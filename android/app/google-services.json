@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "453263245784",
+    "project_id": "fuelfinder-17cce",
+    "storage_bucket": "fuelfinder-17cce.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453263245784:android:3eba4ccf676284cbc632ad",
+        "android_client_info": {
+          "package_name": "com.example.ff_main"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOL548f1ymJP4D7B-uIZs7lK6jdub3ScQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

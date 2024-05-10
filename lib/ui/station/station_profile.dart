@@ -1,0 +1,194 @@
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:ff_main/services/firestore_service.dart';
+import 'package:ff_main/models/fuel_station.dart';
+import 'package:uuid/uuid.dart';
+import 'package:ff_main/services/auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class StationProfile extends StatefulWidget {
+  @override
+  _StationProfileState createState() => _StationProfileState();
+}
+
+class _StationProfileState extends State<StationProfile> {
+  final _formKey = GlobalKey<FormState>();
+  final _firestoreService = FirestoreService();
+  final _nameController = TextEditingController();
+  final _locationController = TextEditingController();
+  final _gpsLinkController = TextEditingController();
+  final _servicesOfferedController = TextEditingController();
+  final _operationHoursController = TextEditingController();
+  final _roadCodeController = TextEditingController();
+  final _routeController = TextEditingController();
+  final _distanceToController = TextEditingController();
+  final _distanceFromController = TextEditingController();
+
+  final _authService = AuthService();
+
+  FuelStation? _existingStation;
+  bool _editMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStationProfile();
+  }
+
+  Future<void> _loadStationProfile() async {
+    User? currentUser = await _authService.getCurrentUser();
+    if (currentUser != null) {
+      FuelStation? existingStation =
+          await _firestoreService.getStationByOwnerId(currentUser.uid);
+      setState(() {
+        _existingStation = existingStation;
+        if (_existingStation != null) {
+          _populateFormFields();
+        }
+      });
+    }
+  }
+
+  void _populateFormFields() {
+    _nameController.text = _existingStation!.name;
+    _locationController.text = _existingStation!.location;
+    _gpsLinkController.text = _existingStation!.gpsLink;
+    _servicesOfferedController.text =
+        _existingStation!.servicesOffered.join(', ');
+    _operationHoursController.text = _existingStation!.operationHours;
+    List<String> locationComponents = _existingStation!.location.split(',');
+    if (locationComponents.length >= 4) {
+      _roadCodeController.text = locationComponents[0].trim();
+      _routeController.text = locationComponents[1].trim();
+      _distanceToController.text = locationComponents[2].trim();
+      _distanceFromController.text = locationComponents[3].trim();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Station Profile'),
+        backgroundColor: Colors.green[100],
+      ),
+      body: Container(
+        padding: EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildFormField('Station Name', _nameController),
+                _buildFormField('Location', _locationController),
+                _buildFormField('GPS Link', _gpsLinkController),
+                _buildFormField('Road Code', _roadCodeController),
+                _buildFormField('Route', _routeController),
+                _buildFormField('Distance To (km)', _distanceToController),
+                _buildFormField('Distance From (km)', _distanceFromController),
+                _buildFormField('Services Offered (comma-separated)',
+                    _servicesOfferedController),
+                _buildFormField('Operation Hours', _operationHoursController),
+                SizedBox(height: 20.0),
+                _buildActionButtons(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormField(String labelText, TextEditingController controller) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            labelText,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8.0),
+          TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Enter GPS coordinates (latitude, longitude)',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+  if (_existingStation == null || _editMode) {
+    // Show Save button when in edit mode or if no existing station
+    return ElevatedButton(
+      onPressed: _saveProfile,
+      child: Text('Save'),
+    );
+  } else {
+    // Show Edit Profile button when not in edit mode and existing station is loaded
+    return ElevatedButton(
+      onPressed: () => setState(() => _editMode = true),
+      child: Text('Edit Profile'),
+    );
+  }
+}
+
+
+  Future<Position?> _getCurrentLocation() async {
+    try {
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+    } catch (e) {
+      print('Error fetching location: $e');
+      return null;
+    }
+  }
+
+  void _updateGPSLink(Position position) {
+    // Update the GPS link controller with the fetched coordinates
+    String gpsCoordinates = '${position.latitude},${position.longitude}';
+    _gpsLinkController.text = gpsCoordinates;
+  }
+
+  Future<void> _saveProfile() async {
+    if (_formKey.currentState!.validate()) {
+      User? currentUser = await _authService.getCurrentUser();
+      if (currentUser == null) {
+        return;
+      }
+
+      String stationId = _existingStation?.id ?? Uuid().v4();
+
+      // Construct the location field with the four components separated by commas
+      String location = [
+        _roadCodeController.text,
+        _routeController.text,
+        _distanceToController.text,
+        _distanceFromController.text,
+      ].join(',');
+
+      FuelStation station = FuelStation(
+        id: stationId,
+        name: _nameController.text,
+        location: location,
+        gpsLink: _gpsLinkController.text,
+        servicesOffered: _servicesOfferedController.text.split(','),
+        operationHours: _operationHoursController.text,
+      );
+
+      await _firestoreService.addOrUpdateStation(station, currentUser.uid);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Station profile saved')));
+      _loadStationProfile(); // Reload profile after save
+    }
+  }
+}

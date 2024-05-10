@@ -1,0 +1,1730 @@
+initial security rules
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+
+
+driver homepage before the changes 
+
+import 'package:ff_main/ui/driver/station_details.dart';
+import 'package:flutter/material.dart';
+import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/services/auth.dart';
+import 'package:ff_main/services/firestore_service.dart';
+import 'driver_profile.dart';
+class DriverHomePage extends StatelessWidget {
+  final AuthService _authService = AuthService();
+  final FirestoreService _firestoreService = FirestoreService();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'FUELFINDER',
+          style: TextStyle(
+            fontSize: 20.0,
+            color: Colors.amber,
+          ),
+        ),
+        backgroundColor: Colors.purple,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              _showLogoutConfirmationDialog(context);
+            },
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.purple,
+              ),
+              child: Text(
+                'Driver Profile',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24.0,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to driver profile page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => DriverProfile()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.purple, Colors.orange[200]!],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Welcome, Driver! How is your journey?',
+                style: TextStyle(
+                  fontSize: 40.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'Find nearest fuel station to refill:',
+                style: TextStyle(
+                  fontSize: 30.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+              ),
+            ),
+            Padding(
+            padding: EdgeInsets.all(15.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Fuel Availability', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.circle, color: Colors.green),
+                    SizedBox(width: 8),
+                    Text('available', style: TextStyle(color: Colors.green)),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Icon(Icons.circle, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Not Available', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+                SizedBox(height: 8),
+                
+              ],
+            ),
+          ),
+
+            Expanded(
+              child: StreamBuilder<List<FuelStation>>(
+                stream: _firestoreService.streamStations(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('No stations found'));
+                  }
+                  List<FuelStation> stations = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: stations.length,
+                    itemBuilder: (context, index) {
+                      FuelStation station = stations[index];
+                      return _buildStationTile(station);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStationTile(FuelStation station) {
+  return FutureBuilder(
+    future: _firestoreService.getStationServices(station.id),
+    builder: (context, serviceSnapshot) {
+      if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+        return _buildListTile(station.name, 'Loading...', Colors.grey);
+      }
+      if (serviceSnapshot.hasError) {
+        return _buildListTile(station.name, 'Error loading services', Colors.grey);
+      }
+      StationServices services = serviceSnapshot.data as StationServices;
+
+      Color nameColor = Colors.amber; // Golden color for station name
+
+      return Container(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Colors.grey[300]!),
+          ),
+          color: Colors.grey[200],
+        ),
+        child: ListTile(
+          leading: Icon(Icons.local_gas_station),
+          title: Text(
+            station.name,
+            style: TextStyle(color: nameColor, fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
+                  SizedBox(width: 20),
+                  Text('Petrol'),
+                  SizedBox(width: 20),
+                  Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
+                  SizedBox(width: 20),
+                  Text('Diesel'),
+                  SizedBox(width: 20),
+                  Text(services.isOpen ? 'Open' : 'Closed'),
+
+                ],
+              ),
+              SizedBox(height: 8),
+              Text('GPS Link: ${station.gpsLink}'),
+              Text('Operation Hours: ${station.operationHours}'),
+            ],
+          ),
+          onTap: () {
+            Navigator.push(
+              context,MaterialPageRoute(builder:(context)=>FuelStationDetailsPage(station: station),
+              ),
+            );
+          },
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
+  return Container(
+    decoration: BoxDecoration(
+      border: Border(
+        bottom: BorderSide(color: Colors.grey[300]!),
+      ),
+      color: backgroundColor,
+    ),
+    child: ListTile(
+      title: Text(
+        title,
+        style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(subtitle),
+    ),
+  );
+}
+
+  // Function to show logout confirmation dialog
+  Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Logout Confirmation'),
+          content: Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Call AuthService to logout
+                await _authService.logout();
+                // Navigate back to login page (assuming you have a named route for login)
+                Navigator.pushNamed(context, '/login');
+              },
+              child: Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+
+
+SLIGHT NEW CHANGE import 'package:flutter/material.dart';
+import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/services/auth.dart';
+import 'package:ff_main/services/firestore_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:geolocator/geolocator.dart';
+import 'driver_profile.dart';
+
+import 'station_details.dart';
+
+class DriverHomePage extends StatelessWidget {
+  final AuthService _authService = AuthService();
+  final FirestoreService _firestoreService = FirestoreService();
+
+  Future<double> calculateDistance(double destinationLat, double destinationLng) async {
+    final apiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
+    final currentPosition = await Geolocator.getCurrentPosition();
+    final startLat = currentPosition.latitude;
+    final startLng = currentPosition.longitude;
+
+    final url = 'https://maps.googleapis.com/maps/api/directions/json?origin=$startLat,$startLng&destination=$destinationLat,$destinationLng&key=$apiKey';
+
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['status'] == 'OK') {
+        final distanceInMeters = data['routes'][0]['legs'][0]['distance']['value'];
+        return distanceInMeters / 1000.0; // Distance in kilometers
+      } else {
+        throw Exception('Failed to fetch directions');
+      }
+    } else {
+      throw Exception('Failed to load directions');
+    }
+  }
+
+  Widget _buildStationTile(FuelStation station, BuildContext context) {
+    return FutureBuilder<double>(
+      future: calculateDistance(station.latitude, station.longitude),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildListTile(station.name, 'Calculating distance...', Colors.grey);
+        }
+        if (snapshot.hasError) {
+          return _buildListTile(station.name, 'Error calculating distance', Colors.grey);
+        }
+        final distance = snapshot.data!;
+        
+        Color nameColor = Colors.amber; // Golden color for station name
+
+        return Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: Colors.grey[300]!),
+            ),
+            color: Colors.grey[200],
+          ),
+          child: ListTile(
+            leading: Icon(Icons.local_gas_station),
+            title: Text(
+              station.name,
+              style: TextStyle(color: nameColor, fontWeight: FontWeight.bold),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.circle, color: station.isPetrolAvailable ? Colors.green : Colors.red),
+                    SizedBox(width: 20),
+                    Text('Petrol'),
+                    SizedBox(width: 20),
+                    Icon(Icons.circle, color: station.isDieselAvailable ? Colors.green : Colors.red),
+                    SizedBox(width: 20),
+                    Text('Diesel'),
+                    SizedBox(width: 20),
+                    Text(station.isOpen ? 'Open' : 'Closed'),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Text('Distance: ${distance.toStringAsFixed(2)} km'), // Display distance
+                Text('Operation Hours: ${station.operationHours}'),
+              ],
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FuelStationDetailsPage(station: station)),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[300]!),
+        ),
+        color: backgroundColor,
+      ),
+      child: ListTile(
+        title: Text(
+          title,
+          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(subtitle),
+      ),
+    );
+  }
+
+  Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Logout Confirmation'),
+          content: Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _authService.logout();
+                Navigator.pushNamed(context, '/login');
+              },
+              child: Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'FUELFINDER',
+          style: TextStyle(
+            fontSize: 20.0,
+            color: Colors.amber,
+          ),
+        ),
+        backgroundColor: Colors.purple,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              _showLogoutConfirmationDialog(context);
+            },
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.purple,
+              ),
+              child: Text(
+                'Driver Profile',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24.0,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => DriverProfile()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.purple, Colors.orange[200]!],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Welcome, Driver! How is your journey?',
+                style: TextStyle(
+                  fontSize: 40.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'Find nearest fuel station to refill:',
+                style: TextStyle(
+                  fontSize: 30.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(15.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Fuel Availability', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.circle, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text('available', style: TextStyle(color: Colors.green)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.circle, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Not Available', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                ],
+              ),
+            ),
+            Expanded(
+              child: StreamBuilder<List<FuelStation>>(
+                stream: _firestoreService.streamStations(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('No stations found'));
+                  }
+                  List<FuelStation> stations = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: stations.length,
+                    itemBuilder: (context, index) {
+                      FuelStation station = stations[index];
+                      return _buildStationTile(station, context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+STATION DETAILS import 'package:ff_main/models/fuel_station.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:ff_main/services/firestore_service.dart';
+
+class FuelStationDetailsPage extends StatelessWidget {
+  final FuelStation station;
+
+  FuelStationDetailsPage({required this.station});
+
+  LatLng parseGpsLink(String gpsLink) {
+    List<String> parts = gpsLink.split(',');
+    return LatLng(double.parse(parts[0]), double.parse(parts[1]));
+  }
+
+  @override
+  @override
+Widget build(BuildContext context) {
+  final LatLng stationLocation = parseGpsLink(station.gpsLink);
+
+  return Scaffold(
+    appBar: AppBar(
+      title: Text(station.name),
+      backgroundColor: Colors.green[100],
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Wrap Expanded with a Column
+          Column(
+            children: [
+              Expanded(
+                  child: FlutterMap(
+                    children: [
+                  options: MapOptions(
+                    center: stationLocation,
+                    zoom: 13.0,
+                  ),
+                  layers: [
+                    TileLayerOptions(
+                      urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      subdomains: ['a', 'b', 'c'],
+                    ),
+                    MarkerLayerOptions(
+                      markers: [
+                        Marker(
+                          width: 80.0,
+                          height: 80.0,
+                          point: stationLocation,
+                          builder: (ctx) => Container(
+                            child: Icon(Icons.location_pin, color: Colors.red, size: 40),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+            ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20.0),
+          Text(
+            'Fuel Availability:',
+            style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 12.0),
+          FutureBuilder(
+            future: FirestoreService().getStationServices(station.id),
+            builder: (context, serviceSnapshot) {
+              if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+              if (serviceSnapshot.hasError) {
+                return Text('Error loading services');
+              }
+              var services = serviceSnapshot.data as StationServices;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildServiceRow('Petrol', services.isPetrolAvailable),
+                  _buildServiceRow('Diesel', services.isDieselAvailable),
+                ],
+              );
+            },
+          ),
+          SizedBox(height: 20.0),
+          Text(
+            'Services Offered:',
+            style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 12.0),
+          FutureBuilder(
+            future: FirestoreService().getStationServices(station.id),
+            builder: (context, serviceSnapshot) {
+              if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+              if (serviceSnapshot.hasError) {
+                return Text('Error loading services');
+              }
+              var services = serviceSnapshot.data as StationServices;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: services.availableServices
+                    .map((serviceName) => _buildServiceRow(serviceName, true))
+                    .toList(),
+              );
+            },
+          ),
+          SizedBox(height: 20.0),
+          Text(
+            'Fuel Prices:',
+            style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 12.0),
+          FutureBuilder(
+            future: FirestoreService().getStationServices(station.id),
+            builder: (context, serviceSnapshot) {
+              if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+              if (serviceSnapshot.hasError) {
+                return Text('Error loading services');
+              }
+              var services = serviceSnapshot.data as StationServices;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildPriceRow('Petrol Price', services.petrolPrice),
+                  _buildPriceRow('Diesel Price', services.dieselPrice),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+  Widget _buildPriceRow(String fuelType, double price) {
+    return Row(
+      children: [
+        Text(
+          '$fuelType: ',
+          style: TextStyle(fontSize: 16.0),
+        ),
+        Text(
+          '\$${price.toStringAsFixed(2)}',
+          style: TextStyle(fontSize: 16.0),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildServiceRow(String serviceName, bool isAvailable) {
+    return Row(
+      children: [
+        Icon(Icons.circle, color: isAvailable ? Colors.green : Colors.red),
+        SizedBox(width: 8),
+        Text(
+          '$serviceName: ${isAvailable ? 'Available' : 'Not Available'}',
+          style: TextStyle(fontSize: 16.0),
+        ),
+      ],
+    );
+  }
+}
+
+
+STATION DETILS initial
+import 'package:flutter/material.dart';
+import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/services/firestore_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class FuelStationDetailsPage extends StatelessWidget {
+  final FuelStation station;
+
+  FuelStationDetailsPage({required this.station});
+  void launchMap(String gpsLink) async {
+    if (await canLaunch(gpsLink)) {
+      await launch(gpsLink);
+    } else {
+      throw 'Could not launch $gpsLink';
+    }
+  }
+
+  @override
+   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(station.name),
+        backgroundColor: Colors.green[100],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Location: ${station.location}',
+              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12.0),
+           ElevatedButton(
+              onPressed: () {
+                launchMap(station.gpsLink);
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Colors.green, // Button color
+                onPrimary: Colors.white, // Text color
+                textStyle: TextStyle(fontSize: 16.0), // Text style
+                padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0), // Button padding
+              ),
+              child: Text('Open Maps'),
+            ),
+            SizedBox(height: 20.0),
+            Text(
+              'Fuel Availability:',
+              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12.0),
+            FutureBuilder(
+              future: FirestoreService().getStationServices(station.id),
+              builder: (context, serviceSnapshot) {
+                if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                }
+                if (serviceSnapshot.hasError) {
+                  return Text('Error loading services');
+                }
+                var services = serviceSnapshot.data as StationServices;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildServiceRow('Petrol', services.isPetrolAvailable),
+                    _buildServiceRow('Diesel', services.isDieselAvailable),
+                  ],
+                );
+              },
+            ),
+            SizedBox(height: 20.0),
+            Text(
+              'Services Offered:',
+              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12.0),
+            FutureBuilder(
+              future: FirestoreService().getStationServices(station.id),
+              builder: (context, serviceSnapshot) {
+                if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                }
+                if (serviceSnapshot.hasError) {
+                  return Text('Error loading services');
+                }
+                var services = serviceSnapshot.data as StationServices;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: services.availableServices
+                      .map((serviceName) => _buildServiceRow(serviceName, true))
+                      .toList(),
+                );
+              },
+            ),
+            SizedBox(height: 20.0),
+            Text(
+              'Fuel Prices:',
+              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12.0),
+            FutureBuilder(
+              future: FirestoreService().getStationServices(station.id),
+              builder: (context, serviceSnapshot) {
+                if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                }
+                if (serviceSnapshot.hasError) {
+                  return Text('Error loading services');
+                }
+                var services = serviceSnapshot.data as StationServices;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPriceRow('Petrol Price', services.petrolPrice),
+                    _buildPriceRow('Diesel Price', services.dieselPrice),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _buildPriceRow(String fuelType, double price) {
+    return Row(
+      children: [
+        Text(
+          '$fuelType: ',
+          style: TextStyle(fontSize: 16.0),
+        ),
+        Text(
+          price.toString(),
+          style: TextStyle(fontSize: 16.0),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildServiceRow(String serviceName, bool isAvailable) {
+    return Row(
+      children: [
+        Icon(Icons.circle, color: isAvailable ? Colors.green : Colors.red),
+        SizedBox(width: 8),
+        Text(
+          '$serviceName: ${isAvailable ? 'Available' : 'Not Available'}',
+          style: TextStyle(fontSize: 16.0),
+        ),
+      ],
+    );
+  }
+
+  
+}
+
+
+
+WORKING MAP VIEW 
+
+
+
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/services/firestore_service.dart';
+
+class MapView extends StatelessWidget {
+  MapView({Key? key}) : super(key: key);
+
+  final FirestoreService _firestoreService = FirestoreService();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('FUELFINDER'),
+      ),
+      body: FutureBuilder<LatLng>(
+        future: _getCurrentLocation(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error fetching location: ${snapshot.error}'));
+          }
+
+          LatLng currentLocation = snapshot.data ?? LatLng(51.505, -0.09); // Default to London
+
+          return StreamBuilder<List<FuelStation>>(
+            stream: _firestoreService.streamStations(),
+            builder: (context, stationSnapshot) {
+              if (stationSnapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              if (stationSnapshot.hasError) {
+                return Center(child: Text('Error fetching stations: ${stationSnapshot.error}'));
+              }
+
+              List<FuelStation> stations = stationSnapshot.data ?? [];
+
+              return FlutterMap(
+                options: MapOptions(
+                  center: currentLocation,
+                  zoom: 13.0,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                    additionalOptions: {
+                      'access token': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                      'id': 'mapbox.mapbox-streets-v8',
+                    },
+                  ),
+                 MarkerLayer(
+                      markers:[Marker(
+                            width: 80.0,
+                            height: 80.0,
+                            point: currentLocation,
+                            child:Container(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.directions_car, color: Colors.red, size: 40.0),
+                                  SizedBox(height: 5.0),
+                                  Text(
+                                    'me driver',
+                                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ), 
+                          ...stations.map((station) {
+                          LatLng? coordinates = _parseCoordinates(station.gpsLink);
+
+                          if (coordinates != null) {
+                            return Marker(
+                              width: 80.0,
+                              height: 80.0,
+                              point: coordinates,
+                              child:Container(
+                                child:Column(
+                                  mainAxisAlignment:MainAxisAlignment.center,
+                                  children:[
+                                   Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
+                                   Text('${station.name}',
+                                   overflow: TextOverflow.ellipsis, // Handle overflow with ellipsis
+                                   maxLines: 2,
+                                   
+                                   )
+                                  ]
+                              ),
+                            )
+                            );
+                          } else {
+                            // If coordinates are null, return an empty placeholder Marker
+                            return Marker(
+                              width: 0.0,
+                              height: 0.0,
+                              point: LatLng(0.0, 0.0), // Placeholder point (invalid coordinates)
+                              child:SizedBox.shrink(), // Empty widget
+                            );
+                          }
+                        })
+                        .where((marker) => marker.point != LatLng(0.0, 0.0)) // Filter out placeholder markers
+                        .toList(),
+                      ]
+                    ),
+
+                    ],
+                  
+                
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<LatLng> _getCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      return LatLng(position.latitude, position.longitude);
+    } catch (e) {
+      print('Error getting location: $e');
+      return LatLng(51.505, -0.09); // Default to London if location services fail
+    }
+  }
+
+  LatLng? _parseCoordinates(String? gpsLink) {
+    if (gpsLink != null && gpsLink.isNotEmpty) {
+      var coordinates = gpsLink.split(',');
+      if (coordinates.length == 2) {
+        try {
+          double latitude = double.parse(coordinates[0].trim());
+          double longitude = double.parse(coordinates[1].trim());
+          return LatLng(latitude, longitude);
+        } catch (e) {
+          print('Error parsing coordinates: $e');
+        }
+      }
+    }
+    return null;
+  }
+}
+  
+
+  MAPVIEW NEW
+  import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/services/firestore_service.dart';
+
+class MapView extends StatelessWidget {
+  MapView({Key? key}) : super(key: key);
+
+  final FirestoreService _firestoreService = FirestoreService();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('FUELFINDER'),
+      ),
+      body: FutureBuilder<LatLng>(
+        future: _getCurrentLocation(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error fetching location: ${snapshot.error}'));
+          }
+
+          LatLng currentLocation = snapshot.data ?? LatLng(51.505, -0.09); // Default to London
+
+          return StreamBuilder<List<FuelStation>>(
+            stream: _firestoreService.streamStations(),
+            builder: (context, stationSnapshot) {
+              if (stationSnapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              if (stationSnapshot.hasError) {
+                return Center(child: Text('Error fetching stations: ${stationSnapshot.error}'));
+              }
+
+              List<FuelStation> stations = stationSnapshot.data ?? [];
+
+              return FlutterMap(
+                options: MapOptions(
+                  center: currentLocation,
+                  zoom: 13.0,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                    additionalOptions: {
+                      'access token': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                      'id': 'mapbox.mapbox-streets-v8',
+                    },
+                  ),
+                 MarkerLayer(
+                      markers:[Marker(
+                            width: 80.0,
+                            height: 80.0,
+                            point: currentLocation,
+                            child:Container(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.directions_car, color: Colors.red, size: 40.0),
+                                  SizedBox(height: 5.0),
+                                  Text(
+                                    'me driver',
+                                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ), 
+                          ...stations.map((station) {
+                            LatLng? coordinates = _parseCoordinates(station.gpsLink);
+                            if (coordinates != null) {
+                              // Fetch station services for each station
+                              StationServices services = await _firestoreService.getStationServices(station.id);
+                              
+                              // Define colors based on availability
+                              Color petrolColor = services.isPetrolAvailable ? Colors.green : Colors.red;
+                              Color dieselColor = services.isDieselAvailable ? Colors.green : Colors.red;
+                              Color openColor = services.isOpen ? Colors.green : Colors.red;
+
+                              return Marker(
+                                width: 80.0,
+                                height: 80.0,
+                                point: coordinates,
+                                child:Container(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
+                                      SizedBox(height: 5.0),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          // Petrol availability indicator
+                                          Icon(Icons.local_gas_station, color: petrolColor, size: 20.0),
+                                          SizedBox(width: 4.0),
+                                          // Diesel availability indicator
+                                          Icon(Icons.local_gas_station, color: dieselColor, size: 20.0),
+                                          SizedBox(width: 4.0),
+                                          // Open status indicator
+                                          Icon(Icons.circle, color: openColor, size: 20.0),
+                                        ],
+                                      ),
+                                      Text(
+                                        '${station.name}',
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 2,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            } else {
+                              // If coordinates are null, return an empty placeholder Marker
+                              return Marker(
+                                width: 0.0,
+                                height: 0.0,
+                                point: LatLng(0.0, 0.0), // Placeholder point (invalid coordinates)
+                                child:SizedBox.shrink(), // Empty widget
+                              );
+                            }
+                          }).where((marker) => marker.point != LatLng(0.0, 0.0)).toList(),
+                        ],
+                      ),
+
+                    ],
+                  
+                
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<LatLng> _getCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      return LatLng(position.latitude, position.longitude);
+    } catch (e) {
+      print('Error getting location: $e');
+      return LatLng(51.505, -0.09); // Default to London if location services fail
+    }
+  }
+
+  LatLng? _parseCoordinates(String? gpsLink) {
+    if (gpsLink != null && gpsLink.isNotEmpty) {
+      var coordinates = gpsLink.split(',');
+      if (coordinates.length == 2) {
+        try {
+          double latitude = double.parse(coordinates[0].trim());
+          double longitude = double.parse(coordinates[1].trim());
+          return LatLng(latitude, longitude);
+        } catch (e) {
+          print('Error parsing coordinates: $e');
+        }
+      }
+    }
+    return null;
+  }
+}
+
+
+
+
+
+
+
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/services/firestore_service.dart';
+
+class MapView extends StatefulWidget {
+  MapView({Key? key}) : super(key: key);
+
+  @override
+  _MapViewState createState() => _MapViewState();
+}
+
+class _MapViewState extends State<MapView> {
+  final FirestoreService _firestoreService = FirestoreService();
+  late Future<List<FuelStation>> _stationsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _stationsFuture = _fetchStations();
+  }
+
+  Future<List<FuelStation>> _fetchStations() async {
+    List<FuelStation> stations = await _firestoreService.streamStations().first;
+    List<FuelStation> stationsWithServices = [];
+    for (var station in stations) {
+      LatLng? coordinates = _parseCoordinates(station.gpsLink);
+      if (coordinates != null) {
+        StationServices services = await _firestoreService.getStationServices(station.id);
+        station.services = services; // Assuming FuelStation has a services property to hold StationServices
+        stationsWithServices.add(station);
+      }
+    }
+    return stationsWithServices;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('FUELFINDER'),
+      ),
+      body: FutureBuilder<LatLng>(
+        future: _getCurrentLocation(),
+        builder: (context, locationSnapshot) {
+          if (locationSnapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (locationSnapshot.hasError) {
+            return Center(child: Text('Error fetching location: ${locationSnapshot.error}'));
+          }
+
+          LatLng currentLocation = locationSnapshot.data ?? LatLng(51.505, -0.09); // Default to London
+
+          return FutureBuilder<List<FuelStation>>(
+            future: _stationsFuture,
+            builder: (context, stationsSnapshot) {
+              if (stationsSnapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              if (stationsSnapshot.hasError) {
+                return Center(child: Text('Error fetching stations: ${stationsSnapshot.error}'));
+              }
+
+              List<FuelStation> stations = stationsSnapshot.data ?? [];
+              return FlutterMap(
+                options: MapOptions(
+                  center: currentLocation,
+                  zoom: 13.0,
+                ),
+                children: [
+                  // ... other layers ...
+                  MarkerLayer(
+                    markers: stations.map((station) {
+                      LatLng coordinates = _parseCoordinates(station.gpsLink)!;
+                      StationServices services = station.services; // Use the pre-fetched services
+                      // ... create markers with services information ...
+                    }).toList(),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  // ... other methods ...
+}
+
+
+
+
+
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:ff_main/models/fuel_station.dart';
+// import 'package:ff_main/models/station_services.dart';
+import 'package:ff_main/services/firestore_service.dart';
+
+class MapView extends StatelessWidget {
+  final FirestoreService _firestoreService = FirestoreService();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('FUELFINDER'),
+      ),
+      body: FutureBuilder<LatLng>(
+        future: _getCurrentLocation(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error fetching location: ${snapshot.error}'));
+          }
+
+          LatLng currentLocation = snapshot.data ?? LatLng(51.505, -0.09); // Default to London
+
+          return _buildMapWithMarkers(currentLocation);
+        },
+      ),
+    );
+  }
+
+  Widget _buildMapWithMarkers(LatLng currentLocation) {
+    return StreamBuilder<List<FuelStation>>(
+      stream: _firestoreService.streamStations(),
+      builder: (context, stationSnapshot) {
+        if (stationSnapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (stationSnapshot.hasError) {
+          return Center(child: Text('Error fetching stations: ${stationSnapshot.error}'));
+        }
+
+        List<FuelStation> stations = stationSnapshot.data ?? [];
+
+        return FlutterMap(
+          options: MapOptions(
+            center: currentLocation,
+            zoom: 13.0,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate:
+                  'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+              additionalOptions: {
+                'access token': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                'id': 'mapbox.mapbox-streets-v8',
+              },
+            ),
+            MarkerLayer(markers: _buildStationMarkers(stations)),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Marker> _buildStationMarkers(List<FuelStation> stations) {
+  List<Marker> markers = [];
+
+  stations.forEach((station) {
+    LatLng? coordinates = _parseCoordinates(station.gpsLink);
+    if (coordinates != null) {
+      markers.add(
+        Marker(
+          width: 80.0,
+          height: 80.0,
+          point: coordinates,
+          builder: (BuildContext context) {
+            return FutureBuilder<StationServices>(
+              future: _firestoreService.getStationServices(station.id),
+              builder: (BuildContext context, AsyncSnapshot<StationServices> servicesSnapshot) {
+                if (servicesSnapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    width: 80.0,
+                    height: 80.0,
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                if (servicesSnapshot.hasError) {
+                  return Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 40.0,
+                  );
+                }
+
+                StationServices services = servicesSnapshot.data ?? StationServices(
+                  isPetrolAvailable: false,
+                  isDieselAvailable: false,
+                  petrolPrice: 0.0,
+                  dieselPrice: 0.0,
+                  isOpen: false,
+                  availableServices: [],
+                );
+
+                Color petrolColor = services.isPetrolAvailable ? Colors.green : Colors.red;
+                Color dieselColor = services.isDieselAvailable ? Colors.green : Colors.red;
+                Color openColor = services.isOpen ? Colors.green : Colors.red;
+
+                return Container(
+                  width: 80.0,
+                  height: 80.0,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
+                      SizedBox(height: 5.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.local_gas_station, color: petrolColor, size: 20.0),
+                          SizedBox(width: 4.0),
+                          Icon(Icons.local_gas_station, color: dieselColor, size: 20.0),
+                          SizedBox(width: 4.0),
+                          Icon(Icons.circle, color: openColor, size: 20.0),
+                        ],
+                      ),
+                      Text(
+                        '${station.name}',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          }, child: Text('hi'),
+        ),
+      );
+    }
+  });
+
+  return markers;
+}
+
+
+
+
+  Future<LatLng> _getCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      return LatLng(position.latitude, position.longitude);
+    } catch (e) {
+      print('Error getting location: $e');
+      return LatLng(51.505, -0.09); // Default to London if location services fail
+    }
+  }
+
+  LatLng? _parseCoordinates(String? gpsLink) {
+    if (gpsLink != null && gpsLink.isNotEmpty) {
+      var coordinates = gpsLink.split(',');
+      if (coordinates.length == 2) {
+        try {
+          double latitude = double.parse(coordinates[0].trim());
+          double longitude = double.parse(coordinates[1].trim());
+          return LatLng(latitude, longitude);
+        } catch (e) {
+          print('Error parsing coordinates: $e');
+        }
+      }
+    }
+    return null;
+  }
+}
+
+
+
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/services/firestore_service.dart';
+
+class MapView extends StatelessWidget {
+  MapView({Key? key}) : super(key: key);
+
+  final FirestoreService _firestoreService = FirestoreService();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('FUELFINDER'),
+      ),
+      body: 
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      FutureBuilder<LatLng>(
+        future: _getCurrentLocation(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error fetching location: ${snapshot.error}'));
+          }
+
+          LatLng currentLocation = snapshot.data ?? LatLng(51.505, -0.09); // Default to London
+
+          return StreamBuilder<List<FuelStation>>(
+            stream: _firestoreService.streamStationsWithServices(),
+            builder: (context, stationSnapshot) {
+              if (stationSnapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              if (stationSnapshot.hasError) {
+                return Center(child: Text('Error fetching stations: ${stationSnapshot.error}'));
+              }
+
+              List<FuelStation> stations = stationSnapshot.data ?? [];
+
+              return FlutterMap(
+                options: MapOptions(
+                  center: currentLocation,
+                  zoom: 13.0,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                    additionalOptions: {
+                      'access token': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                      'id': 'mapbox.mapbox-streets-v8',
+                    },
+                  ),
+                  MarkerLayer(
+  markers: [
+    Marker(
+      width: 80.0,
+      height: 80.0,
+      point: currentLocation,
+      child: Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.directions_car, color: Colors.red, size: 40.0),
+            SizedBox(height: 5.0),
+            Text(
+              'Me Driver',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    ),
+    ...stations.map((station) {
+      LatLng? coordinates = _parseCoordinates(station.gpsLink);
+
+      if (coordinates != null) {
+        return Marker(
+          width: 80.0,
+          height: 80.0,
+          point: coordinates,
+          child: Container(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
+                SizedBox(height: 5.0),
+                Flexible(
+                  child: Text(
+                    '${station.name}',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
+                    style: TextStyle(
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 5.0),
+                FutureBuilder<StationServices>(
+                  future: _firestoreService.getStationServices(station.id),
+                  builder: (context, serviceSnapshot) {
+                    if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    }
+                    if (serviceSnapshot.hasError) {
+                      return Text('Error loading services');
+                    }
+                    StationServices services = serviceSnapshot.data!;
+
+                    return Column(
+                      children: [
+                        SizedBox(height: 5.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
+                            SizedBox(width: 5.0),
+                            Text(
+                              services.isPetrolAvailable ? 'Petrol: Available' : 'Petrol: Not available',
+                              style: TextStyle(color: services.isPetrolAvailable ? Colors.green : Colors.red),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 5.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
+                            SizedBox(width: 5.0),
+                            Text(
+                              services.isDieselAvailable ? 'Diesel: Available' : 'Diesel: Not available',
+                              style: TextStyle(color: services.isDieselAvailable ? Colors.green : Colors.red),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 5.0),
+                        Text(
+                          services.isOpen ? 'Open' : 'Closed',
+                          style: TextStyle(color: services.isOpen ? Colors.green : Colors.red),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        return Marker(
+          width: 0.0,
+          height: 0.0,
+          point: LatLng(0.0, 0.0),
+          child: SizedBox.shrink(),
+        );
+      }
+    }).toList(),
+  ],
+),
+
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<LatLng> _getCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      return LatLng(position.latitude, position.longitude);
+    } catch (e) {
+      print('Error getting location: $e');
+      return LatLng(51.505, -0.09);
+    }
+  }
+
+  LatLng? _parseCoordinates(String? gpsLink) {
+    if (gpsLink != null && gpsLink.isNotEmpty) {
+      var coordinates = gpsLink.split(',');
+      if (coordinates.length == 2) {
+        try {
+          double latitude = double.parse(coordinates[0].trim());
+          double longitude = double.parse(coordinates[1].trim());
+          return LatLng(latitude, longitude);
+        } catch (e) {
+          print('Error parsing coordinates: $e');
+        }
+      }
+    }
+    return null;
+  }
+}
