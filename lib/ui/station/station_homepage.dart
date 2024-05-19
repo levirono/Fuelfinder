@@ -15,8 +15,6 @@ class _StationHomePageState extends State<StationHomePage> {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
 
-
-
   late String _stationId;
   late StationServices _stationServices = StationServices(
     isPetrolAvailable: false,
@@ -28,40 +26,73 @@ class _StationHomePageState extends State<StationHomePage> {
   );
 
   Future<String?> _stationNameFuture = Future.value('Station Name');
-Future<List<String>> _servicesOfferedFuture = Future.value([]);
+  Future<List<String>> _servicesOfferedFuture = Future.value([]);
 
-@override
-void initState() {
-  super.initState();
-  _fetchStationData();
-}
+  @override
+  void initState() {
+    super.initState();
+    _fetchStationData();
+  }
 
-Future<void> _fetchStationData() async {
-  User? currentUser = await _authService.getCurrentUser();
-  if (currentUser != null) {
-    FuelStation? station = await _firestoreService.getStationByOwnerId(currentUser.uid);
-    if (station != null) {
-      setState(() {
-        _stationId = station.id;
-        _stationNameFuture = Future.value(station.name); // Correct initialization
-        _servicesOfferedFuture = _firestoreService.getServicesOffered(_stationId);// Correct initialization
-
+  Future<void> _fetchStationData() async {
+    User? currentUser = await _authService.getCurrentUser();
+    if (currentUser != null) {
+      FuelStation? station = await _firestoreService.getStationByOwnerId(currentUser.uid);
+      if (station != null) {
+        setState(() {
+          _stationId = station.id;
+          _stationNameFuture = Future.value(station.name);
+          _servicesOfferedFuture = _firestoreService.getServicesOffered(_stationId);
           _fetchStationServices();
         });
+      } else {
+        // Station profile doesn't exist, show dialog to fill details
+        _showStationProfileDialog();
       }
     }
   }
 
-
   Future<void> _fetchStationServices() async {
     try {
       _stationServices = await _firestoreService.getStationServices(_stationId);
-      print('Fetched station services: $_stationServices'); // Debug print
-      setState(() {}); // Refresh the UI after fetching services
+      print('Fetched station services: $_stationServices');
+      setState(() {});
     } catch (e) {
-      // Handle error fetching station services
       print('Error fetching station services: $e');
     }
+  }
+
+  void _showStationProfileDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevents closing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Complete Your Station Profile'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Please fill in your station details to proceed.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => StationProfile()),
+                ).then((value) {
+                  // After filling the profile, re-fetch the station data
+                  _fetchStationData();
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -82,14 +113,14 @@ Future<void> _fetchStationData() async {
                   'FUELFINDER - $stationName',
                   style: TextStyle(
                     fontSize: 20.0,
-                    color: Colors.green[100],
+                    color: Colors.orange,
                   ),
                 );
               }
             }
           },
         ),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.green[100],
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -105,7 +136,7 @@ Future<void> _fetchStationData() async {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.purple,
+                color: Colors.green[100],
               ),
               child: Text(
                 'Station Profile',
@@ -150,22 +181,21 @@ Future<void> _fetchStationData() async {
                 color: Colors.amber,
               ),
             ),
-            SizedBox(height: 40.0,),
-                  Container(
-                    padding: EdgeInsets.all(25.0),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: Text(
-                      'Lorem ipsum dolor sit amet, consectetur adipiffffffffffffffffffffffffffhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjdppiottttttttttttttttthscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ),
-
+            SizedBox(height: 40.0),
+            Container(
+              padding: EdgeInsets.all(25.0),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Text(
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  color: Colors.green,
+                ),
+              ),
+            ),
             SizedBox(height: 20.0),
             SwitchListTile(
               title: Text(
@@ -176,7 +206,6 @@ Future<void> _fetchStationData() async {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               value: _stationServices.isPetrolAvailable,
               onChanged: (newValue) {
                 setState(() {
@@ -198,8 +227,9 @@ Future<void> _fetchStationData() async {
             ),
             SizedBox(height: 20.0),
             SwitchListTile(
-              title: Text('Diesel Available',
-              style: TextStyle(
+              title: Text(
+                'Diesel Available',
+                style: TextStyle(
                   color: Colors.amber,
                   fontSize: 16.0,
                   fontWeight: FontWeight.bold,
@@ -226,8 +256,9 @@ Future<void> _fetchStationData() async {
             ),
             SizedBox(height: 20.0),
             SwitchListTile(
-              title: Text('Station Open',
-              style: TextStyle(
+              title: Text(
+                'Station Open',
+                style: TextStyle(
                   color: Colors.amber,
                   fontSize: 16.0,
                   fontWeight: FontWeight.bold,
@@ -243,58 +274,52 @@ Future<void> _fetchStationData() async {
             ),
             SizedBox(height: 20.0),
             FutureBuilder<List<String>>(
-  future: _servicesOfferedFuture,
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return CircularProgressIndicator();
-    } else {
-      if (snapshot.hasError || snapshot.data == null) {
-        return Text('Error fetching services offered.');
-      } else {
-        final servicesOffered = snapshot.data!;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Available Services:',
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              future: _servicesOfferedFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else {
+                  if (snapshot.hasError || snapshot.data == null) {
+                    return Text('Error fetching services offered.');
+                  } else {
+                    final servicesOffered = snapshot.data!;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Available Services:',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 10.0),
+                        ...servicesOffered.map((service) {
+                          bool isSelected = _stationServices.availableServices.contains(service);
+                          return CheckboxListTile(
+                            title: Text(service),
+                            value: isSelected,
+                            onChanged: (newValue) {
+                              setState(() {
+                                if (newValue != null) {
+                                  if (newValue) {
+                                    _stationServices.availableServices.add(service);
+                                  } else {
+                                    _stationServices.availableServices.remove(service);
+                                  }
+                                  _updateStationServices();
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ],
+                    );
+                  }
+                }
+              },
             ),
-            SizedBox(height: 10.0),
-            // Display checkbox list based on servicesOffered
-            ...servicesOffered.map((service) {
-              bool isSelected = _stationServices.availableServices.contains(service);
-              return CheckboxListTile(
-                title: Text(service),
-                value: isSelected,
-                onChanged: (newValue) {
-                  setState(() {
-                    if (newValue != null) {
-                      if (newValue) {
-                        _stationServices.availableServices.add(service);
-                      } else {
-                        _stationServices.availableServices.remove(service);
-                      }
-                      _updateStationServices();
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ],
-        );
-      }
-    }
-  },
-),
-
-            
-            // Inside the build method of StationHomePage widget
-
-
           ],
         ),
       ),
@@ -305,10 +330,8 @@ Future<void> _fetchStationData() async {
     return _stationServices.availableServices.map((service) {
       return CheckboxListTile(
         title: Text(service),
-        value: true, // Implement logic to track and update service availability
-        onChanged: (newValue) {
-          // Implement logic to update service availability
-        },
+        value: true,
+        onChanged: (newValue) {},
       );
     }).toList();
   }
@@ -324,24 +347,22 @@ Future<void> _fetchStationData() async {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop();
               },
-              child: Text('Cancel',
-              style: TextStyle(
-                color:Colors.red[400]
-              ),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.red[400]),
               ),
             ),
             TextButton(
               onPressed: () async {
-                // Call AuthService to logout
                 await _authService.logout();
                 Navigator.pushNamed(context, '/login');
               },
-              child: Text('Logout',
-              style: TextStyle(
-                color: Colors.green
-              ),),
+              child: Text(
+                'Logout',
+                style: TextStyle(color: Colors.green),
+              ),
             ),
           ],
         );
@@ -353,7 +374,6 @@ Future<void> _fetchStationData() async {
     try {
       await _firestoreService.updateStationServices(_stationId, _stationServices);
     } catch (e) {
-      // Handle error updating station services
       print('Error updating station services: $e');
     }
   }

@@ -9,6 +9,7 @@ class MapView extends StatelessWidget {
   MapView({Key? key}) : super(key: key);
 
   final FirestoreService _firestoreService = FirestoreService();
+  final MapController _mapController = MapController();
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,7 @@ class MapView extends StatelessWidget {
             return Center(child: Text('Error fetching location: ${snapshot.error}'));
           }
 
-          LatLng currentLocation = snapshot.data ?? LatLng(51.505, -0.09); // Default to London
+          LatLng currentLocation = snapshot.data ?? LatLng(51.505, -0.09); // Default to a location
 
           return StreamBuilder<List<FuelStation>>(
             stream: _firestoreService.streamStationsWithServices(),
@@ -42,124 +43,177 @@ class MapView extends StatelessWidget {
 
               List<FuelStation> stations = stationSnapshot.data ?? [];
 
-              return FlutterMap(
-                options: MapOptions(
-                  center: currentLocation,
-                  zoom: 13.0,
-                ),
+              return Column(
                 children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
-                    additionalOptions: {
-                      'access token': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
-                      'id': 'mapbox.mapbox-streets-v8',
-                    },
-                  ),
-                  MarkerLayer(
-  markers: [
-    Marker(
-      width: 80.0,
-      height: 80.0,
-      point: currentLocation,
-      child: Container(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.directions_car, color: Colors.red, size: 40.0),
-            SizedBox(height: 5.0),
-            Text(
-              'Me Driver',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-    ),
-    ...stations.map((station) {
-      LatLng? coordinates = _parseCoordinates(station.gpsLink);
-
-      if (coordinates != null) {
-        return Marker(
-          width: 150.0,
-          height: 150.0,
-          point: coordinates,
-          child: Container(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
-                SizedBox(height: 2.0),
-                Text(
-                  '${station.name}',
-                  overflow: TextOverflow.fade,
-                  maxLines: 3,
-                    style: TextStyle(fontSize: 12.0),
-
-                ),
-                SizedBox(height: 5.0),
-                FutureBuilder<StationServices>(
-                  future: _firestoreService.getStationServices(station.id),
-                  builder: (context, serviceSnapshot) {
-                    if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
-                    }
-                    if (serviceSnapshot.hasError) {
-                      return Text('Error loading services');
-                    }
-                    StationServices services = serviceSnapshot.data!;
-
-                    return Row(
+                  Container(
+                    height: MediaQuery.of(context).size.height / 4,
+                    padding: EdgeInsets.all(10),
+                    color: Colors.white,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(height:5.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
-                            SizedBox(width: 5.0),
-                            Text(
-                              services.isPetrolAvailable ? 'P' : 'P',
-                              style: TextStyle(color: services.isPetrolAvailable ? Colors.green : Colors.red),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 5.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
-                            SizedBox(width: 5.0),
-                            Text(
-                              services.isDieselAvailable ? 'D' : 'D',
-                              style: TextStyle(color: services.isDieselAvailable ? Colors.green : Colors.red),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 5.0),
                         Text(
-                          services.isOpen ? ' -Open' : ' -Closed',
-                          style: TextStyle(color: services.isOpen ? Colors.green : Colors.red),
+                          'View nearby stations to refuel',
+                          style: TextStyle(fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.zoom_in),
+                              onPressed: () {
+                                _mapController.move(
+                                  _mapController.center,
+                                  _mapController.zoom + 1,
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.zoom_out),
+                              onPressed: () {
+                                _mapController.move(
+                                  _mapController.center,
+                                  _mapController.zoom - 1,
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ],
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      } else {
-        return Marker(
-          width: 0.0,
-          height: 0.0,
-          point: LatLng(0.0, 0.0),
-          child: SizedBox.shrink(),
-        );
-      }
-    }).toList(),
-  ],
-),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: FlutterMap(
+                          mapController: _mapController,
+                          options: MapOptions(
+                            center: currentLocation,
+                            zoom: 13.0,
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate:
+                                  'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                              additionalOptions: {
+                                'access token': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                                'id': 'mapbox.mapbox-streets-v8',
+                              },
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  width: 80.0,
+                                  height: 80.0,
+                                  point: currentLocation,
+                                  child: Container(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.directions_car, color: Colors.red, size: 40.0),
+                                        SizedBox(height: 5.0),
+                                        Text(
+                                          'Me Driver',
+                                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                ...stations.map((station) {
+                                  LatLng? coordinates = _parseCoordinates(station.gpsLink);
 
+                                  if (coordinates != null) {
+                                    return Marker(
+                                      width: 150.0,
+                                      height: 150.0,
+                                      point: coordinates,
+                                      child: Container(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
+                                            SizedBox(height: 2.0),
+                                            Text(
+                                              '${station.name}',
+                                              overflow: TextOverflow.fade,
+                                              maxLines: 3,
+                                              style: TextStyle(fontSize: 12.0),
+                                            ),
+                                            SizedBox(height: 5.0),
+                                            FutureBuilder<StationServices>(
+                                              future: _firestoreService.getStationServices(station.id),
+                                              builder: (context, serviceSnapshot) {
+                                                if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                                                  return CircularProgressIndicator();
+                                                }
+                                                if (serviceSnapshot.hasError) {
+                                                  return Text('Error loading services');
+                                                }
+                                                StationServices services = serviceSnapshot.data!;
+
+                                                return Row(
+                                                  children: [
+                                                    SizedBox(height: 5.0),
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      children: [
+                                                        Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
+                                                        SizedBox(width: 5.0),
+                                                        Text(
+                                                          services.isPetrolAvailable ? 'P' : 'P',
+                                                          style: TextStyle(color: services.isPetrolAvailable ? Colors.green : Colors.red),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    SizedBox(height: 5.0),
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      children: [
+                                                        Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
+                                                        SizedBox(width: 5.0),
+                                                        Text(
+                                                          services.isDieselAvailable ? 'D' : 'D',
+                                                          style: TextStyle(color: services.isDieselAvailable ? Colors.green : Colors.red),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    SizedBox(height: 5.0),
+                                                    Text(
+                                                      services.isOpen ? ' -Open' : ' -Closed',
+                                                      style: TextStyle(color: services.isOpen ? Colors.green : Colors.red),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    return Marker(
+                                      width: 0.0,
+                                      height: 0.0,
+                                      point: LatLng(0.0, 0.0),
+                                      child: SizedBox.shrink(),
+                                    );
+                                  }
+                                }).toList(),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               );
             },

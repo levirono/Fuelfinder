@@ -84,12 +84,12 @@ class FuelEfficiencyTip {
 }
 
 class Driver {
-  final String id;
-  final String name;
-  final String phoneNumber;
-  final String vehicleModel;
-  final String vehiclePlateNumber;
-  final String driverLicense;
+  String id;
+  String name;
+  String phoneNumber;
+  String vehicleModel;
+  String vehiclePlateNumber;
+  String driverLicense;
 
   Driver({
     required this.id,
@@ -100,14 +100,15 @@ class Driver {
     required this.driverLicense,
   });
 
-  factory Driver.fromMap(Map<String, dynamic> map) {
+  factory Driver.fromSnapshot(DocumentSnapshot doc) {
+    Map data = doc.data() as Map<String, dynamic>;
     return Driver(
-      id: map['id'],
-      name: map['name'],
-      phoneNumber: map['phoneNumber'],
-      vehicleModel: map['vehicleModel'],
-      vehiclePlateNumber: map['vehiclePlateNumber'],
-      driverLicense: map['driverLicense'],
+      id: doc.id,
+      name: data['name'] ?? '',
+      phoneNumber: data['phoneNumber'] ?? '',
+      vehicleModel: data['vehicleModel'] ?? '',
+      vehiclePlateNumber: data['vehiclePlateNumber'] ?? '',
+      driverLicense: data['driverLicense'] ?? '',
     );
   }
 }

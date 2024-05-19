@@ -1,3 +1,4 @@
+import 'package:ff_main/ui/station/pick_my_coordinates.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:ff_main/services/firestore_service.dart';
@@ -83,6 +84,21 @@ class _StationProfileState extends State<StationProfile> {
                 _buildFormField('Station Name', _nameController),
                 _buildFormField('Location', _locationController),
                 _buildFormField('GPS Link', _gpsLinkController),
+                SizedBox(height: 20.0),
+                ElevatedButton(
+                onPressed: _openPickMyCoordinateScreen,
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.lightGreen,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  minimumSize: Size(double.infinity, 40.0),
+                ),
+                child: Text(
+                  'Pick My Coordinates',
+                  style: TextStyle(fontSize: 16.0),
+                ),
+              ),
                 _buildFormField('Road Code', _roadCodeController),
                 _buildFormField('Route', _routeController),
                 _buildFormField('Distance To (km)', _distanceToController),
@@ -92,6 +108,7 @@ class _StationProfileState extends State<StationProfile> {
                 _buildFormField('Operation Hours', _operationHoursController),
                 SizedBox(height: 20.0),
                 _buildActionButtons(),
+                
               ],
             ),
           ),
@@ -127,16 +144,48 @@ class _StationProfileState extends State<StationProfile> {
 
   Widget _buildActionButtons() {
   if (_existingStation == null || _editMode) {
-    // Show Save button when in edit mode or if no existing station
     return ElevatedButton(
-      onPressed: _saveProfile,
-      child: Text('Save'),
-    );
+  onPressed: _saveProfile,
+  style: ElevatedButton.styleFrom(
+    primary: Colors.lightGreen,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20.0), // Rounded corners
+    ),
+  ),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.save, color: Colors.white),
+      SizedBox(width: 8.0),
+      Text(
+        'Save Station Profile',
+        style: TextStyle(fontSize: 16.0),
+      ),
+    ],
+  ),
+);
+
   } else {
-    // Show Edit Profile button when not in edit mode and existing station is loaded
     return ElevatedButton(
       onPressed: () => setState(() => _editMode = true),
-      child: Text('Edit Profile'),
+      style: ElevatedButton.styleFrom(
+        primary: Colors.lightGreen,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        minimumSize: Size(double.infinity, 40.0),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.edit, color: Colors.white),
+          SizedBox(width: 8.0),
+          Text(
+            'Edit Profile',
+            style: TextStyle(fontSize: 16.0),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -154,7 +203,6 @@ class _StationProfileState extends State<StationProfile> {
   }
 
   void _updateGPSLink(Position position) {
-    // Update the GPS link controller with the fetched coordinates
     String gpsCoordinates = '${position.latitude},${position.longitude}';
     _gpsLinkController.text = gpsCoordinates;
   }
@@ -168,7 +216,6 @@ class _StationProfileState extends State<StationProfile> {
 
       String stationId = _existingStation?.id ?? Uuid().v4();
 
-      // Construct the location field with the four components separated by commas
       String location = [
         _roadCodeController.text,
         _routeController.text,
@@ -188,7 +235,14 @@ class _StationProfileState extends State<StationProfile> {
       await _firestoreService.addOrUpdateStation(station, currentUser.uid);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Station profile saved')));
-      _loadStationProfile(); // Reload profile after save
+      _loadStationProfile();
     }
+  }
+
+  void _openPickMyCoordinateScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PickMyCoordinate()),
+    );
   }
 }

@@ -252,64 +252,27 @@ Future<List<FuelEfficiencyTip>> getFuelEfficiencyTips() async {
       throw Exception('Error fetching fuel efficiency tips: $e');
     }
   }
-
-
-   Future<void> createDriversCollection() async {
-    final CollectionReference driversCollection = _db.collection('drivers');
-
-    // Check if collection already exists
-    final existingCollection = await driversCollection.get();
-    if (existingCollection.docs.isEmpty) {
-      // Collection doesn't exist; create it
-      await driversCollection.add({});
+  Future<Driver?> getDriverByOwnerId(String ownerId) async {
+    var snapshot = await _db.collection('drivers').where('ownerId', isEqualTo: ownerId).get();
+    if (snapshot.docs.isNotEmpty) {
+      return Driver.fromSnapshot(snapshot.docs.first);
     }
+    return null;
   }
-         Future<void> addOrUpdateDriver(Driver driver, String ownerId) async {
-  try {
-    // Ensure 'drivers' collection exists (if needed)
-    await createDriversCollection();
 
-    // Convert Driver object to Map<String, dynamic>
-    Map<String, dynamic> driverData = {
-      'id': driver.id,
+  Future<void> addOrUpdateDriver(Driver driver, String ownerId) async {
+    await _db.collection('drivers').doc(driver.id).set({
       'name': driver.name,
       'phoneNumber': driver.phoneNumber,
       'vehicleModel': driver.vehicleModel,
       'vehiclePlateNumber': driver.vehiclePlateNumber,
       'driverLicense': driver.driverLicense,
-    };
-
-    // Add or update driver document in Firestore
-    await _db.collection('drivers').doc(driver.id).set(driverData);
-
-  } catch (e) {
-    print('Error adding/updating driver: $e');
-    throw e;
+      'ownerId': ownerId,
+    });
   }
-}
 
-
-  // Utility function to create 'drivers' collection if it doesn't exist
- 
-
-  // Function to retrieve a driver document by ID
-  Future<Driver?> getDriverById(String driverId) async {
-  try {
-    var docSnapshot = await _db.collection('drivers').doc(driverId).get();
-
-    if (docSnapshot.exists) {
-      // Ensure data is cast to Map<String, dynamic>
-      Map<String, dynamic> data = docSnapshot.data() as Map<String, dynamic>;
-
-      // Create Driver object from retrieved data
-      return Driver.fromMap(data);
-    }
-  } catch (e) {
-    print('Error fetching driver: $e');
-    throw e;
+  Future<void> deleteDriver(String driverId, String ownerId) async {
+    await _db.collection('drivers').doc(driverId).delete();
   }
-  return null;
-}
-
 }
 

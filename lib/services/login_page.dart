@@ -20,14 +20,14 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Login'),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.green[100],
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.purple, Colors.orange[200]!],
+            colors: [Colors.white, Colors.green[200]!],
           ),
         ),
         child: Center(

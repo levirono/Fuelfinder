@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:ff_main/models/fuel_station.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/firestore_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'driver_profile.dart';
-import 'package:ff_main/ui/driver/map_view.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'map_view.dart';
 import 'dart:math';
+import 'package:permission_handler/permission_handler.dart';
+
 class DriverHomePage extends StatefulWidget {
   @override
   _DriverHomePageState createState() => _DriverHomePageState();
@@ -18,15 +20,62 @@ class _DriverHomePageState extends State<DriverHomePage> {
   final FirestoreService _firestoreService = FirestoreService();
   String searchQuery = '';
   bool isFirstTime = true;
+  bool _isProfileLoaded = false;
 
-
-void initState() {
+  @override
+  void initState() {
     super.initState();
+    _checkDriverProfile();
     _showRandomFuelEfficiencyTip();
   }
-Future<void> _showRandomFuelEfficiencyTip() async {
+
+  Future<void> _checkDriverProfile() async {
+  User? currentUser = await _authService.getCurrentUser();
+  if (currentUser != null) {
+    Driver? existingDriver = await _firestoreService.getDriverByOwnerId(currentUser.uid);
+    if (existingDriver == null) {
+      // Show the DriverProfile form as a dialog
+      _showDriverProfileDialog();
+    } else {
+      setState(() {
+        _isProfileLoaded = true;
+      });
+    }
+  }
+}
+
+
+  void _showDriverProfileDialog() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Complete Your Profile'),
+        content: Text('Please complete your driver profile to proceed.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DriverProfile()),
+              );
+            },
+            child: Text('OK'),
+          ),
+        ],
+      );
+    },
+  ).then((value) {
+    setState(() {
+      _isProfileLoaded = true;
+    });
+  });
+}
+
+
+  Future<void> _showRandomFuelEfficiencyTip() async {
     if (isFirstTime) {
-      // Get a random fuel efficiency tip from Firestore
       List<FuelEfficiencyTip> tips = await _firestoreService.getFuelEfficiencyTips();
       if (tips.isNotEmpty) {
         FuelEfficiencyTip randomTip = tips[Random().nextInt(tips.length)];
@@ -35,31 +84,32 @@ Future<void> _showRandomFuelEfficiencyTip() async {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-                backgroundColor: Colors.green[100], // Set background color
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0), // Set rounded corners
-                  side: BorderSide(color: Colors.green, width: 2.0), // Set border
-                ),
-                title: Text('Fuel Efficiency Tip',
+              backgroundColor: Colors.green[100],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                side: BorderSide(color: Colors.green, width: 2.0),
+              ),
+              title: Text(
+                'Fuel Efficiency Tip',
                 style: TextStyle(
-                    color: Colors.green[800],
-                  ),
+                  color: Colors.green[800],
                 ),
-                content: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.0), // Set rounded corners
-                    border: Border.all(color: Colors.green, width: 2.0), // Set border
-                  ),
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    randomTip.tip,
-                    style: TextStyle(fontSize: 16.0),
-                  ),
+              ),
+              content: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.0),
+                  border: Border.all(color: Colors.green, width: 2.0),
                 ),
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  randomTip.tip,
+                  style: TextStyle(fontSize: 16.0),
+                ),
+              ),
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop(); // Close dialog
+                    Navigator.of(context).pop();
                   },
                   child: Text('Close'),
                 ),
@@ -72,11 +122,14 @@ Future<void> _showRandomFuelEfficiencyTip() async {
     }
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
+    if (!_isProfileLoaded) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -105,7 +158,7 @@ Future<void> _showRandomFuelEfficiencyTip() async {
                 color: Colors.grey[100],
               ),
               child: Text(
-                'Aplication',
+                'Application',
                 style: TextStyle(
                   color: Colors.green,
                   fontSize: 24.0,
@@ -117,7 +170,6 @@ Future<void> _showRandomFuelEfficiencyTip() async {
               title: Text('Profile'),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to driver profile page
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => DriverProfile()),
@@ -129,7 +181,6 @@ Future<void> _showRandomFuelEfficiencyTip() async {
               title: Text('Fuel Efficiency Tips'),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to driver profile page
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => FuelEfficiencyTips()),
@@ -172,138 +223,124 @@ Future<void> _showRandomFuelEfficiencyTip() async {
                 ),
               ),
             ),
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            //   child: 
-            // ),
-            
-                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Search Route',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16.0,
-                          ),
-                        ),
-                        SizedBox(height: 8.0),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: TextField(
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'Enter road code or route',
-                              suffixIcon: IconButton(
-                                icon: Icon(Icons.search),
-                                onPressed: () {
-                                  setState(() {
-                                    searchQuery = searchQuery.trim();
-                                  });
-                                },
-                              ),
-                            ),
-                            onChanged: (value) {
-                              searchQuery = value;
-                            },
-                          ),
-                        ),
-                      ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Search Route',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
                     ),
                   ),
-
-                  ElevatedButton(
-  onPressed: () async {
-    PermissionStatus locationStatus = await Permission.location.request();
-
-    if (locationStatus == PermissionStatus.granted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => MapView()),
-      );
-    }
-
-    if (locationStatus == PermissionStatus.denied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('This permission is required to use maps')),
-      );
-    }
-
-    if (locationStatus == PermissionStatus.permanentlyDenied) {
-      openAppSettings();
-    }
-  },
-  child: Text(
-    'Map View',
-    style: TextStyle(
-      color: Colors.white,
-      fontSize: 16.0,
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-),
-
-
-
-
-            Padding(
-            padding: EdgeInsets.all(15.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Fuel Availability', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.circle, color: Colors.green),
-                    SizedBox(width: 8),
-                    Text('available', style: TextStyle(color: Colors.green)),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.circle, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Not Available', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
-                SizedBox(height: 8),
-                
-              ],
+                  SizedBox(height: 8.0),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Enter road code or route',
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.search),
+                          onPressed: () {
+                            setState(() {
+                              searchQuery = searchQuery.trim();
+                            });
+                          },
+                        ),
+                      ),
+                      onChanged: (value) {
+                        searchQuery = value;
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+            ElevatedButton(
+              onPressed: () async {
+                PermissionStatus locationStatus = await Permission.location.request();
 
-           Expanded(
-      child: StreamBuilder<List<FuelStation>>(
-        stream: _firestoreService.streamStations(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No stations found'));
-          }
-          List<FuelStation> stations = snapshot.data!;
-          if (searchQuery.isNotEmpty) {
-            // Filter stations that match the search query
-            stations = stations.where((station) => station.location.toLowerCase().contains(searchQuery.toLowerCase())).toList();
-          }
-          return ListView.builder(
-            itemCount: stations.length,
-            itemBuilder: (context, index) {
-              FuelStation station = stations[index];
-              return _buildStationTile(station);
-            },
-          );
-        },
-      ),
-    ),
+                if (locationStatus == PermissionStatus.granted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MapView()),
+                  );
+                }
 
+                if (locationStatus == PermissionStatus.denied) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('This permission is required to use maps')),
+                  );
+                }
+
+                if (locationStatus == PermissionStatus.permanentlyDenied) {
+                  openAppSettings();
+                }
+              },
+              child: Text(
+                'Map View',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(15.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Fuel Availability', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.circle, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text('Available', style: TextStyle(color: Colors.green)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.circle, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Not Available', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                ],
+              ),
+            ),
+            Expanded(
+              child: StreamBuilder<List<FuelStation>>(
+                stream: _firestoreService.streamStations(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('No stations found'));
+                  }
+                  List<FuelStation> stations = snapshot.data!;
+                  if (searchQuery.isNotEmpty) {
+                    stations = stations.where((station) => station.location.toLowerCase().contains(searchQuery.toLowerCase())).toList();
+                  }
+                  return ListView.builder(
+                    itemCount: stations.length,
+                    itemBuilder: (context, index) {
+                      FuelStation station = stations[index];
+                      return _buildStationTile(station);
+                    },
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -311,94 +348,90 @@ Future<void> _showRandomFuelEfficiencyTip() async {
   }
 
   Widget _buildStationTile(FuelStation station) {
-  return FutureBuilder(
-    future: _firestoreService.getStationServices(station.id),
-    builder: (context, serviceSnapshot) {
-      if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-        return _buildListTile(station.name, 'Loading...', Colors.grey);
-      }
-      if (serviceSnapshot.hasError) {
-        return _buildListTile(station.name, 'Error loading services', Colors.grey);
-      }
-      StationServices services = serviceSnapshot.data as StationServices;
+    return FutureBuilder(
+      future: _firestoreService.getStationServices(station.id),
+      builder: (context, serviceSnapshot) {
+        if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+          return _buildListTile(station.name, 'Loading...', Colors.grey);
+        }
+        if (serviceSnapshot.hasError) {
+          return _buildListTile(station.name, 'Error loading services', Colors.grey);
+        }
+        StationServices services = serviceSnapshot.data as StationServices;
 
-      Color nameColor = Colors.amber; // Golden color for station name
+        Color nameColor = Colors.amber;
 
-      return Container(
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Colors.grey[300]!),
-          ),
-          color: Colors.grey[200],
-        ),
-        child: ListTile(
-          leading: Icon(Icons.local_gas_station),
-          title: Text(
-            station.name,
-            style: TextStyle(color: nameColor, fontWeight: FontWeight.bold),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
-                  SizedBox(width: 20),
-                  Text('Petrol'),
-                  SizedBox(width: 20),
-                  Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
-                  SizedBox(width: 20),
-                  Text('Diesel'),
-                  SizedBox(width: 20),
-                  Text(services.isOpen ? 'Open' : 'Closed'),
-
-                ],
-              ),
-              SizedBox(height: 8),
-              Text('GPS Link: ${station.gpsLink}'),
-              Text(
-              'Location: ${station.location}',
-              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+        return Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: Colors.grey[300]!),
             ),
-            SizedBox(height: 12.0),
-              Text('Operation Hours: ${station.operationHours}'),
-            ],
+            color: Colors.grey[200],
           ),
-          onTap: () {
-            Navigator.push(
-              context,MaterialPageRoute(builder:(context)=>FuelStationDetailsPage(station: station),
-              ),
-            );
-          },
+          child: ListTile(
+            leading: Icon(Icons.local_gas_station),
+            title: Text(
+              station.name,
+              style: TextStyle(color: nameColor, fontWeight: FontWeight.bold),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
+                    SizedBox(width: 20),
+                    Text('Petrol'),
+                    SizedBox(width: 20),
+                    Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
+                    SizedBox(width: 20),
+                    Text('Diesel'),
+                    SizedBox(width: 20),
+                    Text(services.isOpen ? 'Open' : 'Closed'),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Text('GPS Link: ${station.gpsLink}'),
+                Text(
+                  'Location: ${station.location}',
+                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 12.0),
+                Text('Operation Hours: ${station.operationHours}'),
+              ],
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FuelStationDetailsPage(station: station),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[300]!),
         ),
-      );
-    },
-  );
-}
-
-Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
-  return Container(
-    decoration: BoxDecoration(
-      border: Border(
-        bottom: BorderSide(color: Colors.grey[300]!),
+        color: backgroundColor,
       ),
-      color: backgroundColor,
-    ),
-    child: ListTile(
-      title: Text(
-        title,
-        style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+      child: ListTile(
+        title: Text(
+          title,
+          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(subtitle),
       ),
-      subtitle: Text(subtitle),
-    ),
-  );
-}
+    );
+  }
 
-
-
-
-
-  // Function to show logout confirmation dialog
   Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
     return showDialog(
       context: context,
@@ -410,24 +443,22 @@ Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop();
               },
-              child: Text('Cancel',
-              style: TextStyle(
-                color:Colors.red[400]
-              ),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.red[400]),
               ),
             ),
             TextButton(
               onPressed: () async {
-                // Call AuthService to logout
                 await _authService.logout();
                 Navigator.pushNamed(context, '/login');
               },
-              child: Text('Logout',
-              style: TextStyle(
-                color: Colors.green
-              ),),
+              child: Text(
+                'Logout',
+                style: TextStyle(color: Colors.green),
+              ),
             ),
           ],
         );

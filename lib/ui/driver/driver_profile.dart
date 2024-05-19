@@ -21,12 +21,43 @@ class _DriverProfileState extends State<DriverProfile> {
 
   final _authService = AuthService();
 
+  Driver? _existingDriver;
+  bool _editMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDriverProfile();
+  }
+
+  Future<void> _loadDriverProfile() async {
+    User? currentUser = await _authService.getCurrentUser();
+    if (currentUser != null) {
+      Driver? existingDriver = await _firestoreService.getDriverByOwnerId(currentUser.uid);
+      setState(() {
+        _existingDriver = existingDriver;
+        if (_existingDriver != null) {
+          _populateFormFields();
+        }
+        _editMode = _existingDriver == null;
+      });
+    }
+  }
+
+  void _populateFormFields() {
+    _nameController.text = _existingDriver!.name;
+    _phoneNumberController.text = _existingDriver!.phoneNumber;
+    _vehicleModelController.text = _existingDriver!.vehicleModel;
+    _vehiclePlateNumberController.text = _existingDriver!.vehiclePlateNumber;
+    _driverLicenseController.text = _existingDriver!.driverLicense;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Driver Profile'),
-        backgroundColor: Colors.blue[200],
+        backgroundColor: Colors.green[100],
       ),
       body: Container(
         padding: EdgeInsets.all(16.0),
@@ -36,7 +67,7 @@ class _DriverProfileState extends State<DriverProfile> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildFormField('Name', _nameController),
+                _buildFormField('Driver Name', _nameController),
                 _buildFormField('Phone Number', _phoneNumberController),
                 _buildFormField('Vehicle Model', _vehicleModelController),
                 _buildFormField('Vehicle Plate Number', _vehiclePlateNumberController),
@@ -51,65 +82,96 @@ class _DriverProfileState extends State<DriverProfile> {
     );
   }
 
-  Widget _buildFormField(String labelText, TextEditingController controller) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            labelText,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8.0),
-          TextFormField(
-            controller: controller,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter $labelText';
-              }
-              return null;
-            },
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Enter $labelText',
-            ),
-          ),
-        ],
-      ),
+  Widget _buildFormField(String label, TextEditingController controller) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(labelText: label),
+      readOnly: !_editMode,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter $label';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildActionButtons() {
-    return ElevatedButton(
-      onPressed: _saveProfile,
-      child: Text('Save'),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        ElevatedButton(
+          onPressed: _editMode ? _saveProfile : _toggleEditMode,
+          child: Text(_editMode ? 'Save' : 'Edit'),
+        ),
+        if (_existingDriver != null)
+          ElevatedButton(
+            onPressed: _deleteProfile,
+            child: Text('Delete'),
+            style: ElevatedButton.styleFrom(
+              primary: Colors.red,
+            ),
+          ),
+      ],
     );
   }
 
-  Future<void> _saveProfile() async {
-    if (_formKey.currentState!.validate()) {
-      User? currentUser = await _authService.getCurrentUser();
-      if (currentUser == null) {
-        return;
-      }
+  void _toggleEditMode() {
+    setState(() {
+      _editMode = true;
+    });
+  }
 
-      String driverId = Uuid().v4();
-
-      Driver driver = Driver(
-        id: driverId,
-        name: _nameController.text,
-        phoneNumber: _phoneNumberController.text,
-        vehicleModel: _vehicleModelController.text,
-        vehiclePlateNumber: _vehiclePlateNumberController.text,
-        driverLicense: _driverLicenseController.text,
-      );
-
-      await _firestoreService.addOrUpdateDriver(driver, currentUser.uid);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Driver profile saved')));
+ Future<void> _saveProfile() async {
+  if (_formKey.currentState!.validate()) {
+    User? currentUser = await _authService.getCurrentUser();
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You need to be logged in to save your profile.')));
+      return;
     }
+
+    String driverId = _existingDriver?.id ?? Uuid().v4();
+
+    Driver driver = Driver(
+      id: driverId,
+      name: _nameController.text,
+      phoneNumber: _phoneNumberController.text,
+      vehicleModel: _vehicleModelController.text,
+      vehiclePlateNumber: _vehiclePlateNumberController.text,
+      driverLicense: _driverLicenseController.text,
+    );
+
+    await _firestoreService.addOrUpdateDriver(driver, currentUser.uid);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Driver profile saved')));
+    
+    Navigator.pop(context);
+
+    _loadDriverProfile();
+  }
+}
+
+
+  Future<void> _deleteProfile() async {
+    User? currentUser = await _authService.getCurrentUser();
+    if (currentUser != null && _existingDriver != null) {
+      await _firestoreService.deleteDriver(_existingDriver!.id, currentUser.uid);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Driver profile deleted')));
+      _clearFormFields();
+      setState(() {
+        _existingDriver = null;
+        _editMode = false;
+      });
+    }
+  }
+
+  void _clearFormFields() {
+    _nameController.clear();
+    _phoneNumberController.clear();
+    _vehicleModelController.clear();
+    _vehiclePlateNumberController.clear();
+    _driverLicenseController.clear();
   }
 }
