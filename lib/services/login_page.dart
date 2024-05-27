@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/signup_page.dart';
@@ -10,10 +11,27 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
+  final PageController _pageController = PageController(initialPage: 0);
 
   String _email = '';
   String _password = '';
   bool _showPassword = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start the timer to auto-slide the pages
+    Timer.periodic(Duration(seconds: 10), (Timer timer) {
+      if (_pageController.hasClients) {
+        int nextPage = (_pageController.page!.round() + 1) % 3;
+        _pageController.animateToPage(
+          nextPage,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeIn,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +53,23 @@ class _LoginPageState extends State<LoginPage> {
             padding: EdgeInsets.all(20.0),
             child: Column(
               children: [
+                Container(
+                  height: 200.0, // Height of the carousel
+                  child: PageView(
+                    controller: _pageController,
+                    children: [
+                      _buildCarouselItem('Welcome to FuelFinder', 'Find the nearest fule station and know if there is fuel or not.'),
+                      _buildCarouselItem('Track Your Fuel Usage', 'Keep an eye on your fuel consumption and save money.'),
+                      _buildCarouselItem('Plan your trps effectively', 'plan ahead of time where you wanna refill you gas tank.'),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20.0),
                 Text(
                   'Please login to continue',
                   style: TextStyle(
                     color: Colors.green,
-                    fontSize: 50.0,
+                    fontSize: 30.0,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -157,6 +187,44 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCarouselItem(String title, String subtitle) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 10.0),
+      decoration: BoxDecoration(
+        color: Colors.green[100],
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.green[800],
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 10.0),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: Colors.green[700],
+                  fontSize: 16.0,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ),

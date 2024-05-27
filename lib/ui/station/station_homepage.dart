@@ -45,7 +45,6 @@ class _StationHomePageState extends State<StationHomePage> {
           _fetchStationServices();
         });
       } else {
-        // Station profile doesn't exist, show dialog to fill details
         _showStationProfileDialog();
       }
     }
@@ -181,104 +180,106 @@ class _StationHomePageState extends State<StationHomePage> {
           ),
         ),
         padding: EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Welcome To FUELFINDER!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 50.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-            SizedBox(height: 40.0),
-            Container(
-              padding: EdgeInsets.all(25.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              child: Text(
-                'Help motorists refuels and use use services in a more convenient way,to prevent delays and fuel wastages .',
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Welcome To FUELFINDER!',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 25.0,
+                  fontSize: 50.0,
+                  fontWeight: FontWeight.bold,
                   color: Colors.green,
                 ),
               ),
-            ),
-            SizedBox(height: 20.0),
-            _buildFuelTile('Petrol', _stationServices.isPetrolAvailable, _stationServices.petrolPrice),
-            SizedBox(height:20.0),
-            _buildFuelTile('Diesel', _stationServices.isDieselAvailable, _stationServices.dieselPrice),
-            SizedBox(height: 20.0),
-            _buildServiceTile('Station Open', _stationServices.isOpen),
-            SizedBox(height: 20.0),
-            FutureBuilder<List<String>>(
-              future: _servicesOfferedFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                } else {
-                  if (snapshot.hasError || snapshot.data == null) {
-                    return Text('Error fetching services offered.');
+              SizedBox(height: 40.0),
+              Container(
+                padding: EdgeInsets.all(25.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Text(
+                  'Help motorists refuel and use services in a more convenient way, to prevent delays and fuel wastages.',
+                  style: TextStyle(
+                    fontSize: 25.0,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+              SizedBox(height: 20.0),
+              _buildFuelTile('Petrol', _stationServices.isPetrolAvailable, _stationServices.petrolPrice),
+              SizedBox(height: 20.0),
+              _buildFuelTile('Diesel', _stationServices.isDieselAvailable, _stationServices.dieselPrice),
+              SizedBox(height: 20.0),
+              _buildServiceTile('Station Open', _stationServices.isOpen),
+              SizedBox(height: 20.0),
+              FutureBuilder<List<String>>(
+                future: _servicesOfferedFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
                   } else {
-                    final servicesOffered = snapshot.data!;
-                    return Container(
-                      padding: EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(10.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber.withOpacity(0.3),
-                            spreadRadius: 4,
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Available Services:',
-                            style: TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green[900],
+                    if (snapshot.hasError || snapshot.data == null) {
+                      return Text('Error fetching services offered.');
+                    } else {
+                      final servicesOffered = snapshot.data!;
+                      return Container(
+                        padding: EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(10.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.amber.withOpacity(0.3),
+                              spreadRadius: 4,
+                              blurRadius: 8,
                             ),
-                          ),
-                          SizedBox(height: 10.0),
-                          Column(
-                            children: servicesOffered.map((service) {
-                              bool isSelected = _stationServices.availableServices.contains(service);
-                              return CheckboxListTile(
-                                title: Text(service),
-                                value: isSelected,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    if (newValue != null) {
-                                      if (newValue) {
-                                        _stationServices.availableServices.add(service);
-                                      } else {
-                                        _stationServices.availableServices.remove(service);
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Available Services:',
+                              style: TextStyle(
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[900],
+                              ),
+                            ),
+                            SizedBox(height: 10.0),
+                            Column(
+                              children: servicesOffered.map((service) {
+                                bool isSelected = _stationServices.availableServices.contains(service);
+                                return CheckboxListTile(
+                                  title: Text(service),
+                                  value: isSelected,
+                                  onChanged: (newValue) {
+                                    setState(() {
+                                      if (newValue != null) {
+                                        if (newValue) {
+                                          _stationServices.availableServices.add(service);
+                                        } else {
+                                          _stationServices.availableServices.remove(service);
+                                        }
+                                        _updateStationServices();
                                       }
-                                      _updateStationServices();
-                                    }
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    );
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                   }
-                }
-              },
-            ),
-          ],
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -425,4 +426,3 @@ class _StationHomePageState extends State<StationHomePage> {
     }
   }
 }
-
