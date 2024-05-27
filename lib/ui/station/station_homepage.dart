@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/models/fuel_station.dart';
-// import 'package:ff_main/models/station_services.dart';
 import 'station_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -68,17 +67,26 @@ class _StationHomePageState extends State<StationHomePage> {
       barrierDismissible: false, // Prevents closing the dialog by tapping outside
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Complete Your Station Profile'),
+          title: Text(
+            'Complete Your Station Profile',
+            style: TextStyle(fontSize: 20.0, color: Colors.green), // Larger green text
+          ),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Please fill in your station details to proceed.'),
+                Text(
+                  'Please fill in your station details to proceed.',
+                  style: TextStyle(color: Colors.black), // Optional: Set content text color
+                ),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('OK'),
+              child: Text(
+                'OK',
+                style: TextStyle(color: Colors.green), // Green text for button
+              ),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -90,6 +98,10 @@ class _StationHomePageState extends State<StationHomePage> {
               },
             ),
           ],
+          backgroundColor: Colors.green[100], // Green 100 background
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0), // Rounded corners
+          ),
         );
       },
     );
@@ -110,7 +122,7 @@ class _StationHomePageState extends State<StationHomePage> {
               } else {
                 final stationName = snapshot.data!;
                 return Text(
-                  'FUELFINDER - $stationName',
+                  '- $stationName -',
                   style: TextStyle(
                     fontSize: 20.0,
                     color: Colors.orange,
@@ -173,12 +185,12 @@ class _StationHomePageState extends State<StationHomePage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Welcome!',
+              'Welcome To FUELFINDER!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 50.0,
                 fontWeight: FontWeight.bold,
-                color: Colors.amber,
+                color: Colors.green,
               ),
             ),
             SizedBox(height: 40.0),
@@ -189,89 +201,19 @@ class _StationHomePageState extends State<StationHomePage> {
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                'Help motorists refuels and use use services in a more convenient way,to prevent delays and fuel wastages .',
                 style: TextStyle(
-                  fontSize: 16.0,
+                  fontSize: 25.0,
                   color: Colors.green,
                 ),
               ),
             ),
             SizedBox(height: 20.0),
-            SwitchListTile(
-              title: Text(
-                'Petrol Available',
-                style: TextStyle(
-                  color: Colors.amber,
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              value: _stationServices.isPetrolAvailable,
-              onChanged: (newValue) {
-                setState(() {
-                  _stationServices.isPetrolAvailable = newValue;
-                  _updateStationServices();
-                });
-              },
-            ),
-            TextFormField(
-              decoration: InputDecoration(labelText: 'Petrol Price'),
-              keyboardType: TextInputType.number,
-              initialValue: _stationServices.petrolPrice.toString(),
-              onChanged: (value) {
-                setState(() {
-                  _stationServices.petrolPrice = double.parse(value);
-                  _updateStationServices();
-                });
-              },
-            ),
+            _buildFuelTile('Petrol', _stationServices.isPetrolAvailable, _stationServices.petrolPrice),
+            SizedBox(height:20.0),
+            _buildFuelTile('Diesel', _stationServices.isDieselAvailable, _stationServices.dieselPrice),
             SizedBox(height: 20.0),
-            SwitchListTile(
-              title: Text(
-                'Diesel Available',
-                style: TextStyle(
-                  color: Colors.amber,
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              value: _stationServices.isDieselAvailable,
-              onChanged: (newValue) {
-                setState(() {
-                  _stationServices.isDieselAvailable = newValue;
-                  _updateStationServices();
-                });
-              },
-            ),
-            TextFormField(
-              decoration: InputDecoration(labelText: 'Diesel Price'),
-              keyboardType: TextInputType.number,
-              initialValue: _stationServices.dieselPrice.toString(),
-              onChanged: (value) {
-                setState(() {
-                  _stationServices.dieselPrice = double.parse(value);
-                  _updateStationServices();
-                });
-              },
-            ),
-            SizedBox(height: 20.0),
-            SwitchListTile(
-              title: Text(
-                'Station Open',
-                style: TextStyle(
-                  color: Colors.amber,
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              value: _stationServices.isOpen,
-              onChanged: (newValue) {
-                setState(() {
-                  _stationServices.isOpen = newValue;
-                  _updateStationServices();
-                });
-              },
-            ),
+            _buildServiceTile('Station Open', _stationServices.isOpen),
             SizedBox(height: 20.0),
             FutureBuilder<List<String>>(
               future: _servicesOfferedFuture,
@@ -283,38 +225,54 @@ class _StationHomePageState extends State<StationHomePage> {
                     return Text('Error fetching services offered.');
                   } else {
                     final servicesOffered = snapshot.data!;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Available Services:',
-                          style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                    return Container(
+                      padding: EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.amber.withOpacity(0.3),
+                            spreadRadius: 4,
+                            blurRadius: 8,
                           ),
-                        ),
-                        SizedBox(height: 10.0),
-                        ...servicesOffered.map((service) {
-                          bool isSelected = _stationServices.availableServices.contains(service);
-                          return CheckboxListTile(
-                            title: Text(service),
-                            value: isSelected,
-                            onChanged: (newValue) {
-                              setState(() {
-                                if (newValue != null) {
-                                  if (newValue) {
-                                    _stationServices.availableServices.add(service);
-                                  } else {
-                                    _stationServices.availableServices.remove(service);
-                                  }
-                                  _updateStationServices();
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ],
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Available Services:',
+                            style: TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[900],
+                            ),
+                          ),
+                          SizedBox(height: 10.0),
+                          Column(
+                            children: servicesOffered.map((service) {
+                              bool isSelected = _stationServices.availableServices.contains(service);
+                              return CheckboxListTile(
+                                title: Text(service),
+                                value: isSelected,
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    if (newValue != null) {
+                                      if (newValue) {
+                                        _stationServices.availableServices.add(service);
+                                      } else {
+                                        _stationServices.availableServices.remove(service);
+                                      }
+                                      _updateStationServices();
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
                     );
                   }
                 }
@@ -326,14 +284,103 @@ class _StationHomePageState extends State<StationHomePage> {
     );
   }
 
-  List<Widget> _buildServiceCheckboxes() {
-    return _stationServices.availableServices.map((service) {
-      return CheckboxListTile(
-        title: Text(service),
-        value: true,
-        onChanged: (newValue) {},
-      );
-    }).toList();
+  Widget _buildFuelTile(String fuelType, bool isAvailable, double price) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8.0),
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            fuelType,
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8.0),
+          SwitchListTile(
+            title: Text(
+              'Available',
+              style: TextStyle(fontSize: 16.0),
+            ),
+            value: isAvailable,
+            onChanged: (newValue) {
+              setState(() {
+                if (fuelType == 'Petrol') {
+                  _stationServices.isPetrolAvailable = newValue!;
+                } else if (fuelType == 'Diesel') {
+                  _stationServices.isDieselAvailable = newValue!;
+                }
+                _updateStationServices();
+              });
+            },
+          ),
+          TextFormField(
+            decoration: InputDecoration(
+              labelText: 'Price',
+            ),
+            keyboardType: TextInputType.number,
+            initialValue: price.toString(),
+            onChanged: (value) {
+              setState(() {
+                if (fuelType == 'Petrol') {
+                  _stationServices.petrolPrice = double.parse(value);
+                } else if (fuelType == 'Diesel') {
+                  _stationServices.dieselPrice = double.parse(value);
+                }
+                _updateStationServices();
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceTile(String title, bool value) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8.0),
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: SwitchListTile(
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 18.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        value: value,
+        onChanged: (newValue) {
+          setState(() {
+            _stationServices.isOpen = newValue!;
+            _updateStationServices();
+          });
+        },
+      ),
+    );
   }
 
   Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
@@ -378,3 +425,4 @@ class _StationHomePageState extends State<StationHomePage> {
     }
   }
 }
+

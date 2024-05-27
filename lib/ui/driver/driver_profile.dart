@@ -14,7 +14,7 @@ class _DriverProfileState extends State<DriverProfile> {
   final _formKey = GlobalKey<FormState>();
   final _firestoreService = FirestoreService();
   final _nameController = TextEditingController();
-  final _phoneNumberController = TextEditingController();
+  final _phoneNumberController = TextEditingController(text: '+254');
   final _vehicleModelController = TextEditingController();
   final _vehiclePlateNumberController = TextEditingController();
   final _driverLicenseController = TextEditingController();
@@ -68,10 +68,10 @@ class _DriverProfileState extends State<DriverProfile> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildFormField('Driver Name', _nameController),
-                _buildFormField('Phone Number', _phoneNumberController),
+                _buildFormField('Phone Number', _phoneNumberController, prefixText: '+254'),
                 _buildFormField('Vehicle Model', _vehicleModelController),
-                _buildFormField('Vehicle Plate Number', _vehiclePlateNumberController),
-                _buildFormField('Driver License', _driverLicenseController),
+                _buildFormField('Vehicle Plate Number', _vehiclePlateNumberController, hintText: 'e.g., KDJ299F'),
+                _buildFormField('Driver License', _driverLicenseController, hintText: 'e.g., A12345678'),
                 SizedBox(height: 20.0),
                 _buildActionButtons(),
               ],
@@ -82,17 +82,46 @@ class _DriverProfileState extends State<DriverProfile> {
     );
   }
 
-  Widget _buildFormField(String label, TextEditingController controller) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(labelText: label),
-      readOnly: !_editMode,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter $label';
-        }
-        return null;
-      },
+  Widget _buildFormField(String label, TextEditingController controller, {String? prefixText, String? hintText}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+          SizedBox(height: 8.0),
+          TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              prefixText: prefixText,
+              hintText: hintText,
+              border: OutlineInputBorder(),
+            ),
+            readOnly: !_editMode,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter $label';
+              }
+              return null;
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -102,15 +131,20 @@ class _DriverProfileState extends State<DriverProfile> {
       children: [
         ElevatedButton(
           onPressed: _editMode ? _saveProfile : _toggleEditMode,
+          style: ElevatedButton.styleFrom(
+            primary: Colors.green,
+            onPrimary: Colors.white,
+          ),
           child: Text(_editMode ? 'Save' : 'Edit'),
         ),
         if (_existingDriver != null)
           ElevatedButton(
             onPressed: _deleteProfile,
-            child: Text('Delete'),
             style: ElevatedButton.styleFrom(
               primary: Colors.red,
+              onPrimary: Colors.white,
             ),
+            child: Text('Delete'),
           ),
       ],
     );
@@ -122,36 +156,35 @@ class _DriverProfileState extends State<DriverProfile> {
     });
   }
 
- Future<void> _saveProfile() async {
-  if (_formKey.currentState!.validate()) {
-    User? currentUser = await _authService.getCurrentUser();
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You need to be logged in to save your profile.')));
-      return;
+  Future<void> _saveProfile() async {
+    if (_formKey.currentState!.validate()) {
+      User? currentUser = await _authService.getCurrentUser();
+      if (currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('You need to be logged in to save your profile.')));
+        return;
+      }
+
+      String driverId = _existingDriver?.id ?? Uuid().v4();
+
+      Driver driver = Driver(
+        id: driverId,
+        name: _nameController.text,
+        phoneNumber: _phoneNumberController.text,
+        vehicleModel: _vehicleModelController.text,
+        vehiclePlateNumber: _vehiclePlateNumberController.text,
+        driverLicense: _driverLicenseController.text,
+      );
+
+      await _firestoreService.addOrUpdateDriver(driver, currentUser.uid);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Driver profile saved')));
+
+      Navigator.pop(context);
+
+      _loadDriverProfile();
     }
-
-    String driverId = _existingDriver?.id ?? Uuid().v4();
-
-    Driver driver = Driver(
-      id: driverId,
-      name: _nameController.text,
-      phoneNumber: _phoneNumberController.text,
-      vehicleModel: _vehicleModelController.text,
-      vehiclePlateNumber: _vehiclePlateNumberController.text,
-      driverLicense: _driverLicenseController.text,
-    );
-
-    await _firestoreService.addOrUpdateDriver(driver, currentUser.uid);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Driver profile saved')));
-    
-    Navigator.pop(context);
-
-    _loadDriverProfile();
   }
-}
-
 
   Future<void> _deleteProfile() async {
     User? currentUser = await _authService.getCurrentUser();

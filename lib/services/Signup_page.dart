@@ -13,8 +13,10 @@ class _SignupPageState extends State<SignupPage> {
 
   String _email = '';
   String _password = '';
+  String _confirmPassword = '';
   String _role = 'user';
-  bool _showPassword = false;
+  bool _showPassword = false; // Flag to toggle password visibility
+  bool _showConfirmPassword = false; // Flag to toggle confirm password visibility
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +41,7 @@ class _SignupPageState extends State<SignupPage> {
                 Text(
                   'Please sign up to get started',
                   style: TextStyle(
-                    color: Colors.amber, // Golden text color
+                    color: Colors.green, // Golden text color
                     fontSize: 50.0,
                     fontWeight: FontWeight.bold,
                   ),
@@ -59,7 +61,15 @@ class _SignupPageState extends State<SignupPage> {
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Email',
-                              icon: Icon(Icons.email),
+                              hintText: 'Enter your email',
+                              prefixIcon: Icon(Icons.email, color: Colors.green),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -73,39 +83,101 @@ class _SignupPageState extends State<SignupPage> {
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              icon: Icon(Icons.lock),
+                              hintText: 'Enter your password',
+                              prefixIcon: Icon(Icons.lock, color: Colors.green),
                               suffixIcon: IconButton(
-                                icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+                                icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
                                 onPressed: () {
                                   setState(() {
                                     _showPassword = !_showPassword;
                                   });
                                 },
                               ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             obscureText: !_showPassword,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your password.';
                               }
+                              if (value.length < 8) {
+                                return 'Password must be at least 8 characters long.';
+                              }
                               return null;
                             },
                             onSaved: (newValue) => _password = newValue!,
                           ),
-                          SizedBox(height: 20.0),
-                          DropdownButtonFormField(
-                            value: _role,
-                            items: ['user', 'station'].map((role) {
-                              return DropdownMenuItem(
-                                value: role,
-                                child: Text(role),
-                              );
-                            }).toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                _role = newValue.toString();
-                              });
+                          SizedBox(height: 10.0),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Confirm Password',
+                              hintText: 'Confirm your password',
+                              prefixIcon: Icon(Icons.lock, color: Colors.green),
+                              suffixIcon: IconButton(
+                                icon: Icon(_showConfirmPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
+                                onPressed: () {
+                                  setState(() {
+                                    _showConfirmPassword = !_showConfirmPassword;
+                                  });
+                                },
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                            ),
+                            obscureText: !_showConfirmPassword,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please confirm your password.';
+                              }
+                              if (value != _password) {
+                                return 'Passwords do not match.';
+                              }
+                              return null;
                             },
+                            onSaved: (newValue) => _confirmPassword = newValue!,
+                          ),
+                          SizedBox(height: 20.0),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: RadioListTile<String>(
+                                  value: 'user',
+                                  groupValue: _role,
+                                  title: Text('Driver'),
+                                  secondary: Icon(Icons.directions_car, color: Colors.green),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _role = value!;
+                                    });
+                                  },
+                                ),
+                              ),
+                              Expanded(
+                                child: RadioListTile<String>(
+                                  value: 'station',
+                                  groupValue: _role,
+                                  title: Text('Station'),
+                                  secondary: Icon(Icons.local_gas_station, color: Colors.green),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _role = value!;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                           SizedBox(height: 20.0),
                           ElevatedButton(
@@ -124,7 +196,31 @@ class _SignupPageState extends State<SignupPage> {
                                 }
                               }
                             },
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.green, // Match login page button color
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+                            ),
                             child: Text('Sign Up'),
+                          ),
+                          SizedBox(height: 10.0),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => LoginPage()), // Navigate to LoginPage
+                              );
+                            },
+                            child: Text(
+                              'Already have an account? Login',
+                              style: TextStyle(
+                                color: Colors.blue, // Use custom color for button text
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),

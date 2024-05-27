@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/auth.dart';
-import 'package:ff_main/services/signup_page.dart'; // Import your signup page file
+import 'package:ff_main/services/signup_page.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -13,7 +13,7 @@ class _LoginPageState extends State<LoginPage> {
 
   String _email = '';
   String _password = '';
-  bool _showPassword = false; // Flag to toggle password visibility
+  bool _showPassword = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +38,10 @@ class _LoginPageState extends State<LoginPage> {
                 Text(
                   'Please login to continue',
                   style: TextStyle(
-                    color: Colors.amber, // Golden text color
+                    color: Colors.green,
                     fontSize: 50.0,
                     fontWeight: FontWeight.bold,
                   ),
-                  
                 ),
                 SizedBox(height: 20.0),
                 Card(
@@ -59,7 +58,15 @@ class _LoginPageState extends State<LoginPage> {
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Email',
-                              icon: Icon(Icons.email),
+                              hintText: 'Enter your email',
+                              prefixIcon: Icon(Icons.email, color: Colors.green),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -73,15 +80,23 @@ class _LoginPageState extends State<LoginPage> {
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              icon: Icon(Icons.lock),
+                              hintText: 'Enter your password',
+                              prefixIcon: Icon(Icons.lock, color: Colors.green),
                               suffixIcon: IconButton(
-                                icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+                                icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
                                 onPressed: () {
                                   setState(() {
                                     _showPassword = !_showPassword;
                                   });
                                 },
                               ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             obscureText: !_showPassword,
                             validator: (value) {
@@ -109,6 +124,13 @@ class _LoginPageState extends State<LoginPage> {
                                 }
                               }
                             },
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.green, // Button color
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+                            ),
                             child: Text('Login'),
                           ),
                           SizedBox(height: 10.0),

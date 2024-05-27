@@ -49,28 +49,35 @@ class _PickMyCoordinateState extends State<PickMyCoordinate> {
                   children: [
                     Text(
                       'Zoom in and tap your place to pick your coordinates',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 20,
+                      color: Colors.green
+                      ),
                       textAlign: TextAlign.center,
+                      
                     ),
                     SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.zoom_in),
+                          icon: Icon(Icons.zoom_in,
+                          size: 30.0,
+                          ),
                           onPressed: () {
                             _mapController.move(
-                              _mapController.center,
-                              _mapController.zoom + 1,
+                              _mapController.camera.center,
+                              _mapController.camera.zoom + 1,
                             );
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.zoom_out),
+                          icon: Icon(Icons.zoom_out,
+                          size: 30.0,
+                          ),
                           onPressed: () {
                             _mapController.move(
-                              _mapController.center,
-                              _mapController.zoom - 1,
+                              _mapController.camera.center,
+                              _mapController.camera.zoom - 1,
                             );
                           },
                         ),

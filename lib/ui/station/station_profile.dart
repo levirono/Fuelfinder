@@ -1,4 +1,3 @@
-import 'package:ff_main/ui/station/pick_my_coordinates.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:ff_main/services/firestore_service.dart';
@@ -6,6 +5,8 @@ import 'package:ff_main/models/fuel_station.dart';
 import 'package:uuid/uuid.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ff_main/ui/station/pick_my_coordinates.dart';
+import 'package:ff_main/ui/station/station_homepage.dart';
 
 class StationProfile extends StatefulWidget {
   @override
@@ -81,34 +82,32 @@ class _StationProfileState extends State<StationProfile> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildFormField('Station Name', _nameController),
+                _buildFormField('Station Name', _nameController, mandatory: true),
                 _buildFormField('Location', _locationController),
-                _buildFormField('GPS Link', _gpsLinkController),
+                _buildFormField('GPS Link', _gpsLinkController, mandatory: true, example: 'latitude,longitude'),
                 SizedBox(height: 20.0),
                 ElevatedButton(
-                onPressed: _openPickMyCoordinateScreen,
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.lightGreen,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
+                  onPressed: _openPickMyCoordinateScreen,
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.lightGreen,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    minimumSize: Size(double.infinity, 40.0),
                   ),
-                  minimumSize: Size(double.infinity, 40.0),
+                  child: Text(
+                    'Pick My Coordinates',
+                    style: TextStyle(fontSize: 16.0),
+                  ),
                 ),
-                child: Text(
-                  'Pick My Coordinates',
-                  style: TextStyle(fontSize: 16.0),
-                ),
-              ),
-                _buildFormField('Road Code', _roadCodeController),
-                _buildFormField('Route', _routeController),
+                _buildFormField('Road Code', _roadCodeController, mandatory: true, example: 'C39'),
+                _buildFormField('Route', _routeController, mandatory: true, example: 'Eldoret-kapsabet'),
                 _buildFormField('Distance To (km)', _distanceToController),
                 _buildFormField('Distance From (km)', _distanceFromController),
-                _buildFormField('Services Offered (comma-separated)',
-                    _servicesOfferedController),
+                _buildFormField('Services Offered (comma-separated)', _servicesOfferedController),
                 _buildFormField('Operation Hours', _operationHoursController),
                 SizedBox(height: 20.0),
                 _buildActionButtons(),
-                
               ],
             ),
           ),
@@ -117,25 +116,42 @@ class _StationProfileState extends State<StationProfile> {
     );
   }
 
-  Widget _buildFormField(String labelText, TextEditingController controller) {
+  Widget _buildFormField(String labelText, TextEditingController controller, {bool mandatory = false, String example = ''}) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            labelText,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Text(
+                labelText,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (mandatory) Text(
+                '*',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 8.0),
           TextFormField(
             controller: controller,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
-              hintText: 'Enter GPS coordinates (latitude, longitude)',
+              hintText: example.isNotEmpty ? 'e.g. $example' : null,
             ),
+            validator: (value) {
+              if (mandatory && (value == null || value.isEmpty)) {
+                return 'This field is required';
+              }
+              return null;
+            },
           ),
         ],
       ),
@@ -143,53 +159,52 @@ class _StationProfileState extends State<StationProfile> {
   }
 
   Widget _buildActionButtons() {
-  if (_existingStation == null || _editMode) {
-    return ElevatedButton(
-  onPressed: _saveProfile,
-  style: ElevatedButton.styleFrom(
-    primary: Colors.lightGreen,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20.0), // Rounded corners
-    ),
-  ),
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      Icon(Icons.save, color: Colors.white),
-      SizedBox(width: 8.0),
-      Text(
-        'Save Station Profile',
-        style: TextStyle(fontSize: 16.0),
-      ),
-    ],
-  ),
-);
-
-  } else {
-    return ElevatedButton(
-      onPressed: () => setState(() => _editMode = true),
-      style: ElevatedButton.styleFrom(
-        primary: Colors.lightGreen,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-        minimumSize: Size(double.infinity, 40.0),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.edit, color: Colors.white),
-          SizedBox(width: 8.0),
-          Text(
-            'Edit Profile',
-            style: TextStyle(fontSize: 16.0),
+    if (_existingStation == null || _editMode) {
+      return ElevatedButton(
+        onPressed: _saveProfile,
+        style: ElevatedButton.styleFrom(
+          primary: Colors.lightGreen,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0), // Rounded corners
           ),
-        ],
-      ),
-    );
+          minimumSize: Size(double.infinity, 40.0),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.save, color: Colors.white),
+            SizedBox(width: 8.0),
+            Text(
+              'Save Station Profile',
+              style: TextStyle(fontSize: 16.0),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return ElevatedButton(
+        onPressed: () => setState(() => _editMode = true),
+        style: ElevatedButton.styleFrom(
+          primary: Colors.lightGreen,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          minimumSize: Size(double.infinity, 40.0),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.edit, color: Colors.white),
+            SizedBox(width: 8.0),
+            Text(
+              'Edit Profile',
+              style: TextStyle(fontSize: 16.0),
+            ),
+          ],
+        ),
+      );
+    }
   }
-}
-
 
   Future<Position?> _getCurrentLocation() async {
     try {
@@ -210,7 +225,8 @@ class _StationProfileState extends State<StationProfile> {
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       User? currentUser = await _authService.getCurrentUser();
-      if (currentUser == null) {
+     
+          if (currentUser == null) {
         return;
       }
 

@@ -71,8 +71,15 @@ class FuelEfficiencyTips extends StatelessWidget {
                 padding: EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
                   color: Colors.green[50], // Light green background color
-                  border: Border.all(color: Colors.green, width: 1.0),
                   borderRadius: BorderRadius.circular(8.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.3), // Shadow color
+                      spreadRadius: 2,
+                      blurRadius: 4,
+                      offset: Offset(0, 2), // Shadow offset
+                    ),
+                  ],
                 ),
                 child: ListTile(
                   title: Text(tips[index].tip),
@@ -81,6 +88,7 @@ class FuelEfficiencyTips extends StatelessWidget {
               );
             },
           );
+
         },
       ),
       floatingActionButton: FloatingActionButton(
