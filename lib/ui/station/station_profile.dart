@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ff_main/ui/station/pick_my_coordinates.dart';
-import 'package:ff_main/ui/station/station_homepage.dart';
 
 class StationProfile extends StatefulWidget {
   @override
@@ -17,7 +16,6 @@ class _StationProfileState extends State<StationProfile> {
   final _formKey = GlobalKey<FormState>();
   final _firestoreService = FirestoreService();
   final _nameController = TextEditingController();
-  final _locationController = TextEditingController();
   final _gpsLinkController = TextEditingController();
   final _servicesOfferedController = TextEditingController();
   final _operationHoursController = TextEditingController();
@@ -53,7 +51,6 @@ class _StationProfileState extends State<StationProfile> {
 
   void _populateFormFields() {
     _nameController.text = _existingStation!.name;
-    _locationController.text = _existingStation!.location;
     _gpsLinkController.text = _existingStation!.gpsLink;
     _servicesOfferedController.text =
         _existingStation!.servicesOffered.join(', ');
@@ -71,7 +68,9 @@ class _StationProfileState extends State<StationProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Station Profile'),
+        title: Text('My Profile',
+        style: TextStyle(color: Colors.green,fontSize: 30.0),
+        ),
         backgroundColor: Colors.green[100],
       ),
       body: Container(
@@ -83,7 +82,6 @@ class _StationProfileState extends State<StationProfile> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildFormField('Station Name', _nameController, mandatory: true),
-                _buildFormField('Location', _locationController),
                 _buildFormField('GPS Link', _gpsLinkController, mandatory: true, example: 'latitude,longitude'),
                 SizedBox(height: 20.0),
                 ElevatedButton(
@@ -95,9 +93,16 @@ class _StationProfileState extends State<StationProfile> {
                     ),
                     minimumSize: Size(double.infinity, 40.0),
                   ),
-                  child: Text(
-                    'Pick My Coordinates',
-                    style: TextStyle(fontSize: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(Icons.map, color: Colors.white),
+                      SizedBox(width: 10),
+                      Text(
+                        'Pick My Coordinates',
+                        style: TextStyle(fontSize: 16.0),
+                      ),
+                    ],
                   ),
                 ),
                 _buildFormField('Road Code', _roadCodeController, mandatory: true, example: 'C39'),
@@ -142,6 +147,7 @@ class _StationProfileState extends State<StationProfile> {
           SizedBox(height: 8.0),
           TextFormField(
             controller: controller,
+            enabled: _editMode,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               hintText: example.isNotEmpty ? 'e.g. $example' : null,
@@ -165,7 +171,7 @@ class _StationProfileState extends State<StationProfile> {
         style: ElevatedButton.styleFrom(
           primary: Colors.lightGreen,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0), // Rounded corners
+            borderRadius: BorderRadius.circular(20.0),
           ),
           minimumSize: Size(double.infinity, 40.0),
         ),
@@ -225,8 +231,8 @@ class _StationProfileState extends State<StationProfile> {
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       User? currentUser = await _authService.getCurrentUser();
-     
-          if (currentUser == null) {
+
+      if (currentUser == null) {
         return;
       }
 
@@ -251,7 +257,10 @@ class _StationProfileState extends State<StationProfile> {
       await _firestoreService.addOrUpdateStation(station, currentUser.uid);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Station profile saved')));
-      _loadStationProfile();
+      setState(() {
+        _editMode = false;
+        _loadStationProfile();
+      });
     }
   }
 

@@ -4,18 +4,25 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:ff_main/models/fuel_station.dart';
 import 'package:ff_main/services/firestore_service.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:geocoding/geocoding.dart';
 
 class MapView extends StatelessWidget {
   MapView({Key? key}) : super(key: key);
 
   final FirestoreService _firestoreService = FirestoreService();
   final MapController _mapController = MapController();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('FUELFINDER'),
+        title: Text('FUELFINDER',
+        style: TextStyle(fontSize: 20.0, color: Colors.green),
+        ),
+      backgroundColor: Colors.green[100],
+
       ),
       body: FutureBuilder<LatLng>(
         future: _getCurrentLocation(),
@@ -52,11 +59,51 @@ class MapView extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                         TypeAheadField<Location>(
+                          suggestionsCallback: (pattern) async {
+                            if (pattern.isNotEmpty) { 
+                              return await locationFromAddress(pattern);
+                            } else {
+                              return []; // Return an empty list if the input is empty
+                            }
+                          },
+                          itemBuilder: (context, Location suggestion) {
+                            return ListTile(
+                              title: Text('${suggestion.latitude}, ${suggestion.longitude}'),
+                            );
+                          },
+                          onSelected: (Location suggestion) {
+                            final LatLng newLocation = LatLng(suggestion.latitude, suggestion.longitude);
+                            _mapController.move(newLocation, 13.0);
+                          },
+                          builder: (context, controller, focusNode) {
+                            return TextField(
+                              controller: _searchController,
+                              focusNode: focusNode,
+                              decoration: InputDecoration(
+                                hintText: 'Search for a place',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                fillColor: Colors.grey[200],
+                                filled: true,
+                                suffixIcon: IconButton(
+                                  icon: Icon(Icons.search),
+                                  onPressed: () {
+                                    if (_searchController.text.isNotEmpty) {
+                                      _searchPlace(_searchController.text, context);
+                                    }
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        SizedBox(height: 10),
                         Text(
                           'View nearby stations to refuel',
-                          style: TextStyle(fontSize: 20,
-                          color: Colors.green
-                          ),
+                          style: TextStyle(fontSize: 20, color: Colors.green),
                           textAlign: TextAlign.center,
                         ),
                         SizedBox(height: 10),
@@ -64,9 +111,7 @@ class MapView extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.zoom_in,
-                              size: 30.0,
-                              ),
+                              icon: Icon(Icons.zoom_in, size: 30.0),
                               onPressed: () {
                                 _mapController.move(
                                   _mapController.camera.center,
@@ -75,9 +120,7 @@ class MapView extends StatelessWidget {
                               },
                             ),
                             IconButton(
-                              icon: Icon(Icons.zoom_out,
-                              size: 30.0,
-                              ),
+                              icon: Icon(Icons.zoom_out, size: 30.0),
                               onPressed: () {
                                 _mapController.move(
                                   _mapController.camera.center,
@@ -106,10 +149,9 @@ class MapView extends StatelessWidget {
                           ),
                           children: [
                             TileLayer(
-                              urlTemplate:
-                                  'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                              urlTemplate: 'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
                               additionalOptions: {
-                                'access token': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                                'accessToken': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
                                 'id': 'mapbox.mapbox-streets-v8',
                               },
                             ),
@@ -229,6 +271,24 @@ class MapView extends StatelessWidget {
     );
   }
 
+  Future<void> _searchPlace(String place, BuildContext context) async {
+    try {
+      if (place.isNotEmpty) {
+        List<Location> locations = await locationFromAddress(place);
+        if (locations.isNotEmpty) {
+          final LatLng newLocation = LatLng(locations.first.latitude, locations.first.longitude);
+          _mapController.move(newLocation, 13.0);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No results found')));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a valid address')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error searching for place: $e')));
+    }
+  }
+
   Future<LatLng> _getCurrentLocation() async {
     try {
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
@@ -255,3 +315,4 @@ class MapView extends StatelessWidget {
     return null;
   }
 }
+

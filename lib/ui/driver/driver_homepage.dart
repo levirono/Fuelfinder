@@ -172,12 +172,12 @@ class _DriverHomePageState extends State<DriverHomePage> {
       appBar: AppBar(
         title: Text(
           'FUELFINDER',
-          style: TextStyle(fontSize: 20.0, color: Colors.green),
+          style: TextStyle(fontSize: 30.0, color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout,color:Colors.red,size:30.0),
             onPressed: () {
               _showLogoutConfirmationDialog(context);
             },
@@ -391,7 +391,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
         return _buildListTile(station.name, 'Loading...', Colors.grey);
       }
       if (snapshot.hasError) {
-        return _buildListTile(station.name, 'Error loading data', Colors.grey);
+        return _buildListTile(station.name, 'Data uavailable', Colors.grey);
       }
       final data = snapshot.data as List<dynamic>;
       final StationServices services = data[0];

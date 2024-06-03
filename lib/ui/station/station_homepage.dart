@@ -123,8 +123,8 @@ class _StationHomePageState extends State<StationHomePage> {
                 return Text(
                   '- $stationName -',
                   style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.orange,
+                    fontSize: 30.0,
+                    color: Colors.green,
                   ),
                 );
               }
@@ -134,7 +134,7 @@ class _StationHomePageState extends State<StationHomePage> {
         backgroundColor: Colors.green[100],
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout,color: Colors.red,size: 30.0,),
             onPressed: () {
               _showLogoutConfirmationDialog(context);
             },
@@ -152,7 +152,7 @@ class _StationHomePageState extends State<StationHomePage> {
               child: Text(
                 'Station Profile',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.green,
                   fontSize: 24.0,
                 ),
               ),
@@ -320,9 +320,9 @@ class _StationHomePageState extends State<StationHomePage> {
             onChanged: (newValue) {
               setState(() {
                 if (fuelType == 'Petrol') {
-                  _stationServices.isPetrolAvailable = newValue!;
+                  _stationServices.isPetrolAvailable = newValue;
                 } else if (fuelType == 'Diesel') {
-                  _stationServices.isDieselAvailable = newValue!;
+                  _stationServices.isDieselAvailable = newValue;
                 }
                 _updateStationServices();
               });
@@ -376,7 +376,7 @@ class _StationHomePageState extends State<StationHomePage> {
         value: value,
         onChanged: (newValue) {
           setState(() {
-            _stationServices.isOpen = newValue!;
+            _stationServices.isOpen = newValue;
             _updateStationServices();
           });
         },

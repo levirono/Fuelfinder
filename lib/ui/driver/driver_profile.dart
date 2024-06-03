@@ -56,7 +56,11 @@ class _DriverProfileState extends State<DriverProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Driver Profile'),
+        title: Text('MY PROFILE',
+        style: TextStyle(
+          color: Colors.green
+        ),
+        ),
         backgroundColor: Colors.green[100],
       ),
       body: Container(
@@ -137,15 +141,15 @@ class _DriverProfileState extends State<DriverProfile> {
           ),
           child: Text(_editMode ? 'Save' : 'Edit'),
         ),
-        if (_existingDriver != null)
-          ElevatedButton(
-            onPressed: _deleteProfile,
-            style: ElevatedButton.styleFrom(
-              primary: Colors.red,
-              onPrimary: Colors.white,
-            ),
-            child: Text('Delete'),
-          ),
+        // if (_existingDriver != null)
+        //   ElevatedButton(
+        //     onPressed: _deleteProfile,
+        //     style: ElevatedButton.styleFrom(
+        //       primary: Colors.red,
+        //       onPrimary: Colors.white,
+        //     ),
+        //     child: Text('Delete'),
+        //   ),
       ],
     );
   }
@@ -186,19 +190,19 @@ class _DriverProfileState extends State<DriverProfile> {
     }
   }
 
-  Future<void> _deleteProfile() async {
-    User? currentUser = await _authService.getCurrentUser();
-    if (currentUser != null && _existingDriver != null) {
-      await _firestoreService.deleteDriver(_existingDriver!.id, currentUser.uid);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Driver profile deleted')));
-      _clearFormFields();
-      setState(() {
-        _existingDriver = null;
-        _editMode = false;
-      });
-    }
-  }
+  // Future<void> _deleteProfile() async {
+  //   User? currentUser = await _authService.getCurrentUser();
+  //   if (currentUser != null && _existingDriver != null) {
+  //     await _firestoreService.deleteDriver(_existingDriver!.id, currentUser.uid);
+  //     ScaffoldMessenger.of(context)
+  //         .showSnackBar(SnackBar(content: Text('Driver profile deleted')));
+  //     _clearFormFields();
+  //     setState(() {
+  //       _existingDriver = null;
+  //       _editMode = false;
+  //     });
+  //   }
+  // }
 
   void _clearFormFields() {
     _nameController.clear();

@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               children: [
                 Container(
-                  height: 200.0, // Height of the carousel
+                  height: 200.0,
                   child: PageView(
                     controller: _pageController,
                     children: [
@@ -144,7 +144,6 @@ class _LoginPageState extends State<LoginPage> {
                                 _formKey.currentState!.save();
                                 final result = await _authService.login(_email, _password);
                                 if (result != null) {
-                                  // Navigate to appropriate homepage based on role (handled in main.dart)
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(

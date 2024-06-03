@@ -49,6 +49,9 @@ dependencies:
   permission_handler: ^11.0.1
   provider: ^6.1.2
   mapbox_search: ^4.2.2
+  geocoding: ^3.0.0
+  flutter_typeahead: ^5.2.0
+  flutter_keyboard_visibility: ^6.0.0
   # mapbox_gl: ^0.16.0
   
 

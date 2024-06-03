@@ -15,8 +15,8 @@ class _SignupPageState extends State<SignupPage> {
   String _password = '';
   String _confirmPassword = '';
   String _role = 'user';
-  bool _showPassword = false; // Flag to toggle password visibility
-  bool _showConfirmPassword = false; // Flag to toggle confirm password visibility
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class _SignupPageState extends State<SignupPage> {
                 Text(
                   'Please sign up to get started',
                   style: TextStyle(
-                    color: Colors.green, // Golden text color
+                    color: Colors.green,
                     fontSize: 50.0,
                     fontWeight: FontWeight.bold,
                   ),
