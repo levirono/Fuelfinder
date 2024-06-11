@@ -38,7 +38,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
   Future<void> _checkDriverProfile() async {
     User? currentUser = await _authService.getCurrentUser();
     if (currentUser != null) {
-      Driver? existingDriver = await _firestoreService.getDriverByOwnerId(currentUser.uid);
+      Driver? existingDriver =
+          await _firestoreService.getDriverByOwnerId(currentUser.uid);
       if (existingDriver == null) {
         _showDriverProfileDialog();
       } else {
@@ -89,32 +90,33 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
   Future<void> _showRandomFuelEfficiencyTip() async {
     if (isFirstTime) {
-      List<FuelEfficiencyTip> tips = await _firestoreService.getFuelEfficiencyTips();
+      List<FuelEfficiencyTip> tips =
+          await _firestoreService.getFuelEfficiencyTips();
       if (tips.isNotEmpty) {
         FuelEfficiencyTip randomTip = tips[Random().nextInt(tips.length)];
 
         showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (BuildContext context) {
             return AlertDialog(
-              backgroundColor: Colors.green[100],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                side: BorderSide(color: Colors.green, width: 2.0),
-              ),
               title: Text(
                 'Fuel Efficiency Tip',
-                style: TextStyle(color: Colors.green[800]),
+                style: TextStyle(
+                    color: Colors.green[800],
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold),
               ),
               content: Container(
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
                 decoration: BoxDecoration(
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(8.0),
                   border: Border.all(color: Colors.green, width: 2.0),
                 ),
-                padding: EdgeInsets.all(16.0),
                 child: Text(
                   randomTip.tip,
-                  style: TextStyle(fontSize: 16.0),
+                  style: TextStyle(fontSize: 18.0),
                 ),
               ),
               actions: [
@@ -122,7 +124,18 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Close'),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                    child: Text(
+                      'Close',
+                      style: TextStyle(color: Colors.white, fontSize: 18.0),
+                    ),
+                  ),
                 ),
               ],
             );
@@ -135,7 +148,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
   Future<void> _getCurrentLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
       });
@@ -145,7 +159,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
   }
 
   Future<double> calculateRoadDistance(LatLng start, LatLng end) async {
-    final String url = 'https://api.mapbox.com/directions/v5/mapbox/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtwZzVyNjB3bDUydnA3eGNrNHplN3QifQ.M5AHspWj4Wb19XqLD26Gtg';
+    final String url =
+        'https://api.mapbox.com/directions/v5/mapbox/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtwZzVyNjB3bDUydnA3eGNrNHplN3QifQ.M5AHspWj4Wb19XqLD26Gtg';
 
     final response = await http.get(Uri.parse(url));
 
@@ -177,7 +192,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
         backgroundColor: Colors.green[100],
         actions: [
           IconButton(
-            icon: Icon(Icons.logout,color:Colors.red,size:30.0),
+            icon: Icon(Icons.logout, color: Colors.red, size: 30.0),
             onPressed: () {
               _showLogoutConfirmationDialog(context);
             },
@@ -226,7 +241,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
           Container(
             padding: EdgeInsets.all(16.0), // Adjust padding as needed
             decoration: BoxDecoration(
-              color: Colors.grey[200], // Background color similar to list of stations
+              color: Colors
+                  .grey[200], // Background color similar to list of stations
               borderRadius: BorderRadius.horizontal(
                 left: Radius.circular(20.0),
                 right: Radius.circular(20.0),
@@ -259,7 +275,6 @@ class _DriverHomePageState extends State<DriverHomePage> {
               ],
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
@@ -296,46 +311,50 @@ class _DriverHomePageState extends State<DriverHomePage> {
               ),
             ),
           ),
-         Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  PermissionStatus locationStatus = await Permission.location.request();
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                PermissionStatus locationStatus =
+                    await Permission.location.request();
 
-                  if (locationStatus == PermissionStatus.granted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MapView()),
-                    );
-                  }
+                if (locationStatus == PermissionStatus.granted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MapView()),
+                  );
+                }
 
-                  if (locationStatus == PermissionStatus.denied) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('This permission is required to use maps')),
-                    );
-                  }
+                if (locationStatus == PermissionStatus.denied) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content:
+                            Text('This permission is required to use maps')),
+                  );
+                }
 
-                  if (locationStatus == PermissionStatus.permanentlyDenied) {
-                    openAppSettings();
-                  }
-                },
-                icon: Icon(Icons.map, color: Colors.white),
-                label: Text(
-                  'View Stations on Map',
-                  style: TextStyle(color: Colors.white, fontSize: 16.0, fontWeight: FontWeight.bold),
+                if (locationStatus == PermissionStatus.permanentlyDenied) {
+                  openAppSettings();
+                }
+              },
+              icon: Icon(Icons.map, color: Colors.white),
+              label: Text(
+                'View Stations on Map',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.green[400],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
                 ),
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.green[400],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 12.0),
-                  minimumSize: Size(double.infinity, 50),
-                ),
+                padding: EdgeInsets.symmetric(vertical: 12.0),
+                minimumSize: Size(double.infinity, 50),
               ),
             ),
-
-
+          ),
           SizedBox(height: 16.0),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -360,7 +379,11 @@ class _DriverHomePageState extends State<DriverHomePage> {
                 }
                 List<FuelStation> stations = snapshot.data!;
                 if (searchQuery.isNotEmpty) {
-                  stations = stations.where((station) => station.location.toLowerCase().contains(searchQuery.toLowerCase())).toList();
+                  stations = stations
+                      .where((station) => station.location
+                          .toLowerCase()
+                          .contains(searchQuery.toLowerCase()))
+                      .toList();
                 }
                 return ListView.builder(
                   itemCount: stations.length,
@@ -377,108 +400,117 @@ class _DriverHomePageState extends State<DriverHomePage> {
     );
   }
 
- Widget _buildStationTile(FuelStation station) {
-  return FutureBuilder(
-    future: Future.wait([
-      _firestoreService.getStationServices(station.id),
-      calculateRoadDistance(
-        _currentLocation!,
-        _parseCoordinates(station.gpsLink) ?? LatLng(0.0, 0.0),
-      )
-    ]),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return _buildListTile(station.name, 'Loading...', Colors.grey);
-      }
-      if (snapshot.hasError) {
-        return _buildListTile(station.name, 'Data uavailable', Colors.grey);
-      }
-      final data = snapshot.data as List<dynamic>;
-      final StationServices services = data[0];
-      final double distance = data[1];
+  Widget _buildStationTile(FuelStation station) {
+    return FutureBuilder(
+      future: Future.wait([
+        _firestoreService.getStationServices(station.id),
+        calculateRoadDistance(
+          _currentLocation!,
+          _parseCoordinates(station.gpsLink) ?? LatLng(0.0, 0.0),
+        )
+      ]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildListTile(station.name, 'Loading...', Colors.grey);
+        }
+        if (snapshot.hasError) {
+          return _buildListTile(station.name, 'Data uavailable', Colors.grey);
+        }
+        final data = snapshot.data as List<dynamic>;
+        final StationServices services = data[0];
+        final double distance = data[1];
 
-      return GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => FuelStationDetailsPage(station: station),
-            ),
-          );
-        },
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.horizontal(
-              left: Radius.circular(20.0),
-              right: Radius.circular(20.0),
-            ),
-            child: Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.horizontal(
-                  left: Radius.circular(20.0),
-                  right: Radius.circular(20.0),
-                ),
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FuelStationDetailsPage(station: station),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.local_gas_station),
-                      SizedBox(width: 8.0),
-                      Text(
-                        station.name,
-                        style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
-                      ),
-                      Spacer(),
-                      Icon(Icons.arrow_forward_ios), // Added arrow icon for navigation
-                    ],
+            );
+          },
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.horizontal(
+                left: Radius.circular(20.0),
+                right: Radius.circular(20.0),
+              ),
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.horizontal(
+                    left: Radius.circular(20.0),
+                    right: Radius.circular(20.0),
                   ),
-                  SizedBox(height: 8.0),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on),
-                      SizedBox(width: 8.0),
-                      Text(
-                        'Distance: ${distance.toStringAsFixed(2)} km',
-                        style: TextStyle(fontSize: 16.0),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
-                          SizedBox(width: 4.0),
-                          Text('Petrol'),
-                          SizedBox(width: 16.0),
-                          Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
-                          SizedBox(width: 4.0),
-                          Text('Diesel'),
-                        ],
-                      ),
-                      Text(
-                        services.isOpen ? 'Open' : 'Closed',
-                        style: TextStyle(color: services.isOpen ? Colors.green : Colors.red),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.local_gas_station),
+                        SizedBox(width: 8.0),
+                        Text(
+                          station.name,
+                          style: TextStyle(
+                              color: Colors.amber, fontWeight: FontWeight.bold),
+                        ),
+                        Spacer(),
+                        Icon(Icons
+                            .arrow_forward_ios), // Added arrow icon for navigation
+                      ],
+                    ),
+                    SizedBox(height: 8.0),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on),
+                        SizedBox(width: 8.0),
+                        Text(
+                          'Distance: ${distance.toStringAsFixed(2)} km',
+                          style: TextStyle(fontSize: 16.0),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.0),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.circle,
+                                color: services.isPetrolAvailable
+                                    ? Colors.green
+                                    : Colors.red),
+                            SizedBox(width: 4.0),
+                            Text('Petrol'),
+                            SizedBox(width: 16.0),
+                            Icon(Icons.circle,
+                                color: services.isDieselAvailable
+                                    ? Colors.green
+                                    : Colors.red),
+                            SizedBox(width: 4.0),
+                            Text('Diesel'),
+                          ],
+                        ),
+                        Text(
+                          services.isOpen ? 'Open' : 'Closed',
+                          style: TextStyle(
+                              color:
+                                  services.isOpen ? Colors.green : Colors.red),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
-
+        );
+      },
+    );
+  }
 
   Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
     return Container(
@@ -548,4 +580,3 @@ class _DriverHomePageState extends State<DriverHomePage> {
     );
   }
 }
-

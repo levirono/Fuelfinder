@@ -1,3 +1,4 @@
+import 'package:ff_main/ui/driver/driver_homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/models/fuel_station.dart';
@@ -22,7 +23,7 @@ class _DriverProfileState extends State<DriverProfile> {
   final _authService = AuthService();
 
   Driver? _existingDriver;
-  bool _editMode = false;
+  bool _editMode = true;
 
   @override
   void initState() {
@@ -56,11 +57,7 @@ class _DriverProfileState extends State<DriverProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('MY PROFILE',
-        style: TextStyle(
-          color: Colors.green
-        ),
-        ),
+        title: Text('MY PROFILE'),
         backgroundColor: Colors.green[100],
       ),
       body: Container(
@@ -141,15 +138,6 @@ class _DriverProfileState extends State<DriverProfile> {
           ),
           child: Text(_editMode ? 'Save' : 'Edit'),
         ),
-        // if (_existingDriver != null)
-        //   ElevatedButton(
-        //     onPressed: _deleteProfile,
-        //     style: ElevatedButton.styleFrom(
-        //       primary: Colors.red,
-        //       onPrimary: Colors.white,
-        //     ),
-        //     child: Text('Delete'),
-        //   ),
       ],
     );
   }
@@ -160,7 +148,7 @@ class _DriverProfileState extends State<DriverProfile> {
     });
   }
 
-  Future<void> _saveProfile() async {
+   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       User? currentUser = await _authService.getCurrentUser();
       if (currentUser == null) {
@@ -184,31 +172,11 @@ class _DriverProfileState extends State<DriverProfile> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Driver profile saved')));
 
-      Navigator.pop(context);
-
-      _loadDriverProfile();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => DriverHomePage()),
+      );
     }
   }
 
-  // Future<void> _deleteProfile() async {
-  //   User? currentUser = await _authService.getCurrentUser();
-  //   if (currentUser != null && _existingDriver != null) {
-  //     await _firestoreService.deleteDriver(_existingDriver!.id, currentUser.uid);
-  //     ScaffoldMessenger.of(context)
-  //         .showSnackBar(SnackBar(content: Text('Driver profile deleted')));
-  //     _clearFormFields();
-  //     setState(() {
-  //       _existingDriver = null;
-  //       _editMode = false;
-  //     });
-  //   }
-  // }
-
-  void _clearFormFields() {
-    _nameController.clear();
-    _phoneNumberController.clear();
-    _vehicleModelController.clear();
-    _vehiclePlateNumberController.clear();
-    _driverLicenseController.clear();
-  }
 }

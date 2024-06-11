@@ -64,7 +64,7 @@ class MapView extends StatelessWidget {
                             if (pattern.isNotEmpty) { 
                               return await locationFromAddress(pattern);
                             } else {
-                              return []; // Return an empty list if the input is empty
+                              return [];
                             }
                           },
                           itemBuilder: (context, Location suggestion) {

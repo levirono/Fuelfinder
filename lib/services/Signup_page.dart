@@ -1,5 +1,5 @@
-import 'package:ff_main/services/login_page.dart';
 import 'package:flutter/material.dart';
+import 'package:ff_main/services/login_page.dart';
 import 'package:ff_main/services/auth.dart';
 
 class SignupPage extends StatefulWidget {
@@ -17,6 +17,7 @@ class _SignupPageState extends State<SignupPage> {
   String _role = 'user';
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  bool _passwordsMatch = true; // Initialize to true
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +43,7 @@ class _SignupPageState extends State<SignupPage> {
                   'Please sign up to get started',
                   style: TextStyle(
                     color: Colors.green,
-                    fontSize: 50.0,
+                    fontSize: 24.0,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -102,6 +103,12 @@ class _SignupPageState extends State<SignupPage> {
                               contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             obscureText: !_showPassword,
+                            onChanged: (value) {
+                              setState(() {
+                                _password = value;
+                                _passwordsMatch = _confirmPassword == _password;
+                              });
+                            },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your password.';
@@ -111,7 +118,6 @@ class _SignupPageState extends State<SignupPage> {
                               }
                               return null;
                             },
-                            onSaved: (newValue) => _password = newValue!,
                           ),
                           SizedBox(height: 10.0),
                           TextFormField(
@@ -136,16 +142,21 @@ class _SignupPageState extends State<SignupPage> {
                               contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             obscureText: !_showConfirmPassword,
+                            onChanged: (value) {
+                              setState(() {
+                                _confirmPassword = value;
+                                _passwordsMatch = _confirmPassword == _password;
+                              });
+                            },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please confirm your password.';
                               }
-                              if (value != _password) {
+                              if (!_passwordsMatch) {
                                 return 'Passwords do not match.';
                               }
                               return null;
                             },
-                            onSaved: (newValue) => _confirmPassword = newValue!,
                           ),
                           SizedBox(height: 20.0),
                           Row(
@@ -181,21 +192,7 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                           SizedBox(height: 20.0),
                           ElevatedButton(
-                            onPressed: () async {
-                              if (_formKey.currentState!.validate()) {
-                                _formKey.currentState!.save();
-                                final result = await _authService.register(_email, _password, _role);
-                                if (result != null) {
-                                  _showRegistrationSuccessDialog(context);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Registration failed!'),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
+                            onPressed: _submitForm,
                             style: ElevatedButton.styleFrom(
                               primary: Colors.green, // Match login page button color
                               shape: RoundedRectangleBorder(
@@ -233,6 +230,23 @@ class _SignupPageState extends State<SignupPage> {
         ),
       ),
     );
+  }
+
+  // Function to submit the form
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      final result = await _authService.register(_email, _password, _role);
+      if (result != null) {
+        _showRegistrationSuccessDialog(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Registration failed!'),
+          ),
+        );
+      }
+    }
   }
 
   // Function to show registration success dialog

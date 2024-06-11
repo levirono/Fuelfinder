@@ -47,10 +47,8 @@ Stream<List<FuelStation>> streamStationsWithServices() {
         var stationData = doc.data() as Map<String, dynamic>;
         var stationId = doc.id;
 
-        // Fetch station services data for the current station
         var services = await getStationServices(stationId);
 
-        // Create FuelStation object with station details and services data
         var fuelStation = FuelStation.fromMap({
           ...stationData,
           'id': stationId,
@@ -212,6 +210,10 @@ Stream<List<FuelEfficiencyTip>> streamFuelEfficiencyTips() {
       }).toList();
     });
   }
+  Future<void> deleteStation(String stationId) async {
+    await _db.collection('fuelStations').doc(stationId).delete();
+  }
+
 
   Future<void> addFuelEfficiencyTip(String tip) async {
   try {
@@ -271,8 +273,25 @@ Future<List<FuelEfficiencyTip>> getFuelEfficiencyTips() async {
     });
   }
 
-  Future<void> deleteDriver(String driverId, String ownerId) async {
+ Future<void> deleteDriver(String driverId) async {
+  try {
     await _db.collection('drivers').doc(driverId).delete();
+  } catch (e) {
+    throw Exception('Error deleting driver: $e');
   }
+}
+
+  Stream<List<Driver>> streamDrivers() {
+  try {
+    var snapshots = _db.collection('drivers').snapshots();
+
+    return snapshots.map((querySnapshot) => querySnapshot.docs
+        .map((doc) => Driver.fromSnapshot(doc))
+        .toList());
+  } catch (e) {
+    throw Exception('Error streaming drivers: $e');
+  }
+}
+
 }
 

@@ -1,3 +1,4 @@
+import 'package:ff_main/ui/station/station_homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:ff_main/services/firestore_service.dart';
@@ -27,7 +28,7 @@ class _StationProfileState extends State<StationProfile> {
   final _authService = AuthService();
 
   FuelStation? _existingStation;
-  bool _editMode = false;
+  bool _editMode = true;
 
   @override
   void initState() {
@@ -228,46 +229,61 @@ class _StationProfileState extends State<StationProfile> {
     _gpsLinkController.text = gpsCoordinates;
   }
 
-  Future<void> _saveProfile() async {
-    if (_formKey.currentState!.validate()) {
-      User? currentUser = await _authService.getCurrentUser();
+ Future<void> _saveProfile() async {
+  if (_formKey.currentState!.validate()) {
+    User? currentUser = await _authService.getCurrentUser();
 
-      if (currentUser == null) {
-        return;
-      }
+    if (currentUser == null) {
+      return;
+    }
 
-      String stationId = _existingStation?.id ?? Uuid().v4();
+    String stationId = _existingStation?.id ?? Uuid().v4();
 
-      String location = [
-        _roadCodeController.text,
-        _routeController.text,
-        _distanceToController.text,
-        _distanceFromController.text,
-      ].join(',');
+    String location = [
+      _roadCodeController.text,
+      _routeController.text,
+      _distanceToController.text,
+      _distanceFromController.text,
+    ].join(',');
 
-      FuelStation station = FuelStation(
-        id: stationId,
-        name: _nameController.text,
-        location: location,
-        gpsLink: _gpsLinkController.text,
-        servicesOffered: _servicesOfferedController.text.split(','),
-        operationHours: _operationHoursController.text,
+    FuelStation station = FuelStation(
+      id: stationId,
+      name: _nameController.text,
+      location: location,
+      gpsLink: _gpsLinkController.text,
+      servicesOffered: _servicesOfferedController.text.split(','),
+      operationHours: _operationHoursController.text,
+    );
+
+    await _firestoreService.addOrUpdateStation(station, currentUser.uid);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Station profile saved')));
+    setState(() {
+      _editMode = false;
+      _loadStationProfile();
+    });
+
+    // Check if it's the first time saving the profile
+    if (_existingStation == null) {
+      // Navigate to StationHomePage after saving the profile
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => StationHomePage()),
       );
-
-      await _firestoreService.addOrUpdateStation(station, currentUser.uid);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Station profile saved')));
-      setState(() {
-        _editMode = false;
-        _loadStationProfile();
-      });
     }
   }
+}
 
-  void _openPickMyCoordinateScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => PickMyCoordinate()),
-    );
+  void _openPickMyCoordinateScreen() async {
+  final coordinatesText = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => PickMyCoordinate()),
+  );
+  if (coordinatesText != null) {
+    setState(() {
+      _gpsLinkController.text = coordinatesText;
+    });
   }
+}
+
 }

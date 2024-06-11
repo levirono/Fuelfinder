@@ -34,21 +34,24 @@ class _StationHomePageState extends State<StationHomePage> {
   }
 
   Future<void> _fetchStationData() async {
-    User? currentUser = await _authService.getCurrentUser();
-    if (currentUser != null) {
-      FuelStation? station = await _firestoreService.getStationByOwnerId(currentUser.uid);
-      if (station != null) {
-        setState(() {
-          _stationId = station.id;
-          _stationNameFuture = Future.value(station.name);
-          _servicesOfferedFuture = _firestoreService.getServicesOffered(_stationId);
-          _fetchStationServices();
-        });
-      } else {
-        _showStationProfileDialog();
-      }
+  if (!mounted) return; 
+
+  User? currentUser = await _authService.getCurrentUser();
+  if (currentUser != null) {
+    FuelStation? station = await _firestoreService.getStationByOwnerId(currentUser.uid);
+    if (station != null) {
+      setState(() {
+        _stationId = station.id;
+        _stationNameFuture = Future.value(station.name);
+        _servicesOfferedFuture = _firestoreService.getServicesOffered(_stationId);
+        _fetchStationServices();
+      });
+    } else {
+      _showStationProfileDialog();
     }
   }
+}
+
 
   Future<void> _fetchStationServices() async {
     try {
@@ -63,19 +66,19 @@ class _StationHomePageState extends State<StationHomePage> {
   void _showStationProfileDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevents closing the dialog by tapping outside
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
             'Complete Your Station Profile',
-            style: TextStyle(fontSize: 20.0, color: Colors.green), // Larger green text
+            style: TextStyle(fontSize: 20.0, color: Colors.green),
           ),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
                 Text(
                   'Please fill in your station details to proceed.',
-                  style: TextStyle(color: Colors.black), // Optional: Set content text color
+                  style: TextStyle(color: Colors.black),
                 ),
               ],
             ),

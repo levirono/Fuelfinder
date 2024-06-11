@@ -94,7 +94,7 @@ class _PickMyCoordinateState extends State<PickMyCoordinate> {
                         ),
                     SizedBox(height: 10),
                     Text(
-                      'Zoom in and tap your place to pick your coordinates',
+                      'Zoom in and tap your place to pick121your coordinates',
                       style: TextStyle(fontSize: 20, color: Colors.green),
                       textAlign: TextAlign.center,
                     ),
@@ -193,24 +193,26 @@ Future<void> _searchPlace(String place, BuildContext context) async {
   }
 
   void _handleTap(LatLng tappedPoint) {
-    setState(() {
-      _selectedCoordinate = tappedPoint;
-    });
+  setState(() {
+    _selectedCoordinate = tappedPoint;
+  });
 
-    // Copy coordinates to clipboard using platform channel
-    String coordinatesText = '${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}';
+  // Copy coordinates to clipboard using platform channel
+  String coordinatesText = '${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}';
   
-    Clipboard.setData(ClipboardData(text: coordinatesText)).then((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Coordinates copied to clipboard')),
-      );
-    }).catchError((error) {
-      print('Error copying to clipboard: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to copy coordinates')),
-      );
-    });
+  Clipboard.setData(ClipboardData(text: coordinatesText)).then((_) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Coordinates copied to clipboard')),
+    );
+    // Navigate back to the station profile page after copying coordinates
+    Navigator.pop(context, coordinatesText);
+  }).catchError((error) {
+    print('Error copying to clipboard: $error');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to copy coordinates')),
+    );
+  });
 
-    print('Selected Coordinates: ${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}');
-  }
+  print('Selected Coordinates: ${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}');
+}
 }

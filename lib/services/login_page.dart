@@ -20,8 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    // Start the timer to auto-slide the pages
-    Timer.periodic(Duration(seconds: 10), (Timer timer) {
+    Timer.periodic(Duration(seconds: 5), (Timer timer) {
       if (_pageController.hasClients) {
         int nextPage = (_pageController.page!.round() + 1) % 3;
         _pageController.animateToPage(
@@ -54,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               children: [
                 Container(
-                  height: 200.0,
+                  height: 400.0,
                   child: PageView(
                     controller: _pageController,
                     children: [
@@ -154,7 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              primary: Colors.green, // Button color
+                              primary: Colors.green,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
@@ -167,13 +166,13 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => SignupPage()), // Navigate to SignupPage
+                                MaterialPageRoute(builder: (context) => SignupPage()),
                               );
                             },
                             child: Text(
                               'Create an Account',
                               style: TextStyle(
-                                color: Colors.blue, // Use custom color for button text
+                                color: Colors.blue,
                                 fontSize: 16.0,
                                 fontWeight: FontWeight.bold,
                               ),

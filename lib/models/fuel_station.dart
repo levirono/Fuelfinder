@@ -39,14 +39,13 @@ class FuelStation {
     };
   }
 }
-// Define StationServices model
 class StationServices {
   bool isPetrolAvailable;
   bool isDieselAvailable;
   double petrolPrice;
   double dieselPrice;
   bool isOpen;
-  List<String> availableServices; // Define availableServices as a List<String>
+  List<String> availableServices;
   
 
   StationServices({
