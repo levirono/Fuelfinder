@@ -133,8 +133,8 @@ class _DriverProfileState extends State<DriverProfile> {
         ElevatedButton(
           onPressed: _editMode ? _saveProfile : _toggleEditMode,
           style: ElevatedButton.styleFrom(
-            primary: Colors.green,
-            onPrimary: Colors.white,
+            backgroundColor: Colors.green,
+            // onbackgroundColor: Colors.white,
           ),
           child: Text(_editMode ? 'Save' : 'Edit'),
         ),

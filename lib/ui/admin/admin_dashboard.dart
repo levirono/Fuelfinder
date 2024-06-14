@@ -107,7 +107,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
-                primary: Colors.green[400],
+                backgroundColor: Colors.green[400],
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
@@ -128,7 +128,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
-                primary: Colors.green[400],
+                backgroundColor: Colors.green[400],
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),

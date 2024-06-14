@@ -47,8 +47,8 @@ class FuelStationDetailsPage extends StatelessWidget {
                 launchMap(station.gpsLink);
               },
               style: ElevatedButton.styleFrom(
-                primary: Colors.green,
-                onPrimary: Colors.white,
+                backgroundColor: Colors.green,
+                // onbackgroundColor: Colors.white,
                 textStyle: TextStyle(fontSize: 16.0),
                 padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
               ),

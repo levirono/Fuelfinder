@@ -346,7 +346,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                     fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
-                primary: Colors.green[400],
+                backgroundColor: Colors.green[400],
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),

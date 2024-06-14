@@ -194,7 +194,7 @@ class _SignupPageState extends State<SignupPage> {
                           ElevatedButton(
                             onPressed: _submitForm,
                             style: ElevatedButton.styleFrom(
-                              primary: Colors.green, // Match login page button color
+                              backgroundColor: Colors.green, // Match login page button color
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),

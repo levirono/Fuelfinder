@@ -88,7 +88,7 @@ class _StationProfileState extends State<StationProfile> {
                 ElevatedButton(
                   onPressed: _openPickMyCoordinateScreen,
                   style: ElevatedButton.styleFrom(
-                    primary: Colors.lightGreen,
+                    backgroundColor: Colors.lightGreen,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20.0),
                     ),
@@ -170,7 +170,7 @@ class _StationProfileState extends State<StationProfile> {
       return ElevatedButton(
         onPressed: _saveProfile,
         style: ElevatedButton.styleFrom(
-          primary: Colors.lightGreen,
+          backgroundColor: Colors.lightGreen,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
@@ -192,7 +192,7 @@ class _StationProfileState extends State<StationProfile> {
       return ElevatedButton(
         onPressed: () => setState(() => _editMode = true),
         style: ElevatedButton.styleFrom(
-          primary: Colors.lightGreen,
+          backgroundColor: Colors.lightGreen,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
