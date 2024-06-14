@@ -34,24 +34,23 @@ class _StationHomePageState extends State<StationHomePage> {
   }
 
   Future<void> _fetchStationData() async {
-  if (!mounted) return; 
+    if (!mounted) return;
 
-  User? currentUser = await _authService.getCurrentUser();
-  if (currentUser != null) {
-    FuelStation? station = await _firestoreService.getStationByOwnerId(currentUser.uid);
-    if (station != null) {
-      setState(() {
-        _stationId = station.id;
-        _stationNameFuture = Future.value(station.name);
-        _servicesOfferedFuture = _firestoreService.getServicesOffered(_stationId);
-        _fetchStationServices();
-      });
-    } else {
-      _showStationProfileDialog();
+    User? currentUser = await _authService.getCurrentUser();
+    if (currentUser != null) {
+      FuelStation? station = await _firestoreService.getStationByOwnerId(currentUser.uid);
+      if (station != null) {
+        setState(() {
+          _stationId = station.id;
+          _stationNameFuture = Future.value(station.name);
+          _servicesOfferedFuture = _firestoreService.getServicesOffered(_stationId);
+          _fetchStationServices();
+        });
+      } else {
+        _showStationProfileDialog();
+      }
     }
   }
-}
-
 
   Future<void> _fetchStationServices() async {
     try {
@@ -124,9 +123,9 @@ class _StationHomePageState extends State<StationHomePage> {
               } else {
                 final stationName = snapshot.data!;
                 return Text(
-                  '- $stationName -',
+                  stationName,
                   style: TextStyle(
-                    fontSize: 30.0,
+                    fontSize: 24.0,
                     color: Colors.green,
                   ),
                 );
@@ -135,9 +134,10 @@ class _StationHomePageState extends State<StationHomePage> {
           },
         ),
         backgroundColor: Colors.green[100],
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.logout,color: Colors.red,size: 30.0,),
+            icon: Icon(Icons.logout, color: Colors.red, size: 30.0),
             onPressed: () {
               _showLogoutConfirmationDialog(context);
             },
@@ -187,36 +187,30 @@ class _StationHomePageState extends State<StationHomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              SizedBox(height: 20.0),
               Text(
-                'Welcome To FUELFINDER!',
+                'Welcome to Fuel Finder!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 50.0,
+                  fontSize: 30.0,
                   fontWeight: FontWeight.bold,
                   color: Colors.green,
                 ),
               ),
-              SizedBox(height: 40.0),
+              SizedBox(height: 20.0),
               Container(
-                padding: EdgeInsets.all(25.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Text(
-                  'Help motorists refuel and use services in a more convenient way, to prevent delays and fuel wastages.',
-                  style: TextStyle(
-                    fontSize: 25.0,
-                    color: Colors.green,
-                  ),
+                height: 200,
+                color: Colors.grey[300],
+                child: Center(
+                  child: Text('Logo and description image'),
                 ),
               ),
               SizedBox(height: 20.0),
-              _buildFuelTile('Petrol', _stationServices.isPetrolAvailable, _stationServices.petrolPrice),
+              _buildStatusTile('Station Status', _stationServices.isOpen, Colors.green),
               SizedBox(height: 20.0),
-              _buildFuelTile('Diesel', _stationServices.isDieselAvailable, _stationServices.dieselPrice),
+              _buildFuelTile('Petrol', _stationServices.isPetrolAvailable, _stationServices.petrolPrice, Colors.green),
               SizedBox(height: 20.0),
-              _buildServiceTile('Station Open', _stationServices.isOpen),
+              _buildFuelTile('Diesel', _stationServices.isDieselAvailable, _stationServices.dieselPrice, Colors.red),
               SizedBox(height: 20.0),
               FutureBuilder<List<String>>(
                 future: _servicesOfferedFuture,
@@ -288,9 +282,46 @@ class _StationHomePageState extends State<StationHomePage> {
     );
   }
 
-  Widget _buildFuelTile(String fuelType, bool isAvailable, double price) {
+  Widget _buildStatusTile(String title, bool value, Color color) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            value ? 'Open' : 'Closed',
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFuelTile(String fuelType, bool isAvailable, double price, Color color) {
+    return Container(
       padding: EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -311,25 +342,31 @@ class _StationHomePageState extends State<StationHomePage> {
             style: TextStyle(
               fontSize: 18.0,
               fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
           SizedBox(height: 8.0),
-          SwitchListTile(
-            title: Text(
-              'Available',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            value: isAvailable,
-            onChanged: (newValue) {
-              setState(() {
-                if (fuelType == 'Petrol') {
-                  _stationServices.isPetrolAvailable = newValue;
-                } else if (fuelType == 'Diesel') {
-                  _stationServices.isDieselAvailable = newValue;
-                }
-                _updateStationServices();
-              });
-            },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                isAvailable ? 'Available' : 'Not Available',
+                style: TextStyle(fontSize: 16.0, color: color),
+              ),
+              Switch(
+                value: isAvailable,
+                onChanged: (newValue) {
+                  setState(() {
+                    if (fuelType == 'Petrol') {
+                      _stationServices.isPetrolAvailable = newValue;
+                    } else if (fuelType == 'Diesel') {
+                      _stationServices.isDieselAvailable = newValue;
+                    }
+                    _updateStationServices();
+                  });
+                },
+              ),
+            ],
           ),
           TextFormField(
             decoration: InputDecoration(
@@ -349,40 +386,6 @@ class _StationHomePageState extends State<StationHomePage> {
             },
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildServiceTile(String title, bool value) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
-      padding: EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: SwitchListTile(
-        title: Text(
-          title,
-          style: TextStyle(
-            fontSize: 18.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        value: value,
-        onChanged: (newValue) {
-          setState(() {
-            _stationServices.isOpen = newValue;
-            _updateStationServices();
-          });
-        },
       ),
     );
   }
