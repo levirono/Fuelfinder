@@ -127,21 +127,55 @@ class _DriverProfileState extends State<DriverProfile> {
   }
 
   Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        ElevatedButton(
-          onPressed: _editMode ? _saveProfile : _toggleEditMode,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            // onbackgroundColor: Colors.white,
+    if (_existingDriver == null || _editMode) {
+      return ElevatedButton(
+        onPressed: _saveProfile,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
           ),
-          child: Text(_editMode ? 'Save' : 'Edit'),
+          minimumSize: Size(double.infinity, 40.0),
         ),
-      ],
-    );
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.save, color: Colors.white),
+            SizedBox(width: 8.0),
+            Text(
+              'Save Station Profile',
+              style: TextStyle(
+                fontSize: 16.0,
+                color:Colors.white,
+                ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return ElevatedButton(
+        onPressed: () => setState(() => _editMode = true),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          minimumSize: Size(double.infinity, 40.0),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.edit, color: Colors.white),
+            SizedBox(width: 8.0),
+            Text(
+              'Edit Profile',
+              style: TextStyle(fontSize: 16.0),
+            ),
+          ],
+        ),
+      );
+    }
   }
-
   void _toggleEditMode() {
     setState(() {
       _editMode = true;

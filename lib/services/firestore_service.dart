@@ -293,5 +293,37 @@ Future<List<FuelEfficiencyTip>> getFuelEfficiencyTips() async {
   }
 }
 
+
+Future<int> getStationCount() async {
+    try {
+      var querySnapshot = await _db.collection('fuelStations').get();
+      return querySnapshot.size;
+    } catch (e) {
+      throw Exception('Error fetching station count: $e');
+    }
+  }
+
+  Future<int> getDriverCount() async {
+    try {
+      var querySnapshot = await _db.collection('drivers').get();
+      return querySnapshot.size;
+    } catch (e) {
+      throw Exception('Error fetching driver count: $e');
+    }
+  }
+
+
+  //new functionality to verify stationos
+  
+   Future<void> verifyStation(String stationId, bool isVerified) async {
+    try {
+      await _db.collection('stations').doc(stationId).update({'isVerified': isVerified});
+      print("Station verification status updated successfully.");
+    } catch (e) {
+      print("Failed to update station verification status: $e");
+      throw e;
+    }
+  }
+
 }
 

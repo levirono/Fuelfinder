@@ -52,6 +52,7 @@ class _SignupPageState extends State<SignupPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15.0),
                   ),
+                  color: Colors.grey[300],
                   elevation: 8.0,
                   child: Padding(
                     padding: EdgeInsets.all(20.0),
@@ -200,7 +201,11 @@ class _SignupPageState extends State<SignupPage> {
                               ),
                               padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
                             ),
-                            child: Text('Sign Up'),
+                            child: Text('Sign Up',
+                            style: TextStyle(
+                              color:Colors.white,
+                            ),
+                            ),
                           ),
                           SizedBox(height: 10.0),
                           TextButton(

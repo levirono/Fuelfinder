@@ -53,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               children: [
                 Container(
-                  height: 400.0,
+                  height: 300.0,
                   child: PageView(
                     controller: _pageController,
                     children: [
@@ -77,6 +77,7 @@ class _LoginPageState extends State<LoginPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15.0),
                   ),
+                  color: Colors.grey[300],
                   elevation: 8.0,
                   child: Padding(
                     padding: EdgeInsets.all(20.0),
@@ -159,7 +160,12 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
                             ),
-                            child: Text('Login'),
+                            child: Text('Login',
+                            style:TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            )
+                            ),
                           ),
                           SizedBox(height: 10.0),
                           TextButton(

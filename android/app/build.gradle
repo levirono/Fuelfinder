@@ -32,9 +32,15 @@ android {
     compileSdkVersion 34
     ndkVersion flutter.ndkVersion
 
+    dependencies {   v 
+        implementation 'androidx.multidex:multidex:2.0.1'
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+       
+
     }
 
     defaultConfig {
