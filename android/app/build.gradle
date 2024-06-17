@@ -32,7 +32,7 @@ android {
     compileSdkVersion 34
     ndkVersion flutter.ndkVersion
 
-    dependencies {   v 
+    dependencies {
         implementation 'androidx.multidex:multidex:2.0.1'
     }
 

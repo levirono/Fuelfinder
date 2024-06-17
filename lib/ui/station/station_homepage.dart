@@ -6,7 +6,6 @@ import 'station_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 
-
 class StationHomePage extends StatefulWidget {
   @override
   _StationHomePageState createState() => _StationHomePageState();
@@ -15,8 +14,7 @@ class StationHomePage extends StatefulWidget {
 class _StationHomePageState extends State<StationHomePage> {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
-    final PageController _pageController = PageController(initialPage: 0);
-
+  final PageController _pageController = PageController(initialPage: 0);
 
   late String _stationId;
   late StationServices _stationServices = StationServices(
@@ -30,6 +28,7 @@ class _StationHomePageState extends State<StationHomePage> {
 
   Future<String?> _stationNameFuture = Future.value('Station Name');
   Future<List<String>> _servicesOfferedFuture = Future.value([]);
+  bool _isVerified = false; // Add verification status
 
   @override
   void initState() {
@@ -56,6 +55,7 @@ class _StationHomePageState extends State<StationHomePage> {
       if (station != null) {
         setState(() {
           _stationId = station.id;
+          _isVerified = station.isVerified; // Assign verification status
           _stationNameFuture = Future.value(station.name);
           _servicesOfferedFuture = _firestoreService.getServicesOffered(_stationId);
           _fetchStationServices();
@@ -122,188 +122,186 @@ class _StationHomePageState extends State<StationHomePage> {
   }
 
   @override
- @override
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: FutureBuilder<String?>(
-        future: _stationNameFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Text('Loading...');
-          } else {
-            if (snapshot.hasError || snapshot.data == null) {
-              return Text('Error');
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: FutureBuilder<String?>(
+          future: _stationNameFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Text('Loading...');
             } else {
-              final stationName = snapshot.data!;
-              return Text(
-                stationName,
-                style: TextStyle(
-                  fontSize: 30.0,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 1, 33, 3),
-                ),
-              );
+              if (snapshot.hasError || snapshot.data == null) {
+                return Text('Error');
+              } else {
+                final stationName = snapshot.data!;
+                return Text(
+                  stationName,
+                  style: TextStyle(
+                    fontSize: 30.0,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 1, 33, 3),
+                  ),
+                );
+              }
             }
-          }
-        },
-      ),
-      backgroundColor: Colors.green[100],
-      centerTitle: true,
-      actions: [
-        IconButton(
-          icon: Icon(Icons.logout, color: Colors.red, size: 30.0),
-          onPressed: () {
-            _showLogoutConfirmationDialog(context);
           },
         ),
-      ],
-    ),
-    drawer: Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.green[100],
-            ),
-            child: Text(
-              'Station Profile',
-              style: TextStyle(
-                color: Colors.green,
-                fontSize: 24.0,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.person),
-            title: Text('Profile'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => StationProfile()),
-              );
+        backgroundColor: Colors.green[100],
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout, color: Colors.red, size: 30.0),
+            onPressed: () {
+              _showLogoutConfirmationDialog(context);
             },
           ),
         ],
       ),
-    ),
-    body: Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.white, Colors.green[200]!],
-        ),
-      ),
-      padding: EdgeInsets.all(20.0),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            SizedBox(height: 20.0),
-            Text(
-              'Welcome!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 30.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.green[100],
+              ),
+              child: Text(
+                'Station Profile',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 24.0,
+                ),
               ),
             ),
-            SizedBox(height: 20.0),
-            
-            Container(
-                  height: 200.0,
-                  child: PageView(
-                    controller: _pageController,
-                    children: [
-                      _buildCarouselItem('FUELF FINDER', 'LOGO IN THIS FIRST PAGE.'),
-                      _buildCarouselItem('FUELFINDER', 'always update the status of the station and services for smooth operation'),
-                      _buildCarouselItem('FUELFINDER', 'Help drivers to know the fuel status and make informed decissions.'),
-                    ],
-                  ),
-                ),
-            SizedBox(height: 20.0),
-            _buildStatusTile('Station Status', _stationServices.isOpen),
-            SizedBox(height: 20.0),
-            _buildFuelTile('Petrol', _stationServices.isPetrolAvailable, _stationServices.petrolPrice),
-            SizedBox(height: 20.0),
-            _buildFuelTile('Diesel', _stationServices.isDieselAvailable, _stationServices.dieselPrice),
-            SizedBox(height: 20.0),
-            FutureBuilder<List<String>>(
-              future: _servicesOfferedFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                } else {
-                  if (snapshot.hasError || snapshot.data == null) {
-                    return Text('Error fetching services offered.');
-                  } else {
-                    final servicesOffered = snapshot.data!;
-                    return Container(
-                      padding: EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(10.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber.withOpacity(0.3),
-                            spreadRadius: 4,
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Available Services:',
-                            style: TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green[900],
-                            ),
-                          ),
-                          SizedBox(height: 10.0),
-                          Column(
-                            children: servicesOffered.map((service) {
-                              bool isSelected = _stationServices.availableServices.contains(service);
-                              return CheckboxListTile(
-                                controlAffinity: ListTileControlAffinity.leading,
-                                title: Text(service),
-                                value: isSelected,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    if (newValue != null) {
-                                      if (newValue) {
-                                        _stationServices.availableServices.add(service);
-                                      } else {
-                                        _stationServices.availableServices.remove(service);
-                                      }
-                                      _updateStationServices();
-                                    }
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                }
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => StationProfile()),
+                );
               },
             ),
           ],
         ),
       ),
-    ),
-  );
-}
-
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.green[200]!],
+          ),
+        ),
+        padding: EdgeInsets.all(20.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 20.0),
+              Text(
+                'Welcome!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 30.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+              SizedBox(height: 20.0),
+              Container(
+                height: 200.0,
+                child: PageView(
+                  controller: _pageController,
+                  children: [
+                    _buildCarouselItem('FUELF FINDER', 'LOGO IN THIS FIRST PAGE.'),
+                    _buildCarouselItem('FUELFINDER', 'always update the status of the station and services for smooth operation'),
+                    _buildCarouselItem('FUELFINDER', 'Help drivers to know the fuel status and make informed decissions.'),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20.0),
+              _buildStatusTile('Station Status', _stationServices.isOpen),
+              SizedBox(height: 20.0),
+              _buildFuelTile('Petrol', _stationServices.isPetrolAvailable, _stationServices.petrolPrice),
+              SizedBox(height: 20.0),
+              _buildFuelTile('Diesel', _stationServices.isDieselAvailable, _stationServices.dieselPrice),
+              SizedBox(height: 20.0),
+              FutureBuilder<List<String>>(
+                future: _servicesOfferedFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else {
+                    if (snapshot.hasError || snapshot.data == null) {
+                      return Text('Error fetching services offered.');
+                    } else {
+                      final servicesOffered = snapshot.data!;
+                      return Container(
+                        padding: EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(10.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.amber.withOpacity(0.3),
+                              spreadRadius: 4,
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Available Services:',
+                              style: TextStyle(
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[900],
+                              ),
+                            ),
+                            SizedBox(height: 10.0),
+                            Column(
+                              children: servicesOffered.map((service) {
+                                bool isSelected = _stationServices.availableServices.contains(service);
+                                return CheckboxListTile(
+                                  controlAffinity: ListTileControlAffinity.leading,
+                                  title: Text(service),
+                                  value: isSelected,
+                                  onChanged: _isVerified
+                                      ? (newValue) {
+                                          setState(() {
+                                            if (newValue != null) {
+                                              if (newValue) {
+                                                _stationServices.availableServices.add(service);
+                                              } else {
+                                                _stationServices.availableServices.remove(service);
+                                              }
+                                              _updateStationServices();
+                                            }
+                                          });
+                                        }
+                                      : null,
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildStatusTile(String title, bool isOpen) {
   return Container(
@@ -333,12 +331,16 @@ Widget build(BuildContext context) {
         ),
         SizedBox(height: 8.0),
         GestureDetector(
-          onTap: () {
-            setState(() {
-              _stationServices.isOpen = !_stationServices.isOpen;
-              _updateStationServices();
-            });
-          },
+          onTap: _isVerified
+              ? () {
+                  setState(() {
+                    _stationServices.isOpen = !_stationServices.isOpen;
+                    _updateStationServices();
+                  });
+                }
+              : () {
+                  _showVerificationPopup();
+                },
           child: Container(
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: 10.0),
@@ -362,7 +364,7 @@ Widget build(BuildContext context) {
   );
 }
 
- Widget _buildFuelTile(String fuelType, bool isAvailable, double price) {
+Widget _buildFuelTile(String fuelType, bool isAvailable, double price) {
   return Container(
     padding: EdgeInsets.all(16.0),
     margin: EdgeInsets.symmetric(vertical: 10.0),
@@ -390,16 +392,20 @@ Widget build(BuildContext context) {
         ),
         SizedBox(height: 8.0),
         GestureDetector(
-          onTap: () {
-            setState(() {
-              if (fuelType == 'Petrol') {
-                _stationServices.isPetrolAvailable = !_stationServices.isPetrolAvailable;
-              } else if (fuelType == 'Diesel') {
-                _stationServices.isDieselAvailable = !_stationServices.isDieselAvailable;
-              }
-              _updateStationServices();
-            });
-          },
+          onTap: _isVerified
+              ? () {
+                  setState(() {
+                    if (fuelType == 'Petrol') {
+                      _stationServices.isPetrolAvailable = !_stationServices.isPetrolAvailable;
+                    } else if (fuelType == 'Diesel') {
+                      _stationServices.isDieselAvailable = !_stationServices.isDieselAvailable;
+                    }
+                    _updateStationServices();
+                  });
+                }
+              : () {
+                  _showVerificationPopup();
+                },
           child: Container(
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: 10.0),
@@ -409,7 +415,7 @@ Widget build(BuildContext context) {
             ),
             child: Center(
               child: Text(
-                isAvailable ? 'available' : 'not available',
+                isAvailable ? 'Available ..tap change' : 'not available ..tap to chage',
                 style: TextStyle(
                   fontSize: 16.0,
                   color: Colors.white,
@@ -436,16 +442,20 @@ Widget build(BuildContext context) {
                 ),
                 keyboardType: TextInputType.number,
                 initialValue: price.toString(),
-                onChanged: (value) {
-                  setState(() {
-                    if (fuelType == 'Petrol') {
-                      _stationServices.petrolPrice = double.parse(value);
-                    } else if (fuelType == 'Diesel') {
-                      _stationServices.dieselPrice = double.parse(value);
-                    }
-                    _updateStationServices();
-                  });
-                },
+                onChanged: _isVerified
+                    ? (value) {
+                        setState(() {
+                          if (fuelType == 'Petrol') {
+                            _stationServices.petrolPrice = double.parse(value);
+                          } else if (fuelType == 'Diesel') {
+                            _stationServices.dieselPrice = double.parse(value);
+                          }
+                          _updateStationServices();
+                        });
+                      }
+                    : (value) {
+                        _showVerificationPopup();
+                      },
               ),
             ),
           ],
@@ -455,16 +465,37 @@ Widget build(BuildContext context) {
   );
 }
 
+void _showVerificationPopup() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Verification Required'),
+        content: Text('You need to be verified to perform this action.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Logout Confirmation',
-          style: TextStyle(
-            color: Colors.green[600],
-          ),
+          title: Text(
+            'Logout Confirmation',
+            style: TextStyle(
+              color: Colors.green[600],
+            ),
           ),
           backgroundColor: Colors.grey[500],
           content: Text('Are you sure you want to logout?'),
@@ -540,4 +571,5 @@ Widget build(BuildContext context) {
     );
   }
 }
+
 

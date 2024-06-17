@@ -18,11 +18,11 @@ class MapView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('FUELFINDER',
-        style: TextStyle(fontSize: 20.0, color: Colors.green),
+        title: Text(
+          'FUELFINDER',
+          style: TextStyle(fontSize: 20.0, color: Colors.green),
         ),
-      backgroundColor: Colors.green[100],
-
+        backgroundColor: Colors.green[100],
       ),
       body: FutureBuilder<LatLng>(
         future: _getCurrentLocation(),
@@ -49,6 +49,8 @@ class MapView extends StatelessWidget {
               }
 
               List<FuelStation> stations = stationSnapshot.data ?? [];
+              // Filter stations to show only verified ones
+              List<FuelStation> verifiedStations = stations.where((station) => station.isVerified).toList();
 
               return Column(
                 children: [
@@ -59,9 +61,9 @@ class MapView extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                         TypeAheadField<Location>(
+                        TypeAheadField<Location>(
                           suggestionsCallback: (pattern) async {
-                            if (pattern.isNotEmpty) { 
+                            if (pattern.isNotEmpty) {
                               return await locationFromAddress(pattern);
                             } else {
                               return [];
@@ -99,10 +101,9 @@ class MapView extends StatelessWidget {
                             );
                           },
                         ),
-
                         SizedBox(height: 10),
                         Text(
-                          'View nearby stations to refuel',
+                          'View nearby verified stations to refuel',
                           style: TextStyle(fontSize: 20, color: Colors.green),
                           textAlign: TextAlign.center,
                         ),
@@ -149,9 +150,11 @@ class MapView extends StatelessWidget {
                           ),
                           children: [
                             TileLayer(
-                              urlTemplate: 'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                              urlTemplate:
+                                  'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
                               additionalOptions: {
-                                'accessToken': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
+                                'accessToken':
+                                    'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
                                 'id': 'mapbox.mapbox-streets-v8',
                               },
                             ),
@@ -175,7 +178,7 @@ class MapView extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                ...stations.map((station) {
+                                ...verifiedStations.map((station) {
                                   LatLng? coordinates = _parseCoordinates(station.gpsLink);
 
                                   if (coordinates != null) {
@@ -196,8 +199,8 @@ class MapView extends StatelessWidget {
                                               style: TextStyle(fontSize: 12.0),
                                             ),
                                             SizedBox(height: 5.0),
-                                            FutureBuilder<StationServices>(
-                                              future: _firestoreService.getStationServices(station.id),
+                                            StreamBuilder<StationServices>(
+                                              stream: _firestoreService.streamStationServices(station.id),
                                               builder: (context, serviceSnapshot) {
                                                 if (serviceSnapshot.connectionState == ConnectionState.waiting) {
                                                   return CircularProgressIndicator();
@@ -205,35 +208,37 @@ class MapView extends StatelessWidget {
                                                 if (serviceSnapshot.hasError) {
                                                   return Text('Error loading services');
                                                 }
+                                                if (!serviceSnapshot.hasData) {
+                                                  return Text('Services unavailable');
+                                                }
                                                 StationServices services = serviceSnapshot.data!;
 
                                                 return Row(
                                                   children: [
-                                                    SizedBox(height: 5.0),
                                                     Row(
                                                       mainAxisAlignment: MainAxisAlignment.center,
                                                       children: [
                                                         Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
                                                         SizedBox(width: 5.0),
                                                         Text(
-                                                          services.isPetrolAvailable ? 'P' : 'P',
+                                                          'P',
                                                           style: TextStyle(color: services.isPetrolAvailable ? Colors.green : Colors.red),
                                                         ),
                                                       ],
                                                     ),
-                                                    SizedBox(height: 5.0),
+                                                    SizedBox(width: 5.0),
                                                     Row(
                                                       mainAxisAlignment: MainAxisAlignment.center,
                                                       children: [
                                                         Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
                                                         SizedBox(width: 5.0),
                                                         Text(
-                                                          services.isDieselAvailable ? 'D' : 'D',
+                                                          'D',
                                                           style: TextStyle(color: services.isDieselAvailable ? Colors.green : Colors.red),
                                                         ),
                                                       ],
                                                     ),
-                                                    SizedBox(height: 5.0),
+                                                    SizedBox(width: 5.0),
                                                     Text(
                                                       services.isOpen ? ' -Open' : ' -Closed',
                                                       style: TextStyle(color: services.isOpen ? Colors.green : Colors.red),
@@ -251,7 +256,7 @@ class MapView extends StatelessWidget {
                                       width: 0.0,
                                       height: 0.0,
                                       point: LatLng(0.0, 0.0),
-                                      child: SizedBox.shrink(),
+                                      child:SizedBox.shrink(),
                                     );
                                   }
                                 }).toList(),
@@ -270,6 +275,7 @@ class MapView extends StatelessWidget {
       ),
     );
   }
+
 
   Future<void> _searchPlace(String place, BuildContext context) async {
     try {

@@ -7,18 +7,18 @@ class AuthService {
 
   // Register a new user
   Future<UserCredential?> register(String email, String password, String role) async {
-  try {
-    final credential = await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    await _firestore.collection('users').doc(credential.user!.uid).set({
-      'email': email,
-      'role': role,
-    });
+      await _firestore.collection('users').doc(credential.user!.uid).set({
+        'email': email,
+        'role': role,
+      });
 
-    return credential;
+      return credential;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');
@@ -64,9 +64,19 @@ class AuthService {
   Future<void> logout() async {
     await _auth.signOut();
   }
-  Future<User?> getCurrentUser() async {
-  User? user = _auth.currentUser;
-  return user;
-}
 
+  // Get current user
+  Future<User?> getCurrentUser() async {
+    return _auth.currentUser;
+  }
+
+  // Get user role
+  Future<String?> getUserRole() async {
+    User? user = await getCurrentUser();
+    if (user != null) {
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      return userDoc['role'] as String?;
+    }
+    return null;
+  }
 }

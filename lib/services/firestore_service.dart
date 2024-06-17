@@ -68,6 +68,48 @@ Stream<List<FuelStation>> streamStationsWithServices() {
 }
 
 
+Stream<List<FuelStation>> streamVerifiedStations() {
+  try {
+    var snapshots = _db.collection('fuelStations')
+                       .where('isVerified', isEqualTo: true)
+                       .snapshots();
+
+    return snapshots.asyncMap((querySnapshot) async {
+      List<FuelStation> stations = [];
+
+      for (var doc in querySnapshot.docs) {
+        var stationData = doc.data() as Map<String, dynamic>;
+        var stationId = doc.id;
+
+        var services = await getStationServices(stationId);
+
+        var fuelStation = FuelStation.fromMap({
+          ...stationData,
+          'id': stationId,
+          'isPetrolAvailable': services.isPetrolAvailable,
+          'isDieselAvailable': services.isDieselAvailable,
+          'isOpen': services.isOpen,
+        });
+
+        stations.add(fuelStation);
+      }
+
+      return stations;
+    });
+  } catch (e) {
+    throw Exception('Error streaming verified stations: $e');
+  }
+}
+Stream<StationServices> streamStationServices(String stationId) {
+    return FirebaseFirestore.instance
+        .collection('stationServices')
+        .doc(stationId)
+        .snapshots()
+        .map((snapshot) => StationServices.fromMap(snapshot.data()!));
+  }
+
+
+
 
   Future<void> addOrUpdateStation(FuelStation station, String ownerId) async {
     try {
@@ -314,10 +356,9 @@ Future<int> getStationCount() async {
 
 
   //new functionality to verify stationos
-  
    Future<void> verifyStation(String stationId, bool isVerified) async {
     try {
-      await _db.collection('stations').doc(stationId).update({'isVerified': isVerified});
+      await _db.collection('fuelStations').doc(stationId).update({'isVerified': isVerified});
       print("Station verification status updated successfully.");
     } catch (e) {
       print("Failed to update station verification status: $e");

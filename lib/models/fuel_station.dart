@@ -51,7 +51,6 @@ class StationServices {
   double dieselPrice;
   bool isOpen;
   List<String> availableServices;
-  
 
   StationServices({
     required this.isPetrolAvailable,
@@ -62,7 +61,29 @@ class StationServices {
     required this.availableServices,
   });
 
+  factory StationServices.fromMap(Map<String, dynamic> data) {
+    return StationServices(
+      isPetrolAvailable: data['isPetrolAvailable'] ?? false,
+      isDieselAvailable: data['isDieselAvailable'] ?? false,
+      petrolPrice: (data['petrolPrice'] ?? 0.0).toDouble(),
+      dieselPrice: (data['dieselPrice'] ?? 0.0).toDouble(),
+      isOpen: data['isOpen'] ?? false,
+      availableServices: List<String>.from(data['availableServices'] ?? []),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'isPetrolAvailable': isPetrolAvailable,
+      'isDieselAvailable': isDieselAvailable,
+      'petrolPrice': petrolPrice,
+      'dieselPrice': dieselPrice,
+      'isOpen': isOpen,
+      'availableServices': availableServices,
+    };
+  }
 }
+
 
 class FuelEfficiencyTip {
   final String id;

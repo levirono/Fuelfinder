@@ -319,7 +319,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
                     await Permission.location.request();
 
                 if (locationStatus == PermissionStatus.granted) {
-                  Navigator.push(
+                  Navigator.push
+(
                     context,
                     MaterialPageRoute(builder: (context) => MapView()),
                   );
@@ -328,8 +329,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
                 if (locationStatus == PermissionStatus.denied) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content:
-                            Text('This permission is required to use maps')),
+                      content: Text('This permission is required to use maps'),
+                    ),
                   );
                 }
 
@@ -369,7 +370,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
           ),
           Expanded(
             child: StreamBuilder<List<FuelStation>>(
-              stream: _firestoreService.streamStations(),
+              stream: _firestoreService.streamVerifiedStations(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -401,116 +402,123 @@ class _DriverHomePageState extends State<DriverHomePage> {
   }
 
   Widget _buildStationTile(FuelStation station) {
-    return FutureBuilder(
-      future: Future.wait([
-        _firestoreService.getStationServices(station.id),
-        calculateRoadDistance(
-          _currentLocation!,
-          _parseCoordinates(station.gpsLink) ?? LatLng(0.0, 0.0),
-        )
-      ]),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildListTile(station.name, 'Loading...', Colors.grey);
-        }
-        if (snapshot.hasError) {
-          return _buildListTile(station.name, 'Data uavailable', Colors.grey);
-        }
-        final data = snapshot.data as List<dynamic>;
-        final StationServices services = data[0];
-        final double distance = data[1];
+  return FutureBuilder<double>(
+    future: calculateRoadDistance(
+      _currentLocation!,
+      _parseCoordinates(station.gpsLink) ?? LatLng(0.0, 0.0),
+    ),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return _buildListTile(station.name, 'Loading...', Colors.grey);
+      }
+      if (snapshot.hasError) {
+        return _buildListTile(station.name, 'Data unavailable', Colors.grey);
+      }
+      final double distance = snapshot.data!;
 
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => FuelStationDetailsPage(station: station),
-              ),
-            );
-          },
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.horizontal(
-                left: Radius.circular(20.0),
-                right: Radius.circular(20.0),
-              ),
-              child: Container(
-                padding: EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.horizontal(
-                    left: Radius.circular(20.0),
-                    right: Radius.circular(20.0),
-                  ),
+      return StreamBuilder<StationServices>(
+        stream: _firestoreService.streamStationServices(station.id),
+        builder: (context, serviceSnapshot) {
+          if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+            return _buildListTile(station.name, 'Loading services...', Colors.grey);
+          }
+          if (serviceSnapshot.hasError || !serviceSnapshot.hasData) {
+            return _buildListTile(station.name, 'Services unavailable', Colors.grey);
+          }
+          final StationServices services = serviceSnapshot.data!;
+
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FuelStationDetailsPage(station: station),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.local_gas_station),
-                        SizedBox(width: 8.0),
-                        Text(
-                          station.name,
-                          style: TextStyle(
-                              color: Colors.amber, fontWeight: FontWeight.bold),
-                        ),
-                        Spacer(),
-                        Icon(Icons
-                            .arrow_forward_ios), // Added arrow icon for navigation
-                      ],
+              );
+            },
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.horizontal(
+                  left: Radius.circular(20.0),
+                  right: Radius.circular(20.0),
+                ),
+                child: Container(
+                  padding: EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.horizontal(
+                      left: Radius.circular(20.0),
+                      right: Radius.circular(20.0),
                     ),
-                    SizedBox(height: 8.0),
-                    Row(
-                      children: [
-                        Icon(Icons.location_on),
-                        SizedBox(width: 8.0),
-                        Text(
-                          'Distance: ${distance.toStringAsFixed(2)} km',
-                          style: TextStyle(fontSize: 16.0),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.circle,
-                                color: services.isPetrolAvailable
-                                    ? Colors.green
-                                    : Colors.red),
-                            SizedBox(width: 4.0),
-                            Text('Petrol'),
-                            SizedBox(width: 16.0),
-                            Icon(Icons.circle,
-                                color: services.isDieselAvailable
-                                    ? Colors.green
-                                    : Colors.red),
-                            SizedBox(width: 4.0),
-                            Text('Diesel'),
-                          ],
-                        ),
-                        Text(
-                          services.isOpen ? 'Open' : 'Closed',
-                          style: TextStyle(
-                              color:
-                                  services.isOpen ? Colors.green : Colors.red),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.local_gas_station),
+                          SizedBox(width: 8.0),
+                          Text(
+                            station.name,
+                            style: TextStyle(
+                                color: Colors.amber, fontWeight: FontWeight.bold),
+                          ),
+                          Spacer(),
+                          Icon(Icons.arrow_forward_ios),
+                        ],
+                      ),
+                      SizedBox(height: 8.0),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on),
+                          SizedBox(width: 8.0),
+                          Text(
+                            'Distance: ${distance.toStringAsFixed(2)} km',
+                            style: TextStyle(fontSize: 16.0),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.circle,
+                                  color: services.isPetrolAvailable
+                                      ? Colors.green
+                                      : Colors.red),
+                              SizedBox(width: 4.0),
+                              Text('Petrol'),
+                              SizedBox(width: 16.0),
+                              Icon(Icons.circle,
+                                  color: services.isDieselAvailable
+                                      ? Colors.green
+                                      : Colors.red),
+                              SizedBox(width: 4.0),
+                              Text('Diesel'),
+                            ],
+                          ),
+                          Text(
+                            services.isOpen ? 'Open' : 'Closed',
+                            style: TextStyle(
+                                color: services.isOpen ? Colors.green : Colors.red),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
+          );
+        },
+      );
+    },
+  );
+}
+
 
   Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
     return Container(
