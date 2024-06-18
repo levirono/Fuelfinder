@@ -7,11 +7,13 @@ import 'package:geocoding/geocoding.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class PickMyCoordinate extends StatefulWidget {
+  const PickMyCoordinate({super.key});
+
   @override
-  _PickMyCoordinateState createState() => _PickMyCoordinateState();
+  PickMyCoordinateState createState() => PickMyCoordinateState();
 }
 
-class _PickMyCoordinateState extends State<PickMyCoordinate> {
+class PickMyCoordinateState extends State<PickMyCoordinate> {
   LatLng? _selectedCoordinate;
   late MapController _mapController;
   final TextEditingController _searchController = TextEditingController();
@@ -26,7 +28,7 @@ class _PickMyCoordinateState extends State<PickMyCoordinate> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('FUELFINDER',
+        title: const Text('FUELFINDER',
         style: TextStyle(fontSize: 20.0, color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
@@ -35,19 +37,19 @@ class _PickMyCoordinateState extends State<PickMyCoordinate> {
         future: _getCurrentLocation(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
             return Center(child: Text('Error fetching location: ${snapshot.error}'));
           }
 
-          LatLng currentLocation = snapshot.data ?? LatLng(0.001, 35.09);
+          LatLng currentLocation = snapshot.data ?? const LatLng(0.001, 35.09);
 
           return Column(
             children: [
               Container(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 color: Colors.white,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -81,7 +83,7 @@ class _PickMyCoordinateState extends State<PickMyCoordinate> {
                                 fillColor: Colors.grey[200],
                                 filled: true,
                                 suffixIcon: IconButton(
-                                  icon: Icon(Icons.search),
+                                  icon: const Icon(Icons.search),
                                   onPressed: () {
                                     if (_searchController.text.isNotEmpty) {
                                       _searchPlace(_searchController.text, context);
@@ -92,18 +94,18 @@ class _PickMyCoordinateState extends State<PickMyCoordinate> {
                             );
                           },
                         ),
-                    SizedBox(height: 10),
-                    Text(
+                    const SizedBox(height: 10),
+                    const Text(
                       'Zoom in and tap your place to pick121your coordinates',
                       style: TextStyle(fontSize: 20, color: Colors.green),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.zoom_in, size: 30.0),
+                          icon: const Icon(Icons.zoom_in, size: 30.0),
                           onPressed: () {
                             _mapController.move(
                               _mapController.camera.center,
@@ -112,7 +114,7 @@ class _PickMyCoordinateState extends State<PickMyCoordinate> {
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.zoom_out, size: 30.0),
+                          icon: const Icon(Icons.zoom_out, size: 30.0),
                           onPressed: () {
                             _mapController.move(
                               _mapController.camera.center,
@@ -127,7 +129,7 @@ class _PickMyCoordinateState extends State<PickMyCoordinate> {
               ),
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(10),
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black),
@@ -146,7 +148,7 @@ class _PickMyCoordinateState extends State<PickMyCoordinate> {
                         TileLayer(
                           urlTemplate:
                               'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
-                          additionalOptions: {
+                          additionalOptions: const {
                             'accessToken': 'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
                             'id': 'mapbox.mapbox-streets-v8',
                           },
@@ -170,10 +172,10 @@ Future<void> _searchPlace(String place, BuildContext context) async {
         final LatLng newLocation = LatLng(locations.first.latitude, locations.first.longitude);
         _mapController.move(newLocation, 13.0);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No results found')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No results found')));
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a valid address')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid address')));
     }
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error searching for place: $e')));
@@ -188,7 +190,7 @@ Future<void> _searchPlace(String place, BuildContext context) async {
       return LatLng(position.latitude, position.longitude);
     } catch (e) {
       print('Error getting location: $e');
-      return LatLng(51.505, -0.09);
+      return const LatLng(51.505, -0.09);
     }
   }
 
@@ -197,19 +199,19 @@ Future<void> _searchPlace(String place, BuildContext context) async {
     _selectedCoordinate = tappedPoint;
   });
 
-  // Copy coordinates to clipboard using platform channel
+// Copy coordinates to clipboard using platform channel
   String coordinatesText = '${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}';
   
   Clipboard.setData(ClipboardData(text: coordinatesText)).then((_) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Coordinates copied to clipboard')),
+      const SnackBar(content: Text('Coordinates copied to clipboard')),
     );
-    // Navigate back to the station profile page after copying coordinates
+// Navigate back to the station profile page after copying coordinates
     Navigator.pop(context, coordinatesText);
   }).catchError((error) {
     print('Error copying to clipboard: $error');
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to copy coordinates')),
+      const SnackBar(content: Text('Failed to copy coordinates')),
     );
   });
 

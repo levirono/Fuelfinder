@@ -1,13 +1,17 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/login_page.dart';
 import 'package:ff_main/services/auth.dart';
 
 class SignupPage extends StatefulWidget {
+    const SignupPage({super.key});
+
   @override
-  _SignupPageState createState() => _SignupPageState();
+  SignupPageState createState() => SignupPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
+class SignupPageState extends State<SignupPage> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
 
@@ -17,13 +21,13 @@ class _SignupPageState extends State<SignupPage> {
   String _role = 'user';
   bool _showPassword = false;
   bool _showConfirmPassword = false;
-  bool _passwordsMatch = true; // Initialize to true
+  bool _passwordsMatch = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Account'),
+        title: const Text('Create Account'),
         backgroundColor: Colors.green[100],
       ),
       body: Container(
@@ -36,10 +40,10 @@ class _SignupPageState extends State<SignupPage> {
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               children: [
-                Text(
+                const Text(
                   'Please sign up to get started',
                   style: TextStyle(
                     color: Colors.green,
@@ -47,7 +51,7 @@ class _SignupPageState extends State<SignupPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 20.0),
+                const SizedBox(height: 20.0),
                 Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15.0),
@@ -55,7 +59,7 @@ class _SignupPageState extends State<SignupPage> {
                   color: Colors.grey[300],
                   elevation: 8.0,
                   child: Padding(
-                    padding: EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -64,14 +68,14 @@ class _SignupPageState extends State<SignupPage> {
                             decoration: InputDecoration(
                               labelText: 'Email',
                               hintText: 'Enter your email',
-                              prefixIcon: Icon(Icons.email, color: Colors.green),
+                              prefixIcon: const Icon(Icons.email, color: Colors.green),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -81,12 +85,12 @@ class _SignupPageState extends State<SignupPage> {
                             },
                             onSaved: (newValue) => _email = newValue!,
                           ),
-                          SizedBox(height: 10.0),
+                          const SizedBox(height: 10.0),
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Password',
                               hintText: 'Enter your password',
-                              prefixIcon: Icon(Icons.lock, color: Colors.green),
+                              prefixIcon: const Icon(Icons.lock, color: Colors.green),
                               suffixIcon: IconButton(
                                 icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
                                 onPressed: () {
@@ -101,7 +105,7 @@ class _SignupPageState extends State<SignupPage> {
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             obscureText: !_showPassword,
                             onChanged: (value) {
@@ -120,12 +124,12 @@ class _SignupPageState extends State<SignupPage> {
                               return null;
                             },
                           ),
-                          SizedBox(height: 10.0),
+                          const SizedBox(height: 10.0),
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Confirm Password',
                               hintText: 'Confirm your password',
-                              prefixIcon: Icon(Icons.lock, color: Colors.green),
+                              prefixIcon: const Icon(Icons.lock, color: Colors.green),
                               suffixIcon: IconButton(
                                 icon: Icon(_showConfirmPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
                                 onPressed: () {
@@ -140,7 +144,7 @@ class _SignupPageState extends State<SignupPage> {
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             obscureText: !_showConfirmPassword,
                             onChanged: (value) {
@@ -159,7 +163,7 @@ class _SignupPageState extends State<SignupPage> {
                               return null;
                             },
                           ),
-                          SizedBox(height: 20.0),
+                          const SizedBox(height: 20.0),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -167,8 +171,8 @@ class _SignupPageState extends State<SignupPage> {
                                 child: RadioListTile<String>(
                                   value: 'user',
                                   groupValue: _role,
-                                  title: Text('Driver'),
-                                  secondary: Icon(Icons.directions_car, color: Colors.green),
+                                  title: const Text('Driver'),
+                                  secondary: const Icon(Icons.directions_car, color: Colors.green),
                                   onChanged: (value) {
                                     setState(() {
                                       _role = value!;
@@ -180,8 +184,8 @@ class _SignupPageState extends State<SignupPage> {
                                 child: RadioListTile<String>(
                                   value: 'station',
                                   groupValue: _role,
-                                  title: Text('Station'),
-                                  secondary: Icon(Icons.local_gas_station, color: Colors.green),
+                                  title: const Text('Station'),
+                                  secondary: const Icon(Icons.local_gas_station, color: Colors.green),
                                   onChanged: (value) {
                                     setState(() {
                                       _role = value!;
@@ -191,34 +195,34 @@ class _SignupPageState extends State<SignupPage> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 20.0),
+                          const SizedBox(height: 20.0),
                           ElevatedButton(
                             onPressed: _submitForm,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green, // Match login page button color
+                              backgroundColor: Colors.green,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+                              padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
                             ),
-                            child: Text('Sign Up',
+                            child: const Text('Sign Up',
                             style: TextStyle(
                               color:Colors.white,
                             ),
                             ),
                           ),
-                          SizedBox(height: 10.0),
+                          const SizedBox(height: 10.0),
                           TextButton(
                             onPressed: () {
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (context) => LoginPage()), // Navigate to LoginPage
+                                MaterialPageRoute(builder: (context) => const LoginPage()),
                               );
                             },
-                            child: Text(
+                            child: const Text(
                               'Already have an account? Login',
                               style: TextStyle(
-                                color: Colors.blue, // Use custom color for button text
+                                color: Colors.blue,
                                 fontSize: 16.0,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -237,41 +241,44 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  // Function to submit the form
   void _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      final result = await _authService.register(_email, _password, _role);
-      if (result != null) {
-        _showRegistrationSuccessDialog(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Registration failed!'),
-          ),
-        );
-      }
+  if (_formKey.currentState!.validate()) {
+    _formKey.currentState!.save();
+    final BuildContext contextBeforeAsync = context;
+    final result = await _authService.register(_email, _password, _role);
+
+    if (!mounted) return;
+
+    if (result != null) {
+      _showRegistrationSuccessDialog(contextBeforeAsync);
+    } else {
+      ScaffoldMessenger.of(contextBeforeAsync).showSnackBar(
+        const SnackBar(
+          content: Text('Registration failed!'),
+        ),
+      );
     }
   }
+}
 
-  // Function to show registration success dialog
+
   Future<void> _showRegistrationSuccessDialog(BuildContext context) async {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Account Created Successfully'),
-          content: Text('Your account has been created successfully!'),
+          title: const Text('Account Created Successfully'),
+          content: const Text('Your account has been created successfully!'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
                 );
               },
-              child: Text('Proceed to Login'),
+              child: const Text('Proceed to Login'),
             ),
           ],
         );

@@ -7,11 +7,13 @@ import 'package:ff_main/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class DriverProfile extends StatefulWidget {
+  const DriverProfile({super.key});
+
   @override
-  _DriverProfileState createState() => _DriverProfileState();
+  DriverProfileState createState() => DriverProfileState();
 }
 
-class _DriverProfileState extends State<DriverProfile> {
+class DriverProfileState extends State<DriverProfile> {
   final _formKey = GlobalKey<FormState>();
   final _firestoreService = FirestoreService();
   final _nameController = TextEditingController();
@@ -57,11 +59,11 @@ class _DriverProfileState extends State<DriverProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('MY PROFILE'),
+        title: const Text('MY PROFILE'),
         backgroundColor: Colors.green[100],
       ),
       body: Container(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -73,7 +75,7 @@ class _DriverProfileState extends State<DriverProfile> {
                 _buildFormField('Vehicle Model', _vehicleModelController),
                 _buildFormField('Vehicle Plate Number', _vehiclePlateNumberController, hintText: 'e.g., KDJ299F'),
                 _buildFormField('Driver License', _driverLicenseController, hintText: 'e.g., A12345678'),
-                SizedBox(height: 20.0),
+                const SizedBox(height: 20.0),
                 _buildActionButtons(),
               ],
             ),
@@ -103,15 +105,15 @@ class _DriverProfileState extends State<DriverProfile> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.black),
+            style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.black),
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           TextFormField(
             controller: controller,
             decoration: InputDecoration(
               prefixText: prefixText,
               hintText: hintText,
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
             readOnly: !_editMode,
             validator: (value) {
@@ -135,9 +137,9 @@ class _DriverProfileState extends State<DriverProfile> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          minimumSize: Size(double.infinity, 40.0),
+          minimumSize: const Size(double.infinity, 40.0),
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.save, color: Colors.white),
@@ -160,9 +162,9 @@ class _DriverProfileState extends State<DriverProfile> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          minimumSize: Size(double.infinity, 40.0),
+          minimumSize: const Size(double.infinity, 40.0),
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.edit, color: Colors.white),
@@ -187,11 +189,11 @@ class _DriverProfileState extends State<DriverProfile> {
       User? currentUser = await _authService.getCurrentUser();
       if (currentUser == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('You need to be logged in to save your profile.')));
+            const SnackBar(content: Text('You need to be logged in to save your profile.')));
         return;
       }
 
-      String driverId = _existingDriver?.id ?? Uuid().v4();
+      String driverId = _existingDriver?.id ?? const Uuid().v4();
 
       Driver driver = Driver(
         id: driverId,
@@ -204,11 +206,11 @@ class _DriverProfileState extends State<DriverProfile> {
 
       await _firestoreService.addOrUpdateDriver(driver, currentUser.uid);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Driver profile saved')));
+          .showSnackBar(const SnackBar(content: Text('Driver profile saved')));
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => DriverHomePage()),
+        MaterialPageRoute(builder: (context) => const DriverHomePage()),
       );
     }
   }

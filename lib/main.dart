@@ -19,6 +19,8 @@ class MyApp extends StatelessWidget {
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -27,13 +29,13 @@ class MyApp extends StatelessWidget {
         future: Permission.location.request(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else {
             final locationStatus = snapshot.data;
             if (locationStatus == PermissionStatus.granted) {
               return buildMainInterface();
             } else if (locationStatus == PermissionStatus.denied) {
-              return Scaffold(
+              return const Scaffold(
                 body: Center(
                   child: Text('This permission is required to use FUELFINDER'),
                 ),
@@ -42,7 +44,7 @@ class MyApp extends StatelessWidget {
               openAppSettings();
               return Container();
             } else {
-              return Scaffold(
+              return const Scaffold(
                 body: Center(
                   child: Text('Unknown permission status'),
                 ),
@@ -59,7 +61,7 @@ class MyApp extends StatelessWidget {
       stream: _authService.currentUser,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else {
@@ -69,30 +71,30 @@ class MyApp extends StatelessWidget {
               future: _firestore.collection('users').doc(user.uid).get(),
               builder: (context, userSnapshot) {
                 if (userSnapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 } else if (userSnapshot.hasError) {
-                  return Text('Error retrieving user data');
+                  return const Text('Error retrieving user data');
                 } else {
                   final userData = userSnapshot.data;
                   if (userData != null && userData.exists) {
                     final role = userData['role'] as String?;
                     if (role == 'user') {
-                      return DriverHomePage();
+                      return const DriverHomePage();
                     } else if (role == 'station') {
-                      return StationHomePage();
+                      return const StationHomePage();
                     } else if (role == 'admin'){
-                      return AdminDashboard();
+                      return const AdminDashboard();
                     } else {
-                      return Text('Unknown role');
+                      return const Text('Unknown role');
                     }
                   } else {
-                    return Text('User data not found');
+                    return const Text('User data not found');
                   }
                 }
               },
             );
           } else {
-            return LoginPage();
+            return const LoginPage();
           }
         }
       },

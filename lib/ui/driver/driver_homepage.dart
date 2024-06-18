@@ -15,11 +15,13 @@ import 'package:ff_main/models/fuel_station.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class DriverHomePage extends StatefulWidget {
+  const DriverHomePage({super.key});
+
   @override
-  _DriverHomePageState createState() => _DriverHomePageState();
+  DriverHomePageState createState() => DriverHomePageState();
 }
 
-class _DriverHomePageState extends State<DriverHomePage> {
+class DriverHomePageState extends State<DriverHomePage> {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
   String searchQuery = '';
@@ -55,11 +57,11 @@ class _DriverHomePageState extends State<DriverHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(
+          title: const Text(
             'Complete Your Profile',
             style: TextStyle(fontSize: 20.0, color: Colors.green),
           ),
-          content: Text('Please complete your driver profile to proceed.'),
+          content: const Text('Please complete your driver profile to proceed.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -69,7 +71,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   MaterialPageRoute(builder: (context) => DriverProfile()),
                 );
               },
-              child: Text(
+              child: const Text(
                 'OK',
                 style: TextStyle(color: Colors.green),
               ),
@@ -108,7 +110,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                     fontWeight: FontWeight.bold),
               ),
               content: Container(
-                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8.0),
@@ -116,7 +118,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                 ),
                 child: Text(
                   randomTip.tip,
-                  style: TextStyle(fontSize: 18.0),
+                  style: const TextStyle(fontSize: 18.0),
                 ),
               ),
               actions: [
@@ -130,8 +132,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     padding:
-                        EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-                    child: Text(
+                        const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                    child: const Text(
                       'Close',
                       style: TextStyle(color: Colors.white, fontSize: 18.0),
                     ),
@@ -178,21 +180,21 @@ class _DriverHomePageState extends State<DriverHomePage> {
   @override
   Widget build(BuildContext context) {
     if (!_isProfileLoaded || _currentLocation == null) {
-      return Scaffold(
+      return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'FUELFINDER',
           style: TextStyle(fontSize: 30.0, color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
         actions: [
           IconButton(
-            icon: Icon(Icons.logout, color: Colors.red, size: 30.0),
+            icon: const Icon(Icons.logout, color: Colors.red, size: 30.0),
             onPressed: () {
               _showLogoutConfirmationDialog(context);
             },
@@ -205,14 +207,14 @@ class _DriverHomePageState extends State<DriverHomePage> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(color: Colors.grey[100]),
-              child: Text(
+              child: const Text(
                 'Application',
                 style: TextStyle(color: Colors.green, fontSize: 24.0),
               ),
             ),
             ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Profile'),
+              leading: const Icon(Icons.person),
+              title: const Text('Profile'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -222,13 +224,13 @@ class _DriverHomePageState extends State<DriverHomePage> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.directions_car),
-              title: Text('Fuel Efficiency Tips'),
+              leading: const Icon(Icons.directions_car),
+              title: const Text('Fuel Efficiency Tips'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => FuelEfficiencyTips()),
+                  MaterialPageRoute(builder: (context) => const FuelEfficiencyTips()),
                 );
               },
             ),
@@ -239,11 +241,11 @@ class _DriverHomePageState extends State<DriverHomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.all(16.0), // Adjust padding as needed
+            padding: const EdgeInsets.all(16.0), // Adjust padding as needed
             decoration: BoxDecoration(
               color: Colors
                   .grey[200], // Background color similar to list of stations
-              borderRadius: BorderRadius.horizontal(
+              borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20.0),
                 right: Radius.circular(20.0),
               ),
@@ -252,7 +254,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                 width: 1.0,
               ),
             ),
-            child: Column(
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -275,8 +277,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
             child: Text(
               'Search Route',
               style: TextStyle(
@@ -297,7 +299,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   border: InputBorder.none,
                   hintText: 'Enter road code or route',
                   suffixIcon: IconButton(
-                    icon: Icon(Icons.search),
+                    icon: const Icon(Icons.search),
                     onPressed: () {
                       setState(() {
                         searchQuery = searchQuery.trim();
@@ -312,7 +314,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: ElevatedButton.icon(
               onPressed: () async {
                 PermissionStatus locationStatus =
@@ -328,7 +330,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
                 if (locationStatus == PermissionStatus.denied) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('This permission is required to use maps'),
                     ),
                   );
@@ -338,8 +340,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   openAppSettings();
                 }
               },
-              icon: Icon(Icons.map, color: Colors.white),
-              label: Text(
+              icon: const Icon(Icons.map, color: Colors.white),
+              label: const Text(
                 'View Stations on Map',
                 style: TextStyle(
                     color: Colors.white,
@@ -351,13 +353,13 @@ class _DriverHomePageState extends State<DriverHomePage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 12.0),
-                minimumSize: Size(double.infinity, 50),
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                minimumSize: const Size(double.infinity, 50),
               ),
             ),
           ),
-          SizedBox(height: 16.0),
-          Padding(
+          const SizedBox(height: 16.0),
+          const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
               'Fuel Stations:',
@@ -373,10 +375,10 @@ class _DriverHomePageState extends State<DriverHomePage> {
               stream: _firestoreService.streamVerifiedStations(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No stations found'));
+                  return const Center(child: Text('No stations found'));
                 }
                 List<FuelStation> stations = snapshot.data!;
                 if (searchQuery.isNotEmpty) {
@@ -405,7 +407,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
   return FutureBuilder<double>(
     future: calculateRoadDistance(
       _currentLocation!,
-      _parseCoordinates(station.gpsLink) ?? LatLng(0.0, 0.0),
+      _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
     ),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -437,17 +439,17 @@ class _DriverHomePageState extends State<DriverHomePage> {
               );
             },
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: ClipRRect(
-                borderRadius: BorderRadius.horizontal(
+                borderRadius: const BorderRadius.horizontal(
                   left: Radius.circular(20.0),
                   right: Radius.circular(20.0),
                 ),
                 child: Container(
-                  padding: EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
-                    borderRadius: BorderRadius.horizontal(
+                    borderRadius: const BorderRadius.horizontal(
                       left: Radius.circular(20.0),
                       right: Radius.circular(20.0),
                     ),
@@ -457,29 +459,29 @@ class _DriverHomePageState extends State<DriverHomePage> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.local_gas_station),
-                          SizedBox(width: 8.0),
+                          const Icon(Icons.local_gas_station),
+                          const SizedBox(width: 8.0),
                           Text(
                             station.name,
-                            style: TextStyle(
+                            style: const TextStyle(
                                 color: Colors.amber, fontWeight: FontWeight.bold),
                           ),
-                          Spacer(),
-                          Icon(Icons.arrow_forward_ios),
+                          const Spacer(),
+                          const Icon(Icons.arrow_forward_ios),
                         ],
                       ),
-                      SizedBox(height: 8.0),
+                      const SizedBox(height: 8.0),
                       Row(
                         children: [
-                          Icon(Icons.location_on),
-                          SizedBox(width: 8.0),
+                          const Icon(Icons.location_on),
+                          const SizedBox(width: 8.0),
                           Text(
                             'Distance: ${distance.toStringAsFixed(2)} km',
-                            style: TextStyle(fontSize: 16.0),
+                            style: const TextStyle(fontSize: 16.0),
                           ),
                         ],
                       ),
-                      SizedBox(height: 8.0),
+                      const SizedBox(height: 8.0),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -489,15 +491,15 @@ class _DriverHomePageState extends State<DriverHomePage> {
                                   color: services.isPetrolAvailable
                                       ? Colors.green
                                       : Colors.red),
-                              SizedBox(width: 4.0),
-                              Text('Petrol'),
-                              SizedBox(width: 16.0),
+                              const SizedBox(width: 4.0),
+                              const Text('Petrol'),
+                              const SizedBox(width: 16.0),
                               Icon(Icons.circle,
                                   color: services.isDieselAvailable
                                       ? Colors.green
                                       : Colors.red),
-                              SizedBox(width: 4.0),
-                              Text('Diesel'),
+                              const SizedBox(width: 4.0),
+                              const Text('Diesel'),
                             ],
                           ),
                           Text(
@@ -531,7 +533,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
       child: ListTile(
         title: Text(
           title,
-          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(subtitle),
       ),
@@ -559,9 +561,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Logout Confirmation'),
+          title: const Text('Logout Confirmation'),
           backgroundColor: Colors.green[100],
-          content: Text('Are you sure you want to logout?'),
+          content: const Text('Are you sure you want to logout?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -577,7 +579,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                 await _authService.logout();
                 Navigator.pushNamed(context, '/login');
               },
-              child: Text(
+              child: const Text(
                 'Logout',
                 style: TextStyle(color: Colors.green),
               ),

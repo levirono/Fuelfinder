@@ -8,11 +8,13 @@ import 'package:ff_main/ui/station/pick_my_coordinates.dart';
 import 'package:ff_main/ui/station/station_homepage.dart';
 
 class StationProfile extends StatefulWidget {
+  const StationProfile({super.key});
+
   @override
-  _StationProfileState createState() => _StationProfileState();
+  StationProfileState createState() => StationProfileState();
 }
 
-class _StationProfileState extends State<StationProfile> {
+class StationProfileState extends State<StationProfile> {
   final _formKey = GlobalKey<FormState>();
   final _firestoreService = FirestoreService();
   final _nameController = TextEditingController();
@@ -72,18 +74,18 @@ Widget build(BuildContext context) {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
+          const Text(
             'My Profile',
             style: TextStyle(color: Colors.green, fontSize: 30.0),
           ),
           if (_existingStation != null && _existingStation!.isVerified)
-            Icon(Icons.verified, color: Colors.blue),
+            const Icon(Icons.verified, color: Colors.blue),
         ],
       ),
       backgroundColor: Colors.green[100],
     ),
     body: Container(
-      padding: EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16.0),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -92,7 +94,7 @@ Widget build(BuildContext context) {
             children: [
               _buildFormField('Station Name', _nameController, mandatory: true),
               _buildFormField('GPS Link', _gpsLinkController, mandatory: true, example: 'latitude,longitude'),
-              SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
               ElevatedButton(
                 onPressed: _openPickMyCoordinateScreen,
                 style: ElevatedButton.styleFrom(
@@ -100,9 +102,9 @@ Widget build(BuildContext context) {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20.0),
                   ),
-                  minimumSize: Size(double.infinity, 40.0),
+                  minimumSize: const Size(double.infinity, 40.0),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Icon(Icons.map, color: Colors.white),
@@ -120,7 +122,7 @@ Widget build(BuildContext context) {
               _buildFormField('Distance From (km)', _distanceFromController),
               _buildFormField('Services Offered (comma-separated)', _servicesOfferedController),
               _buildFormField('Operation Hours', _operationHoursController),
-              SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
               _buildActionButtons(),
             ],
           ),
@@ -134,7 +136,7 @@ Widget build(BuildContext context) {
   Widget _buildFormField(String labelText, TextEditingController controller,
       {bool mandatory = false, String example = ''}) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -154,12 +156,12 @@ Widget build(BuildContext context) {
             children: [
               Text(
                 labelText,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               if (mandatory)
-                Text(
+                const Text(
                   '*',
                   style: TextStyle(
                     color: Colors.red,
@@ -168,12 +170,12 @@ Widget build(BuildContext context) {
                 ),
             ],
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           TextFormField(
             controller: controller,
             enabled: _editMode,
             decoration: InputDecoration(
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
               hintText: example.isNotEmpty ? 'e.g. $example' : null,
             ),
             validator: (value) {
@@ -197,9 +199,9 @@ Widget build(BuildContext context) {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          minimumSize: Size(double.infinity, 40.0),
+          minimumSize: const Size(double.infinity, 40.0),
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.save, color: Colors.white),
@@ -222,9 +224,9 @@ Widget build(BuildContext context) {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          minimumSize: Size(double.infinity, 40.0),
+          minimumSize: const Size(double.infinity, 40.0),
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.edit, color: Colors.white),
@@ -247,7 +249,7 @@ Widget build(BuildContext context) {
         return;
       }
 
-      String stationId = _existingStation?.id ?? Uuid().v4();
+      String stationId = _existingStation?.id ?? const Uuid().v4();
 
       String location = [
         _roadCodeController.text,
@@ -267,7 +269,7 @@ Widget build(BuildContext context) {
 
       await _firestoreService.addOrUpdateStation(station, currentUser.uid);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Station profile saved')));
+          .showSnackBar(const SnackBar(content: Text('Station profile saved')));
       setState(() {
         _editMode = false;
         _loadStationProfile();
@@ -278,7 +280,7 @@ Widget build(BuildContext context) {
         // Navigate to StationHomePage after saving the profile
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => StationHomePage()),
+          MaterialPageRoute(builder: (context) => const StationHomePage()),
         );
       }
     }
@@ -287,7 +289,7 @@ Widget build(BuildContext context) {
   void _openPickMyCoordinateScreen() async {
     final coordinatesText = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PickMyCoordinate()),
+      MaterialPageRoute(builder: (context) => const PickMyCoordinate()),
     );
     if (coordinatesText != null) {
       setState(() {

@@ -1,12 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ff_main/models/fuel_station.dart';
-// import 'package:ff_main/models/station_services.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-
-   Stream<List<FuelStation>> streamStations() {
+  Stream<List<FuelStation>> streamStations() {
     try {
       var snapshots = _db.collection('fuelStations').snapshots();
 
@@ -14,7 +12,7 @@ class FirestoreService {
         List<FuelStation> stations = [];
 
         for (var doc in querySnapshot.docs) {
-          var stationData = doc.data() as Map<String, dynamic>;
+          var stationData = doc.data();
           var stationId = doc.id;
 
           // Fetch station services data for the current station
@@ -38,78 +36,80 @@ class FirestoreService {
       throw Exception('Error streaming stations: $e');
     }
   }
-Stream<List<FuelStation>> streamStationsWithServices() {
-  try {
-    return _db.collection('fuelStations').snapshots().asyncMap((querySnapshot) async {
-      List<FuelStation> stations = [];
 
-      for (var doc in querySnapshot.docs) {
-        var stationData = doc.data() as Map<String, dynamic>;
-        var stationId = doc.id;
+  Stream<List<FuelStation>> streamStationsWithServices() {
+    try {
+      return _db
+          .collection('fuelStations')
+          .snapshots()
+          .asyncMap((querySnapshot) async {
+        List<FuelStation> stations = [];
 
-        var services = await getStationServices(stationId);
+        for (var doc in querySnapshot.docs) {
+          var stationData = doc.data();
+          var stationId = doc.id;
 
-        var fuelStation = FuelStation.fromMap({
-          ...stationData,
-          'id': stationId,
-          'isPetrolAvailable': services.isPetrolAvailable,
-          'isDieselAvailable': services.isDieselAvailable,
-          'isOpen': services.isOpen,
-        });
+          var services = await getStationServices(stationId);
 
-        stations.add(fuelStation);
-      }
+          var fuelStation = FuelStation.fromMap({
+            ...stationData,
+            'id': stationId,
+            'isPetrolAvailable': services.isPetrolAvailable,
+            'isDieselAvailable': services.isDieselAvailable,
+            'isOpen': services.isOpen,
+          });
 
-      return stations;
-    });
-  } catch (e) {
-    throw Exception('Error streaming stations with services: $e');
+          stations.add(fuelStation);
+        }
+
+        return stations;
+      });
+    } catch (e) {
+      throw Exception('Error streaming stations with services: $e');
+    }
   }
-}
 
+  Stream<List<FuelStation>> streamVerifiedStations() {
+    try {
+      var snapshots = _db
+          .collection('fuelStations')
+          .where('isVerified', isEqualTo: true)
+          .snapshots();
 
-Stream<List<FuelStation>> streamVerifiedStations() {
-  try {
-    var snapshots = _db.collection('fuelStations')
-                       .where('isVerified', isEqualTo: true)
-                       .snapshots();
+      return snapshots.asyncMap((querySnapshot) async {
+        List<FuelStation> stations = [];
 
-    return snapshots.asyncMap((querySnapshot) async {
-      List<FuelStation> stations = [];
+        for (var doc in querySnapshot.docs) {
+          var stationData = doc.data();
+          var stationId = doc.id;
 
-      for (var doc in querySnapshot.docs) {
-        var stationData = doc.data() as Map<String, dynamic>;
-        var stationId = doc.id;
+          var services = await getStationServices(stationId);
 
-        var services = await getStationServices(stationId);
+          var fuelStation = FuelStation.fromMap({
+            ...stationData,
+            'id': stationId,
+            'isPetrolAvailable': services.isPetrolAvailable,
+            'isDieselAvailable': services.isDieselAvailable,
+            'isOpen': services.isOpen,
+          });
 
-        var fuelStation = FuelStation.fromMap({
-          ...stationData,
-          'id': stationId,
-          'isPetrolAvailable': services.isPetrolAvailable,
-          'isDieselAvailable': services.isDieselAvailable,
-          'isOpen': services.isOpen,
-        });
+          stations.add(fuelStation);
+        }
 
-        stations.add(fuelStation);
-      }
-
-      return stations;
-    });
-  } catch (e) {
-    throw Exception('Error streaming verified stations: $e');
+        return stations;
+      });
+    } catch (e) {
+      throw Exception('Error streaming verified stations: $e');
+    }
   }
-}
-Stream<StationServices> streamStationServices(String stationId) {
+
+  Stream<StationServices> streamStationServices(String stationId) {
     return FirebaseFirestore.instance
         .collection('stationServices')
         .doc(stationId)
         .snapshots()
         .map((snapshot) => StationServices.fromMap(snapshot.data()!));
   }
-
-
-
 
   Future<void> addOrUpdateStation(FuelStation station, String ownerId) async {
     try {
@@ -133,7 +133,7 @@ Stream<StationServices> streamStationServices(String stationId) {
       if (querySnapshot.docs.isNotEmpty) {
         var doc = querySnapshot.docs.first;
         return FuelStation.fromMap({
-          ...doc.data() as Map<String, dynamic>,
+          ...doc.data(),
           'id': doc.id,
         });
       }
@@ -152,7 +152,7 @@ Stream<StationServices> streamStationServices(String stationId) {
 
       return snapshots.map((querySnapshot) => querySnapshot.docs
           .map((doc) => FuelStation.fromMap({
-                ...doc.data() as Map<String, dynamic>,
+                ...doc.data(),
                 'id': doc.id,
               }))
           .toList());
@@ -161,7 +161,8 @@ Stream<StationServices> streamStationServices(String stationId) {
     }
   }
 
-  Future<void> updateStationServices(String stationId, StationServices services) async {
+  Future<void> updateStationServices(
+      String stationId, StationServices services) async {
     try {
       await _db.collection('stationServices').doc(stationId).set({
         'isPetrolAvailable': services.isPetrolAvailable,
@@ -175,9 +176,11 @@ Stream<StationServices> streamStationServices(String stationId) {
       throw Exception('Error updating station services: $e');
     }
   }
-   Future<List<String>> getServicesOffered(String stationId) async {
+
+  Future<List<String>> getServicesOffered(String stationId) async {
     try {
-      var docSnapshot = await _db.collection('fuelStations').doc(stationId).get();
+      var docSnapshot =
+          await _db.collection('fuelStations').doc(stationId).get();
 
       if (docSnapshot.exists) {
         var data = docSnapshot.data() as Map<String, dynamic>;
@@ -190,25 +193,27 @@ Stream<StationServices> streamStationServices(String stationId) {
     }
     return [];
   }
+
   Future<String?> getStationName(String stationId) async {
-  try {
-    var docSnapshot = await _db.collection('fuelStations').doc(stationId).get();
+    try {
+      var docSnapshot =
+          await _db.collection('fuelStations').doc(stationId).get();
 
-    if (docSnapshot.exists) {
-      var data = docSnapshot.data() as Map<String, dynamic>;
-      return data['name']?.toString(); // Use null-safe access operator (?)
+      if (docSnapshot.exists) {
+        var data = docSnapshot.data() as Map<String, dynamic>;
+        return data['name']?.toString();
+      }
+    } catch (e) {
+      throw Exception('Error fetching station name: $e');
     }
-  } catch (e) {
-    throw Exception('Error fetching station name: $e');
+    return null;
   }
-  return null; // Return null if station not found or error occurs
-}
-
 
   Future<StationServices> getStationServices(String stationId) async {
     try {
       // Fetch the station services document using the provided stationId
-      var docSnapshot = await _db.collection('stationServices').doc(stationId).get();
+      var docSnapshot =
+          await _db.collection('stationServices').doc(stationId).get();
 
       if (docSnapshot.exists) {
         // If the station services document exists, parse the data into a StationServices object
@@ -219,7 +224,8 @@ Stream<StationServices> streamStationServices(String stationId) {
           petrolPrice: servicesData['petrolPrice'].toDouble(),
           dieselPrice: servicesData['dieselPrice'].toDouble(),
           isOpen: servicesData['isOpen'],
-          availableServices: List<String>.from(servicesData['availableServices']),
+          availableServices:
+              List<String>.from(servicesData['availableServices']),
         );
       } else {
         // If the station services document doesn't exist, create a new one with defaults
@@ -245,59 +251,65 @@ Stream<StationServices> streamStationServices(String stationId) {
     }
   }
 
-Stream<List<FuelEfficiencyTip>> streamFuelEfficiencyTips() {
-    return _db.collection('fuel_efficiency_tips').orderBy('timestamp', descending: true).snapshots().map((snapshot) {
+  Stream<List<FuelEfficiencyTip>> streamFuelEfficiencyTips() {
+    return _db
+        .collection('fuel_efficiency_tips')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return FuelEfficiencyTip.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        return FuelEfficiencyTip.fromMap(doc.data(), doc.id);
       }).toList();
     });
   }
+
   Future<void> deleteStation(String stationId) async {
     await _db.collection('fuelStations').doc(stationId).delete();
   }
 
-
   Future<void> addFuelEfficiencyTip(String tip) async {
-  try {
-    final CollectionReference tipsCollection = FirebaseFirestore.instance.collection('fuel_efficiency_tips');
-
-    // Check if the collection exists by retrieving its metadata
-    final CollectionReference metadataCollection = FirebaseFirestore.instance.collection('fuel_efficiency_tips');
-    final QuerySnapshot metadataQuery = await metadataCollection.limit(1).get();
-
-    if (metadataQuery.docs.isEmpty) {
-      // The collection does not exist, Firestore will create it automatically
-      print('The fuel_efficiency_tips collection does not exist yet.');
-    }
-
-    // Add the tip to the collection
-    await tipsCollection.add({
-      'tip': tip,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-    
-    print('Fuel efficiency tip added successfully.');
-
-  } catch (e) {
-    // Log the error or use a more sophisticated error handling approach
-    print('Error adding tip: $e');
-  }
-}
-Future<List<FuelEfficiencyTip>> getFuelEfficiencyTips() async {
     try {
-      final QuerySnapshot querySnapshot = await _db.collection('fuel_efficiency_tips')
-                                                     .orderBy('timestamp', descending: true)
-                                                     .get();
+      final CollectionReference tipsCollection =
+          FirebaseFirestore.instance.collection('fuel_efficiency_tips');
+      final CollectionReference metadataCollection =
+          FirebaseFirestore.instance.collection('fuel_efficiency_tips');
+      final QuerySnapshot metadataQuery =
+          await metadataCollection.limit(1).get();
+
+      if (metadataQuery.docs.isEmpty) {}
+
+      await tipsCollection.add({
+        'tip': tip,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // print('Fuel efficiency tip added successfully.');
+    } catch (e) {
+      // print('Error adding tip: $e');
+    }
+  }
+
+  Future<List<FuelEfficiencyTip>> getFuelEfficiencyTips() async {
+    try {
+      final QuerySnapshot querySnapshot = await _db
+          .collection('fuel_efficiency_tips')
+          .orderBy('timestamp', descending: true)
+          .get();
 
       return querySnapshot.docs.map((doc) {
-        return FuelEfficiencyTip.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        return FuelEfficiencyTip.fromMap(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     } catch (e) {
       throw Exception('Error fetching fuel efficiency tips: $e');
     }
   }
+
   Future<Driver?> getDriverByOwnerId(String ownerId) async {
-    var snapshot = await _db.collection('drivers').where('ownerId', isEqualTo: ownerId).get();
+    var snapshot = await _db
+        .collection('drivers')
+        .where('ownerId', isEqualTo: ownerId)
+        .get();
     if (snapshot.docs.isNotEmpty) {
       return Driver.fromSnapshot(snapshot.docs.first);
     }
@@ -315,28 +327,26 @@ Future<List<FuelEfficiencyTip>> getFuelEfficiencyTips() async {
     });
   }
 
- Future<void> deleteDriver(String driverId) async {
-  try {
-    await _db.collection('drivers').doc(driverId).delete();
-  } catch (e) {
-    throw Exception('Error deleting driver: $e');
+  Future<void> deleteDriver(String driverId) async {
+    try {
+      await _db.collection('drivers').doc(driverId).delete();
+    } catch (e) {
+      throw Exception('Error deleting driver: $e');
+    }
   }
-}
 
   Stream<List<Driver>> streamDrivers() {
-  try {
-    var snapshots = _db.collection('drivers').snapshots();
+    try {
+      var snapshots = _db.collection('drivers').snapshots();
 
-    return snapshots.map((querySnapshot) => querySnapshot.docs
-        .map((doc) => Driver.fromSnapshot(doc))
-        .toList());
-  } catch (e) {
-    throw Exception('Error streaming drivers: $e');
+      return snapshots.map((querySnapshot) =>
+          querySnapshot.docs.map((doc) => Driver.fromSnapshot(doc)).toList());
+    } catch (e) {
+      throw Exception('Error streaming drivers: $e');
+    }
   }
-}
 
-
-Future<int> getStationCount() async {
+  Future<int> getStationCount() async {
     try {
       var querySnapshot = await _db.collection('fuelStations').get();
       return querySnapshot.size;
@@ -354,17 +364,15 @@ Future<int> getStationCount() async {
     }
   }
 
-
   //new functionality to verify stationos
-   Future<void> verifyStation(String stationId, bool isVerified) async {
+  Future<void> verifyStation(String stationId, bool isVerified) async {
     try {
-      await _db.collection('fuelStations').doc(stationId).update({'isVerified': isVerified});
-      print("Station verification status updated successfully.");
+      await _db
+          .collection('fuelStations')
+          .doc(stationId)
+          .update({'isVerified': isVerified});
     } catch (e) {
-      print("Failed to update station verification status: $e");
-      throw e;
+      rethrow;
     }
   }
-
 }
-

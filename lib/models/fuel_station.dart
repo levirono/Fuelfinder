@@ -7,7 +7,7 @@ class FuelStation {
   String gpsLink;
   List<String> servicesOffered;
   String operationHours;
-  bool isVerified; // Add this property
+  bool isVerified;
 
   FuelStation({
     required this.id,
@@ -16,7 +16,7 @@ class FuelStation {
     required this.gpsLink,
     required this.servicesOffered,
     required this.operationHours,
-    this.isVerified = false, // Initialize as false by default
+    this.isVerified = false,
   });
 
   factory FuelStation.fromMap(Map<String, dynamic> map) {
@@ -27,7 +27,7 @@ class FuelStation {
       gpsLink: map['gpsLink'],
       servicesOffered: List<String>.from(map['servicesOffered']),
       operationHours: map['operationHours'],
-      isVerified: map['isVerified'] ?? false, // Read the isVerified field
+      isVerified: map['isVerified'] ?? false,
     );
   }
 
@@ -39,7 +39,7 @@ class FuelStation {
       'gpsLink': gpsLink,
       'servicesOffered': servicesOffered,
       'operationHours': operationHours,
-      'isVerified': isVerified, // Include isVerified in the map
+      'isVerified': isVerified,
     };
   }
 }

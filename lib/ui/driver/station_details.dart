@@ -36,13 +36,13 @@ class FuelStationDetailsPage extends StatelessWidget {
             _buildLocationTile('Road Code', roadCode),
             _buildLocationTile('Distance To', distanceTo),
             _buildLocationTile('Distance From', distanceFrom),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
             _buildSectionTitle('FUEL AVAILABILITY:'),
             _buildFuelAvailability(),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
             _buildSectionTitle('FUEL PRICES:'),
             _buildFuelPrices(),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
             _buildSectionTitle('SERVICES OFFERED:'),
             _buildServicesOffered(),
           ],
@@ -71,12 +71,12 @@ class FuelStationDetailsPage extends StatelessWidget {
         children: [
           Text(
             '$title: ',
-            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
           ),
           Flexible(
             child: Text(
               value,
-              style: TextStyle(fontSize: 16.0),
+              style: const TextStyle(fontSize: 16.0),
               overflow: TextOverflow.ellipsis,
               maxLines: 2,
             ),
@@ -91,7 +91,7 @@ class FuelStationDetailsPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 18.0,
           fontWeight: FontWeight.bold,
           color: Colors.green,
@@ -117,7 +117,7 @@ class FuelStationDetailsPage extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 16.0),
+        style: const TextStyle(fontSize: 16.0),
       ),
     );
   }
@@ -127,10 +127,10 @@ class FuelStationDetailsPage extends StatelessWidget {
       future: FirestoreService().getStationServices(station.id),
       builder: (context, AsyncSnapshot<StationServices> serviceSnapshot) {
         if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (serviceSnapshot.hasError || !serviceSnapshot.hasData) {
-          return Text('Error loading services');
+          return const Text('Error loading services');
         }
         var services = serviceSnapshot.data!;
 
@@ -165,7 +165,7 @@ class FuelStationDetailsPage extends StatelessWidget {
         children: [
           Text(
             '$fuelType: ',
-            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
           ),
           Text(
             isAvailable ? 'Available' : 'Not Available',
@@ -184,14 +184,13 @@ class FuelStationDetailsPage extends StatelessWidget {
       future: FirestoreService().getStationServices(station.id),
       builder: (context, AsyncSnapshot<StationServices> serviceSnapshot) {
         if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (serviceSnapshot.hasError || !serviceSnapshot.hasData) {
-          return Text('Error loading services');
+          return const Text('Error loading services');
         }
         var services = serviceSnapshot.data!;
 
-        // Concatenate all available services into one string
         String allServices = services.availableServices.join(', ');
 
         return Container(
@@ -210,7 +209,7 @@ class FuelStationDetailsPage extends StatelessWidget {
           ),
           child: Text(
             allServices,
-            style: TextStyle(fontSize: 16.0),
+            style: const TextStyle(fontSize: 16.0),
           ),
         );
       },
@@ -222,10 +221,10 @@ class FuelStationDetailsPage extends StatelessWidget {
       future: FirestoreService().getStationServices(station.id),
       builder: (context, AsyncSnapshot<StationServices> serviceSnapshot) {
         if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (serviceSnapshot.hasError || !serviceSnapshot.hasData) {
-          return Text('Error loading services');
+          return const Text('Error loading services');
         }
         var services = serviceSnapshot.data!;
 
@@ -260,11 +259,11 @@ class FuelStationDetailsPage extends StatelessWidget {
         children: [
           Text(
             '$fuelType: ',
-            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
           ),
           Text(
-            '${price.toStringAsFixed(2)}',
-            style: TextStyle(
+            price.toStringAsFixed(2),
+            style: const TextStyle(
               fontSize: 16.0,
               color: Colors.red,
             ),

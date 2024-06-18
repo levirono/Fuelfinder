@@ -5,11 +5,13 @@ import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/ui/driver/station_details.dart';
 
 class StationsPage extends StatefulWidget {
+  const StationsPage({super.key});
+
   @override
-  _StationsPageState createState() => _StationsPageState();
+  StationsPageState createState() => StationsPageState();
 }
 
-class _StationsPageState extends State<StationsPage> {
+class StationsPageState extends State<StationsPage> {
   final FirestoreService _firestoreService = FirestoreService();
   final AuthService _authService = AuthService();
   String? _userRole;
@@ -49,15 +51,15 @@ class _StationsPageState extends State<StationsPage> {
         stream: _firestoreService.streamStations(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(
                 child: Text(
               'Error: ${snapshot.error}',
-              style: TextStyle(color: Colors.red),
+              style: const TextStyle(color: Colors.red),
             ));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
+            return const Center(
                 child: Text(
               'No stations available',
               style: TextStyle(color: Colors.grey),
@@ -98,17 +100,17 @@ class _StationsPageState extends State<StationsPage> {
             );
           },
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.0),
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: ClipRRect(
-              borderRadius: BorderRadius.horizontal(
+              borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20.0),
                 right: Radius.circular(20.0),
               ),
               child: Container(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
-                  borderRadius: BorderRadius.horizontal(
+                  borderRadius: const BorderRadius.horizontal(
                     left: Radius.circular(20.0),
                     right: Radius.circular(20.0),
                   ),
@@ -118,34 +120,34 @@ class _StationsPageState extends State<StationsPage> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.local_gas_station),
-                        SizedBox(width: 8.0),
+                        const Icon(Icons.local_gas_station),
+                        const SizedBox(width: 8.0),
                         Text(
                           station.name,
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: Colors.amber, fontWeight: FontWeight.bold),
                         ),
-                        Spacer(),
+                        const Spacer(),
                         if (_userRole == 'admin') ...[
                           IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red),
+                            icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () async {
                               bool confirmDelete = await showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
-                                  title: Text('Delete Station'),
-                                  content: Text(
+                                  title: const Text('Delete Station'),
+                                  content: const Text(
                                       'Are you sure you want to delete this station?'),
                                   actions: [
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.of(context).pop(false),
-                                      child: Text('Cancel'),
+                                      child: const Text('Cancel'),
                                     ),
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.of(context).pop(true),
-                                      child: Text('Delete'),
+                                      child: const Text('Delete'),
                                     ),
                                   ],
                                 ),
@@ -171,18 +173,18 @@ class _StationsPageState extends State<StationsPage> {
                         ]
                       ],
                     ),
-                    SizedBox(height: 8.0),
+                    const SizedBox(height: 8.0),
                     Row(
                       children: [
-                        Icon(Icons.location_on),  
-                        SizedBox(width: 8.0),
+                        const Icon(Icons.location_on),  
+                        const SizedBox(width: 8.0),
                         Text(
                           'Location: ${station.location}',
-                          style: TextStyle(fontSize: 16.0, color: Colors.grey),
+                          style: const TextStyle(fontSize: 16.0, color: Colors.grey),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8.0),
+                    const SizedBox(height: 8.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -192,15 +194,15 @@ class _StationsPageState extends State<StationsPage> {
                                 color: services.isPetrolAvailable
                                     ? Colors.green
                                     : Colors.red),
-                            SizedBox(width: 4.0),
-                            Text('Petrol'),
-                            SizedBox(width: 16.0),
+                            const SizedBox(width: 4.0),
+                            const Text('Petrol'),
+                            const SizedBox(width: 16.0),
                             Icon(Icons.circle,
                                 color: services.isDieselAvailable
                                     ? Colors.green
                                     : Colors.red),
-                            SizedBox(width: 4.0),
-                            Text('Diesel'),
+                            const SizedBox(width: 4.0),
+                            const Text('Diesel'),
                           ],
                         ),
                       ],
@@ -226,7 +228,7 @@ class _StationsPageState extends State<StationsPage> {
       child: ListTile(
         title: Text(
           title,
-          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(subtitle),
       ),

@@ -18,7 +18,7 @@ class MapView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'FUELFINDER',
           style: TextStyle(fontSize: 20.0, color: Colors.green),
         ),
@@ -28,20 +28,20 @@ class MapView extends StatelessWidget {
         future: _getCurrentLocation(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
             return Center(child: Text('Error fetching location: ${snapshot.error}'));
           }
 
-          LatLng currentLocation = snapshot.data ?? LatLng(51.505, -0.09);
+          LatLng currentLocation = snapshot.data ?? const LatLng(51.505, -0.09);
 
           return StreamBuilder<List<FuelStation>>(
             stream: _firestoreService.streamStationsWithServices(),
             builder: (context, stationSnapshot) {
               if (stationSnapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
               if (stationSnapshot.hasError) {
@@ -56,7 +56,7 @@ class MapView extends StatelessWidget {
                 children: [
                   Container(
                     height: MediaQuery.of(context).size.height / 4,
-                    padding: EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(10),
                     color: Colors.white,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -90,7 +90,7 @@ class MapView extends StatelessWidget {
                                 fillColor: Colors.grey[200],
                                 filled: true,
                                 suffixIcon: IconButton(
-                                  icon: Icon(Icons.search),
+                                  icon: const Icon(Icons.search),
                                   onPressed: () {
                                     if (_searchController.text.isNotEmpty) {
                                       _searchPlace(_searchController.text, context);
@@ -101,18 +101,18 @@ class MapView extends StatelessWidget {
                             );
                           },
                         ),
-                        SizedBox(height: 10),
-                        Text(
+                        const SizedBox(height: 10),
+                        const Text(
                           'View nearby verified stations to refuel',
                           style: TextStyle(fontSize: 20, color: Colors.green),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.zoom_in, size: 30.0),
+                              icon: const Icon(Icons.zoom_in, size: 30.0),
                               onPressed: () {
                                 _mapController.move(
                                   _mapController.camera.center,
@@ -121,7 +121,7 @@ class MapView extends StatelessWidget {
                               },
                             ),
                             IconButton(
-                              icon: Icon(Icons.zoom_out, size: 30.0),
+                              icon: const Icon(Icons.zoom_out, size: 30.0),
                               onPressed: () {
                                 _mapController.move(
                                   _mapController.camera.center,
@@ -136,7 +136,7 @@ class MapView extends StatelessWidget {
                   ),
                   Expanded(
                     child: Padding(
-                      padding: EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(10),
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.black),
@@ -152,7 +152,7 @@ class MapView extends StatelessWidget {
                             TileLayer(
                               urlTemplate:
                                   'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
-                              additionalOptions: {
+                              additionalOptions: const {
                                 'accessToken':
                                     'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
                                 'id': 'mapbox.mapbox-streets-v8',
@@ -165,7 +165,7 @@ class MapView extends StatelessWidget {
                                   height: 80.0,
                                   point: currentLocation,
                                   child: Container(
-                                    child: Column(
+                                    child: const Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(Icons.directions_car, color: Colors.red, size: 40.0),
@@ -190,26 +190,26 @@ class MapView extends StatelessWidget {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
-                                            SizedBox(height: 2.0),
+                                            const Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
+                                            const SizedBox(height: 2.0),
                                             Text(
-                                              '${station.name}',
+                                              station.name,
                                               overflow: TextOverflow.fade,
                                               maxLines: 3,
-                                              style: TextStyle(fontSize: 12.0),
+                                              style: const TextStyle(fontSize: 12.0),
                                             ),
-                                            SizedBox(height: 5.0),
+                                            const SizedBox(height: 5.0),
                                             StreamBuilder<StationServices>(
                                               stream: _firestoreService.streamStationServices(station.id),
                                               builder: (context, serviceSnapshot) {
                                                 if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-                                                  return CircularProgressIndicator();
+                                                  return const CircularProgressIndicator();
                                                 }
                                                 if (serviceSnapshot.hasError) {
-                                                  return Text('Error loading services');
+                                                  return const Text('Error loading services');
                                                 }
                                                 if (!serviceSnapshot.hasData) {
-                                                  return Text('Services unavailable');
+                                                  return const Text('Services unavailable');
                                                 }
                                                 StationServices services = serviceSnapshot.data!;
 
@@ -219,26 +219,26 @@ class MapView extends StatelessWidget {
                                                       mainAxisAlignment: MainAxisAlignment.center,
                                                       children: [
                                                         Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
-                                                        SizedBox(width: 5.0),
+                                                        const SizedBox(width: 5.0),
                                                         Text(
                                                           'P',
                                                           style: TextStyle(color: services.isPetrolAvailable ? Colors.green : Colors.red),
                                                         ),
                                                       ],
                                                     ),
-                                                    SizedBox(width: 5.0),
+                                                    const SizedBox(width: 5.0),
                                                     Row(
                                                       mainAxisAlignment: MainAxisAlignment.center,
                                                       children: [
                                                         Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
-                                                        SizedBox(width: 5.0),
+                                                        const SizedBox(width: 5.0),
                                                         Text(
                                                           'D',
                                                           style: TextStyle(color: services.isDieselAvailable ? Colors.green : Colors.red),
                                                         ),
                                                       ],
                                                     ),
-                                                    SizedBox(width: 5.0),
+                                                    const SizedBox(width: 5.0),
                                                     Text(
                                                       services.isOpen ? ' -Open' : ' -Closed',
                                                       style: TextStyle(color: services.isOpen ? Colors.green : Colors.red),
@@ -252,7 +252,7 @@ class MapView extends StatelessWidget {
                                       ),
                                     );
                                   } else {
-                                    return Marker(
+                                    return const Marker(
                                       width: 0.0,
                                       height: 0.0,
                                       point: LatLng(0.0, 0.0),
@@ -285,10 +285,10 @@ class MapView extends StatelessWidget {
           final LatLng newLocation = LatLng(locations.first.latitude, locations.first.longitude);
           _mapController.move(newLocation, 13.0);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No results found')));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No results found')));
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a valid address')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid address')));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error searching for place: $e')));
@@ -301,7 +301,7 @@ class MapView extends StatelessWidget {
       return LatLng(position.latitude, position.longitude);
     } catch (e) {
       print('Error getting location: $e');
-      return LatLng(51.505, -0.09);
+      return const LatLng(51.505, -0.09);
     }
   }
 

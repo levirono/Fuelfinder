@@ -3,18 +3,20 @@ import 'package:ff_main/models/fuel_station.dart';
 import 'package:ff_main/services/firestore_service.dart';
 
 class DriversPage extends StatefulWidget {
+  const DriversPage({super.key});
+
   @override
-  _DriversPageState createState() => _DriversPageState();
+  DriversPageState createState() => DriversPageState();
 }
 
-class _DriversPageState extends State<DriversPage> {
+class DriversPageState extends State<DriversPage> {
   final FirestoreService _firestoreService = FirestoreService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'DRIVERS',
           style: TextStyle(fontSize: 30.0, color: Colors.green),
         ),
@@ -25,11 +27,11 @@ class _DriversPageState extends State<DriversPage> {
         stream: _firestoreService.streamDrivers(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No drivers available'));
+            return const Center(child: Text('No drivers available'));
           } else {
             final drivers = snapshot.data!;
             return ListView.builder(
@@ -50,17 +52,17 @@ class _DriversPageState extends State<DriversPage> {
       onTap: () {
       },
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: ClipRRect(
-          borderRadius: BorderRadius.horizontal(
+          borderRadius: const BorderRadius.horizontal(
             left: Radius.circular(20.0),
             right: Radius.circular(20.0),
           ),
           child: Container(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
               color: Colors.grey[200],
-              borderRadius: BorderRadius.horizontal(
+              borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20.0),
                 right: Radius.circular(20.0),
               ),
@@ -73,18 +75,18 @@ class _DriversPageState extends State<DriversPage> {
                     Expanded(
                       child: Text(
                         driver.name,
-                        style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
+                      icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
                         _deleteDriver(driver.id);
                       },
                     ),
                   ],
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 Text('Phone: ${driver.phoneNumber}'),
                 Text('Vehicle: ${driver.vehicleModel}'),
                 Text('Plate: ${driver.vehiclePlateNumber}'),

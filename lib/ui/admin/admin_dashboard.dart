@@ -6,11 +6,13 @@ import 'package:ff_main/ui/admin/stations.dart';
 import 'package:ff_main/ui/driver/fuel_efficiency_tips.dart';
 
 class AdminDashboard extends StatefulWidget {
+  const AdminDashboard({super.key});
+
   @override
-  _AdminDashboardState createState() => _AdminDashboardState();
+  AdminDashboardState createState() => AdminDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> {
+class AdminDashboardState extends State<AdminDashboard> {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
 
@@ -28,14 +30,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Admin Dashboard',
           style: TextStyle(fontSize: 30.0, color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
         actions: [
           IconButton(
-            icon: Icon(Icons.logout, color: Colors.red, size: 30.0),
+            icon: const Icon(Icons.logout, color: Colors.red, size: 30.0),
             onPressed: () {
               _showLogoutConfirmationDialog(context);
             },
@@ -48,21 +50,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(color: Colors.grey[100]),
-              child: Text(
+              child: const Text(
                 'Application',
                 style: TextStyle(color: Colors.green, fontSize: 24.0),
               ),
             ),
             ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Profile'),
+              leading: const Icon(Icons.person),
+              title: const Text('Profile'),
               onTap: () {
                 // Navigate to Profile Page
               },
             ),
             ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
               onTap: () {
                 // Navigate to Settings Page
               },
@@ -76,7 +78,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(20.0),
@@ -85,7 +87,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   width: 1.0,
                 ),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -108,12 +110,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ],
               ),
             ),
-            SizedBox(height: 32.0),
+            const SizedBox(height: 32.0),
             FutureBuilder<int>(
               future: _stationCount,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
                 } else {
@@ -131,12 +133,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 }
               },
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             FutureBuilder<int>(
               future: _driverCount,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
                 } else {
@@ -154,7 +156,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 }
               },
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             _buildContainer(
               'Fuel Efficiency Tips',
               '',
@@ -162,7 +164,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => FuelEfficiencyTips()),
+                  MaterialPageRoute(builder: (context) => const FuelEfficiencyTips()),
                 );
               },
             ),
@@ -175,7 +177,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildContainer(String title, String count, Color countColor, void Function() onTap) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.0),
@@ -193,7 +195,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 children: [
                   TextSpan(
                     text: title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.green,
@@ -211,21 +213,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: onTap,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
-                padding: EdgeInsets.symmetric(vertical: 12.0),
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
               ),
               child: Text(
                 'View $title',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18.0,
                   color: Colors.white,
                 ),
@@ -242,9 +244,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Logout Confirmation'),
+          title: const Text('Logout Confirmation'),
           backgroundColor: Colors.green[100],
-          content: Text('Are you sure you want to logout?'),
+          content: const Text('Are you sure you want to logout?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -260,7 +262,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 await _authService.logout();
                 Navigator.pushNamed(context, '/login');
               },
-              child: Text(
+              child: const Text(
                 'Logout',
                 style: TextStyle(color: Colors.green),
               ),
