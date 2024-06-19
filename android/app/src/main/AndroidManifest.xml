@@ -6,7 +6,7 @@
 
 
     <application
-        android:label="ff_main"
+        android:label="FuelFinder"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

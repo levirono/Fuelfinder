@@ -52,7 +52,7 @@ class LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.green[200]!],
+            colors: [Colors.white, Colors.grey[200]!],
           ),
         ),
         child: Center(

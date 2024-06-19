@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:ff_main/ui/about.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
@@ -169,9 +170,9 @@ class DriverHomePageState extends State<DriverHomePage> {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
 
-      // Extract distance (in meters)
+      // Extract distance
       final distance = data['routes'][0]['distance'];
-      return distance / 1000; // Convert to kilometers
+      return distance / 1000; // Converting to kilometers
     } else {
       throw Exception('Failed to load directions');
     }
@@ -181,7 +182,7 @@ class DriverHomePageState extends State<DriverHomePage> {
   Widget build(BuildContext context) {
     if (!_isProfileLoaded || _currentLocation == null) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        // body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -234,6 +235,17 @@ class DriverHomePageState extends State<DriverHomePage> {
                 );
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.info_outline_rounded),
+              title: const Text('About us'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const About()),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -241,10 +253,10 @@ class DriverHomePageState extends State<DriverHomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(16.0), // Adjust padding as needed
+            padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
               color: Colors
-                  .grey[200], // Background color similar to list of stations
+                  .grey[200],
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20.0),
                 right: Radius.circular(20.0),
@@ -464,7 +476,7 @@ class DriverHomePageState extends State<DriverHomePage> {
                           Text(
                             station.name,
                             style: const TextStyle(
-                                color: Colors.amber, fontWeight: FontWeight.bold),
+                                color: Colors.black, fontWeight: FontWeight.bold),
                           ),
                           const Spacer(),
                           const Icon(Icons.arrow_forward_ios),
@@ -533,7 +545,7 @@ class DriverHomePageState extends State<DriverHomePage> {
       child: ListTile(
         title: Text(
           title,
-          style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(subtitle),
       ),

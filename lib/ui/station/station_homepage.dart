@@ -1,3 +1,4 @@
+import 'package:ff_main/ui/about.dart';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/firestore_service.dart';
@@ -107,7 +108,7 @@ class StationHomePageState extends State<StationHomePage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => StationProfile()),
+                  MaterialPageRoute(builder: (context) => const StationProfile()),
                 ).then((value) {
                   _fetchStationData();
                 });
@@ -183,7 +184,18 @@ class StationHomePageState extends State<StationHomePage> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => StationProfile()),
+                  MaterialPageRoute(builder: (context) => const StationProfile()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info_outline_rounded),
+              title: const Text('About'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const About()),
                 );
               },
             ),

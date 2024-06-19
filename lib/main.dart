@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
         future: Permission.location.request(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: LogoLoading());
           } else {
             final locationStatus = snapshot.data;
             if (locationStatus == PermissionStatus.granted) {
@@ -61,7 +61,7 @@ class MyApp extends StatelessWidget {
       stream: _authService.currentUser,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: LogoLoading());
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else {
@@ -71,7 +71,7 @@ class MyApp extends StatelessWidget {
               future: _firestore.collection('users').doc(user.uid).get(),
               builder: (context, userSnapshot) {
                 if (userSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: LogoLoading());
                 } else if (userSnapshot.hasError) {
                   return const Text('Error retrieving user data');
                 } else {
@@ -82,7 +82,7 @@ class MyApp extends StatelessWidget {
                       return const DriverHomePage();
                     } else if (role == 'station') {
                       return const StationHomePage();
-                    } else if (role == 'admin'){
+                    } else if (role == 'admin') {
                       return const AdminDashboard();
                     } else {
                       return const Text('Unknown role');
@@ -98,6 +98,20 @@ class MyApp extends StatelessWidget {
           }
         }
       },
+    );
+  }
+}
+
+class LogoLoading extends StatelessWidget {
+  const LogoLoading({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Center(
+        child: Image.asset('assets/loading.png'),
+      ),
     );
   }
 }
