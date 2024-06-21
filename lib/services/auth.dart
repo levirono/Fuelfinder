@@ -6,7 +6,7 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Register a new user
-  Future<UserCredential?> register(String email, String password, String role) async {
+  Future<User?> register(String email, String password, String role) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -18,7 +18,10 @@ class AuthService {
         'role': role,
       });
 
-      return credential;
+      // Sign out the user immediately after registration
+      await _auth.signOut();
+
+      return credential.user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');

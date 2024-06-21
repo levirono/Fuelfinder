@@ -261,28 +261,27 @@ class SignupPageState extends State<SignupPage> {
   }
 }
 
-
   Future<void> _showRegistrationSuccessDialog(BuildContext context) async {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Account Created Successfully'),
-          content: const Text('Your account has been created successfully!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              },
-              child: const Text('Proceed to Login'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  return showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Account Created Successfully'),
+        content: const Text('Your account has been created successfully!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            },
+            child: const Text('Proceed to Login'),
+          ),
+        ],
+      );
+    },
+  );
+}
 }

@@ -499,46 +499,6 @@ void _showVerificationPopup() {
   );
 }
 
-
-  Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Logout Confirmation',
-            style: TextStyle(
-              color: Colors.green[600],
-            ),
-          ),
-          backgroundColor: Colors.grey[500],
-          content: const Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Colors.red[400]),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                await _authService.logout();
-                Navigator.pushNamed(context, '/login');
-              },
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.green),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _updateStationServices() async {
     try {
       await _firestoreService.updateStationServices(_stationId, _stationServices);
@@ -584,6 +544,46 @@ void _showVerificationPopup() {
       ),
     );
   }
+
+  Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        title: const Text('Logout Confirmation'),
+        backgroundColor: Colors.green[100],
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.red[400]),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await _authService.logout();
+              Navigator.pushNamedAndRemoveUntil(
+                context, 
+                '/login', 
+                (Route<dynamic> route) => false
+              );
+            },
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.green),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
 }
 
 

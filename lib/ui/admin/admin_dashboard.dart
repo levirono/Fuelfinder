@@ -240,36 +240,42 @@ class AdminDashboardState extends State<AdminDashboard> {
   }
 
   Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Logout Confirmation'),
-          backgroundColor: Colors.green[100],
-          content: const Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Colors.red[400]),
-              ),
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        title: const Text('Logout Confirmation'),
+        backgroundColor: Colors.green[100],
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.red[400]),
             ),
-            TextButton(
-              onPressed: () async {
-                await _authService.logout();
-                Navigator.pushNamed(context, '/login');
-              },
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.green),
-              ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await _authService.logout();
+              Navigator.pushNamedAndRemoveUntil(
+                context, 
+                '/login', 
+                (Route<dynamic> route) => false
+              );
+            },
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.green),
             ),
-          ],
-        );
-      },
-    );
-  }
+          ),
+        ],
+      );
+    },
+  );
+}
 }

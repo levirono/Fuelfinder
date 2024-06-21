@@ -52,44 +52,49 @@ class DriverHomePageState extends State<DriverHomePage> {
       }
     }
   }
-
-  void _showDriverProfileDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'Complete Your Profile',
-            style: TextStyle(fontSize: 20.0, color: Colors.green),
-          ),
-          content: const Text('Please complete your driver profile to proceed.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => DriverProfile()),
-                );
-              },
-              child: const Text(
-                'OK',
-                style: TextStyle(color: Colors.green),
-              ),
+void _showDriverProfileDialog() {
+  Future.delayed(const Duration(seconds: 10), () {
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text(
+              'Complete Your Profile',
+              style: TextStyle(fontSize: 20.0, color: Colors.green),
             ),
-          ],
-          backgroundColor: Colors.green[100],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-        );
-      },
-    ).then((value) {
-      setState(() {
-        _isProfileLoaded = true;
+            content: const Text('Please complete your driver profile to proceed.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => DriverProfile()),
+                  );
+                },
+                child: const Text(
+                  'OK',
+                  style: TextStyle(color: Colors.green),
+                ),
+              ),
+            ],
+            backgroundColor: Colors.green[100],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+          );
+        },
+      ).then((value) {
+        if (mounted) {
+          setState(() {
+            _isProfileLoaded = true;
+          });
+        }
       });
-    });
-  }
+    }
+  });
+}
 
   Future<void> _showRandomFuelEfficiencyTip() async {
     if (isFirstTime) {
@@ -383,33 +388,46 @@ class DriverHomePageState extends State<DriverHomePage> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<List<FuelStation>>(
-              stream: _firestoreService.streamVerifiedStations(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No stations found'));
-                }
-                List<FuelStation> stations = snapshot.data!;
-                if (searchQuery.isNotEmpty) {
-                  stations = stations
-                      .where((station) => station.location
-                          .toLowerCase()
-                          .contains(searchQuery.toLowerCase()))
-                      .toList();
-                }
-                return ListView.builder(
-                  itemCount: stations.length,
-                  itemBuilder: (context, index) {
-                    FuelStation station = stations[index];
-                    return _buildStationTile(station);
-                  },
-                );
-              },
-            ),
-          ),
+  child: StreamBuilder<List<FuelStation>>(
+    stream: _firestoreService.streamVerifiedStations(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        return const Center(child: Text('No stations found'));
+      }
+      List<FuelStation> stations = snapshot.data!;
+      if (searchQuery.isNotEmpty) {
+        stations = stations
+            .where((station) => station.location
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase()))
+            .toList();
+      }
+      
+      return FutureBuilder<List<FuelStation>>(
+        future: _sortStationsByDistance(stations),
+        builder: (context, sortedSnapshot) {
+          if (sortedSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!sortedSnapshot.hasData || sortedSnapshot.data!.isEmpty) {
+            return const Center(child: Text('No stations found'));
+          }
+          List<FuelStation> sortedStations = sortedSnapshot.data!;
+          
+          return ListView.builder(
+            itemCount: sortedStations.length,
+            itemBuilder: (context, index) {
+              return _buildStationTile(sortedStations[index]);
+            },
+          );
+        },
+      );
+    },
+  ),
+),
         ],
       ),
     );
@@ -567,38 +585,57 @@ class DriverHomePageState extends State<DriverHomePage> {
     }
     return null;
   }
+Future<List<FuelStation>> _sortStationsByDistance(List<FuelStation> stations) async {
+  List<MapEntry<FuelStation, double>> stationsWithDistances = await Future.wait(
+    stations.map((station) async {
+      double distance = await calculateRoadDistance(
+        _currentLocation!,
+        _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
+      );
+      return MapEntry(station, distance);
+    })
+  );
 
+  stationsWithDistances.sort((a, b) => a.value.compareTo(b.value));
+  return stationsWithDistances.map((e) => e.key).toList();
+}
   Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Logout Confirmation'),
-          backgroundColor: Colors.green[100],
-          content: const Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Colors.red[400]),
-              ),
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        title: const Text('Logout Confirmation'),
+        backgroundColor: Colors.green[100],
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.red[400]),
             ),
-            TextButton(
-              onPressed: () async {
-                await _authService.logout();
-                Navigator.pushNamed(context, '/login');
-              },
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.green),
-              ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await _authService.logout();
+              Navigator.pushNamedAndRemoveUntil(
+                context, 
+                '/login', 
+                (Route<dynamic> route) => false
+              );
+            },
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.green),
             ),
-          ],
-        );
-      },
-    );
-  }
+          ),
+        ],
+      );
+    },
+  );
+}
 }
