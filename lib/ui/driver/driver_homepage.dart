@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:ff_main/ui/about.dart';
+import 'package:ff_main/utils/carousel_item.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +15,10 @@ import 'package:ff_main/ui/driver/station_details.dart';
 import 'map_view.dart';
 import 'package:ff_main/models/fuel_station.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+import 'package:ff_main/ui/driver/all_stations.dart';
+import 'package:ff_main/utils/logout_confirmation.dart';
+
 
 class DriverHomePage extends StatefulWidget {
   const DriverHomePage({super.key});
@@ -25,6 +30,8 @@ class DriverHomePage extends StatefulWidget {
 class DriverHomePageState extends State<DriverHomePage> {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
+  final PageController _pageController = PageController(initialPage: 0);
+
   String searchQuery = '';
   bool isFirstTime = true;
   bool _isProfileLoaded = false;
@@ -36,6 +43,16 @@ class DriverHomePageState extends State<DriverHomePage> {
     _checkDriverProfile();
     _showRandomFuelEfficiencyTip();
     _getCurrentLocation();
+    Timer.periodic(const Duration(seconds: 5), (Timer timer) {
+      if (_pageController.hasClients) {
+        int nextPage = (_pageController.page!.round() + 1) % 3;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeIn,
+        );
+      }
+    });
   }
 
   Future<void> _checkDriverProfile() async {
@@ -52,49 +69,51 @@ class DriverHomePageState extends State<DriverHomePage> {
       }
     }
   }
-void _showDriverProfileDialog() {
-  Future.delayed(const Duration(seconds: 10), () {
-    if (mounted) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text(
-              'Complete Your Profile',
-              style: TextStyle(fontSize: 20.0, color: Colors.green),
-            ),
-            content: const Text('Please complete your driver profile to proceed.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => DriverProfile()),
-                  );
-                },
-                child: const Text(
-                  'OK',
-                  style: TextStyle(color: Colors.green),
-                ),
+
+  void _showDriverProfileDialog() {
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text(
+                'Complete Your Profile',
+                style: TextStyle(fontSize: 20.0, color: Colors.green),
               ),
-            ],
-            backgroundColor: Colors.green[100],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-          );
-        },
-      ).then((value) {
-        if (mounted) {
-          setState(() {
-            _isProfileLoaded = true;
-          });
-        }
-      });
-    }
-  });
-}
+              content:
+                  const Text('Please complete your driver profile to proceed.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => DriverProfile()),
+                    );
+                  },
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                ),
+              ],
+              backgroundColor: Colors.green[100],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+            );
+          },
+        ).then((value) {
+          if (mounted) {
+            setState(() {
+              _isProfileLoaded = true;
+            });
+          }
+        });
+      }
+    });
+  }
 
   Future<void> _showRandomFuelEfficiencyTip() async {
     if (isFirstTime) {
@@ -116,7 +135,8 @@ void _showDriverProfileDialog() {
                     fontWeight: FontWeight.bold),
               ),
               content: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 16.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8.0),
@@ -137,8 +157,8 @@ void _showDriverProfileDialog() {
                       color: Colors.green,
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 12.0),
                     child: const Text(
                       'Close',
                       style: TextStyle(color: Colors.white, fontSize: 18.0),
@@ -187,8 +207,8 @@ void _showDriverProfileDialog() {
   Widget build(BuildContext context) {
     if (!_isProfileLoaded || _currentLocation == null) {
       return const Scaffold(
-        // body: Center(child: CircularProgressIndicator()),
-      );
+          // body: Center(child: CircularProgressIndicator()),
+          );
     }
 
     return Scaffold(
@@ -202,7 +222,7 @@ void _showDriverProfileDialog() {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.red, size: 30.0),
             onPressed: () {
-              _showLogoutConfirmationDialog(context);
+              LogoutConfirmationDialog.show(context);
             },
           ),
         ],
@@ -236,7 +256,8 @@ void _showDriverProfileDialog() {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const FuelEfficiencyTips()),
+                  MaterialPageRoute(
+                      builder: (context) => const FuelEfficiencyTips()),
                 );
               },
             ),
@@ -260,8 +281,7 @@ void _showDriverProfileDialog() {
           Container(
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: Colors
-                  .grey[200],
+              color: Colors.grey[200],
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20.0),
                 right: Radius.circular(20.0),
@@ -271,24 +291,28 @@ void _showDriverProfileDialog() {
                 width: 1.0,
               ),
             ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Welcome, Driver! How is your journey?',
-                  style: TextStyle(
-                    fontSize: 40.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                SizedBox(height: 16.0),
-                Text(
-                  'Find nearest fuel station to refill:',
-                  style: TextStyle(
-                    fontSize: 30.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                const SizedBox(height: 20.0),
+                SizedBox(
+                  height: 300.0,
+                  child: PageView(
+                    controller: _pageController,
+                    children: const [
+                      CarouselItem(
+                          imagePath:'assets/images/welcome1.png',
+                          title:'FIND THE NEAREST FUEL STATION TO REFILL',
+                          subtitle: 'always have a view of fuel stations to refill your car,save your time.'),
+                      CarouselItem(
+                          imagePath: 'assets/images/welcome2.png',
+                          title:'COMPREHENSIVE MAP VIEW',
+                          subtitle:'You can open map view to see the stations on the map'),
+                      CarouselItem(
+                          imagePath:'assets/images/welcome3.png',
+                          title:'EFFICIENCY TIPS',
+                          subtitle: 'You get fuel efficiency tips that will hep you save your fuel and time.'),
+                    ],
                   ),
                 ),
               ],
@@ -315,17 +339,32 @@ void _showDriverProfileDialog() {
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: 'Enter road code or route',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () {
-                      setState(() {
-                        searchQuery = searchQuery.trim();
-                      });
-                    },
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            searchQuery = '';
+                          });
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.search),
+                        onPressed: () {
+                          setState(() {
+                            searchQuery = searchQuery.trim();
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 onChanged: (value) {
-                  searchQuery = value;
+                  setState(() {
+                    searchQuery = value;
+                  });
                 },
               ),
             ),
@@ -338,8 +377,7 @@ void _showDriverProfileDialog() {
                     await Permission.location.request();
 
                 if (locationStatus == PermissionStatus.granted) {
-                  Navigator.push
-(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => MapView()),
                   );
@@ -379,7 +417,7 @@ void _showDriverProfileDialog() {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
-              'Fuel Stations:',
+              'Stations near me:',
               style: TextStyle(
                 fontSize: 24.0,
                 fontWeight: FontWeight.bold,
@@ -388,169 +426,212 @@ void _showDriverProfileDialog() {
             ),
           ),
           Expanded(
-  child: StreamBuilder<List<FuelStation>>(
-    stream: _firestoreService.streamVerifiedStations(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-        return const Center(child: Text('No stations found'));
-      }
-      List<FuelStation> stations = snapshot.data!;
-      if (searchQuery.isNotEmpty) {
-        stations = stations
-            .where((station) => station.location
-                .toLowerCase()
-                .contains(searchQuery.toLowerCase()))
-            .toList();
-      }
-      
-      return FutureBuilder<List<FuelStation>>(
-        future: _sortStationsByDistance(stations),
-        builder: (context, sortedSnapshot) {
-          if (sortedSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!sortedSnapshot.hasData || sortedSnapshot.data!.isEmpty) {
-            return const Center(child: Text('No stations found'));
-          }
-          List<FuelStation> sortedStations = sortedSnapshot.data!;
-          
-          return ListView.builder(
-            itemCount: sortedStations.length,
-            itemBuilder: (context, index) {
-              return _buildStationTile(sortedStations[index]);
-            },
-          );
-        },
-      );
-    },
-  ),
-),
+            child: StreamBuilder<List<FuelStation>>(
+              stream: _firestoreService.streamVerifiedStations(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No stations found'));
+                }
+                List<FuelStation> stations = snapshot.data!;
+                if (searchQuery.isNotEmpty) {
+                  stations = stations
+                      .where((station) => station.location
+                          .toLowerCase()
+                          .contains(searchQuery.toLowerCase()))
+                      .toList();
+                }
+
+                return FutureBuilder<List<FuelStation>>(
+                  future: _sortStationsByDistance(stations),
+                  builder: (context, sortedSnapshot) {
+                    if (sortedSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (!sortedSnapshot.hasData ||
+                        sortedSnapshot.data!.isEmpty) {
+                      return const Center(child: Text('No stations found'));
+                    }
+                    List<FuelStation> sortedStations = sortedSnapshot.data!;
+
+                    return ListView.builder(
+                      itemCount: sortedStations.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index < sortedStations.length) {
+                          ///changes right now
+                          return _buildStationTile(sortedStations[index]);
+                        } else {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8.0, horizontal: 16.0),
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          AllFuelStationsPage()),
+                                );
+                              },
+                              icon: const Icon(Icons.arrow_forward,
+                                  color: Colors.white),
+                              label: const Text(
+                                'View All Stations',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12.0),
+                                minimumSize: const Size(double.infinity, 50),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildStationTile(FuelStation station) {
-  return FutureBuilder<double>(
-    future: calculateRoadDistance(
-      _currentLocation!,
-      _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
-    ),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return _buildListTile(station.name, 'Loading...', Colors.grey);
-      }
-      if (snapshot.hasError) {
-        return _buildListTile(station.name, 'Data unavailable', Colors.grey);
-      }
-      final double distance = snapshot.data!;
+    return FutureBuilder<double>(
+      future: calculateRoadDistance(
+        _currentLocation!,
+        _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildListTile(station.name, 'Loading...', Colors.grey);
+        }
+        if (snapshot.hasError) {
+          return _buildListTile(station.name, 'Data unavailable', Colors.grey);
+        }
+        final double distance = snapshot.data!;
 
-      return StreamBuilder<StationServices>(
-        stream: _firestoreService.streamStationServices(station.id),
-        builder: (context, serviceSnapshot) {
-          if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-            return _buildListTile(station.name, 'Loading services...', Colors.grey);
-          }
-          if (serviceSnapshot.hasError || !serviceSnapshot.hasData) {
-            return _buildListTile(station.name, 'Services unavailable', Colors.grey);
-          }
-          final StationServices services = serviceSnapshot.data!;
+        return StreamBuilder<StationServices>(
+          stream: _firestoreService.streamStationServices(station.id),
+          builder: (context, serviceSnapshot) {
+            if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+              return _buildListTile(
+                  station.name, 'Loading services...', Colors.grey);
+            }
+            if (serviceSnapshot.hasError || !serviceSnapshot.hasData) {
+              return _buildListTile(
+                  station.name, 'Services unavailable', Colors.grey);
+            }
+            final StationServices services = serviceSnapshot.data!;
 
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FuelStationDetailsPage(station: station),
-                ),
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(20.0),
-                  right: Radius.circular(20.0),
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(20.0),
-                      right: Radius.circular(20.0),
-                    ),
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        FuelStationDetailsPage(station: station),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.local_gas_station),
-                          const SizedBox(width: 8.0),
-                          Text(
-                            station.name,
-                            style: const TextStyle(
-                                color: Colors.black, fontWeight: FontWeight.bold),
-                          ),
-                          const Spacer(),
-                          const Icon(Icons.arrow_forward_ios),
-                        ],
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(20.0),
+                    right: Radius.circular(20.0),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(20.0),
+                        right: Radius.circular(20.0),
                       ),
-                      const SizedBox(height: 8.0),
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on),
-                          const SizedBox(width: 8.0),
-                          Text(
-                            'Distance: ${distance.toStringAsFixed(2)} km',
-                            style: const TextStyle(fontSize: 16.0),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.circle,
-                                  color: services.isPetrolAvailable
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.local_gas_station),
+                            const SizedBox(width: 8.0),
+                            Text(
+                              station.name,
+                              style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.arrow_forward_ios),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on),
+                            const SizedBox(width: 8.0),
+                            Text(
+                              'Distance: ${distance.toStringAsFixed(2)} km',
+                              style: const TextStyle(fontSize: 16.0),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.circle,
+                                    color: services.isPetrolAvailable
+                                        ? Colors.green
+                                        : Colors.red),
+                                const SizedBox(width: 4.0),
+                                const Text('Petrol'),
+                                const SizedBox(width: 16.0),
+                                Icon(Icons.circle,
+                                    color: services.isDieselAvailable
+                                        ? Colors.green
+                                        : Colors.red),
+                                const SizedBox(width: 4.0),
+                                const Text('Diesel'),
+                              ],
+                            ),
+                            Text(
+                              services.isOpen ? 'Open' : 'Closed',
+                              style: TextStyle(
+                                  color: services.isOpen
                                       ? Colors.green
                                       : Colors.red),
-                              const SizedBox(width: 4.0),
-                              const Text('Petrol'),
-                              const SizedBox(width: 16.0),
-                              Icon(Icons.circle,
-                                  color: services.isDieselAvailable
-                                      ? Colors.green
-                                      : Colors.red),
-                              const SizedBox(width: 4.0),
-                              const Text('Diesel'),
-                            ],
-                          ),
-                          Text(
-                            services.isOpen ? 'Open' : 'Closed',
-                            style: TextStyle(
-                                color: services.isOpen ? Colors.green : Colors.red),
-                          ),
-                        ],
-                      ),
-                    ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-
+            );
+          },
+        );
+      },
+    );
+  }
 
   Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
     return Container(
@@ -563,7 +644,8 @@ void _showDriverProfileDialog() {
       child: ListTile(
         title: Text(
           title,
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(subtitle),
       ),
@@ -585,57 +667,22 @@ void _showDriverProfileDialog() {
     }
     return null;
   }
-Future<List<FuelStation>> _sortStationsByDistance(List<FuelStation> stations) async {
-  List<MapEntry<FuelStation, double>> stationsWithDistances = await Future.wait(
-    stations.map((station) async {
+
+  Future<List<FuelStation>> _sortStationsByDistance(
+      List<FuelStation> stations) async {
+    List<MapEntry<FuelStation, double>> stationsWithDistances =
+        await Future.wait(stations.map((station) async {
       double distance = await calculateRoadDistance(
         _currentLocation!,
         _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
       );
       return MapEntry(station, distance);
-    })
-  );
+    }));
 
-  stationsWithDistances.sort((a, b) => a.value.compareTo(b.value));
-  return stationsWithDistances.map((e) => e.key).toList();
-}
-  Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext dialogContext) {
-      return AlertDialog(
-        title: const Text('Logout Confirmation'),
-        backgroundColor: Colors.green[100],
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-            },
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Colors.red[400]),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              await _authService.logout();
-              Navigator.pushNamedAndRemoveUntil(
-                context, 
-                '/login', 
-                (Route<dynamic> route) => false
-              );
-            },
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.green),
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
+    stationsWithDistances =
+        stationsWithDistances.where((entry) => entry.value <= 20).toList();
+
+    stationsWithDistances.sort((a, b) => a.value.compareTo(b.value));
+    return stationsWithDistances.map((e) => e.key).toList();
+  }
 }

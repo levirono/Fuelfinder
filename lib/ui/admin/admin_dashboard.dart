@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/ui/admin/drivers.dart';
 import 'package:ff_main/ui/admin/stations.dart';
 import 'package:ff_main/ui/driver/fuel_efficiency_tips.dart';
+import 'package:ff_main/utils/logout_confirmation.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -13,7 +13,6 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class AdminDashboardState extends State<AdminDashboard> {
-  final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
 
   late Future<int> _stationCount;
@@ -39,7 +38,7 @@ class AdminDashboardState extends State<AdminDashboard> {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.red, size: 30.0),
             onPressed: () {
-              _showLogoutConfirmationDialog(context);
+              LogoutConfirmationDialog.show(context);
             },
           ),
         ],
@@ -238,44 +237,4 @@ class AdminDashboardState extends State<AdminDashboard> {
       ),
     );
   }
-
-  Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext dialogContext) {
-      return AlertDialog(
-        title: const Text('Logout Confirmation'),
-        backgroundColor: Colors.green[100],
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-            },
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Colors.red[400]),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              await _authService.logout();
-              Navigator.pushNamedAndRemoveUntil(
-                context, 
-                '/login', 
-                (Route<dynamic> route) => false
-              );
-            },
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.green),
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
 }

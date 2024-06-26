@@ -8,10 +8,36 @@ import 'package:ff_main/services/login_page.dart';
 import 'package:ff_main/ui/driver/driver_homepage.dart';
 import 'package:ff_main/ui/station/station_homepage.dart';
 import 'package:ff_main/ui/admin/admin_dashboard.dart';
+//added these 2
+import 'package:workmanager/workmanager.dart';
+import 'package:ff_main/services/firestore_service.dart';
 
+
+
+
+//added this part
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    FirestoreService firestoreService = FirestoreService();
+    await firestoreService.checkForNewStations();
+    return Future.value(true);
+  });
+}
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+//added this part
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: true,
+  );
+
+  Workmanager().registerPeriodicTask(
+    "1",
+    "checkNewStations",
+    frequency: Duration(minutes: 4),
+  );
+
   runApp(MyApp());
 }
 

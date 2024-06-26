@@ -32,11 +32,6 @@ class StationsPageState extends State<StationsPage> {
     setState(() {});
   }
 
-  void _verifyStation(String stationId, bool isVerified) async {
-    await _firestoreService.verifyStation(stationId, isVerified);
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,34 +42,36 @@ class StationsPageState extends State<StationsPage> {
         ),
         backgroundColor: Colors.green[100],
       ),
-      body: StreamBuilder<List<FuelStation>>(
-        stream: _firestoreService.streamStations(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-                child: Text(
-              'Error: ${snapshot.error}',
-              style: const TextStyle(color: Colors.red),
-            ));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-                child: Text(
-              'No stations available',
-              style: TextStyle(color: Colors.grey),
-            ));
-          } else {
-            final stations = snapshot.data!;
-            return ListView.builder(
-              itemCount: stations.length,
-              itemBuilder: (context, index) {
-                final station = stations[index];
-                return _buildStationTile(context, station);
-              },
-            );
-          }
-        },
+      body: SafeArea(
+        child: StreamBuilder<List<FuelStation>>(
+          stream: _firestoreService.streamStations(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(
+                  child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(
+                  child: Text(
+                'No stations available',
+                style: TextStyle(color: Colors.grey),
+              ));
+            } else {
+              final stations = snapshot.data!;
+              return ListView.builder(
+                itemCount: stations.length,
+                itemBuilder: (context, index) {
+                  final station = stations[index];
+                  return _buildStationTile(context, station);
+                },
+              );
+            }
+          },
+        ),
       ),
     );
   }
@@ -100,7 +97,7 @@ class StationsPageState extends State<StationsPage> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             child: ClipRRect(
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20.0),
@@ -122,12 +119,13 @@ class StationsPageState extends State<StationsPage> {
                       children: [
                         const Icon(Icons.local_gas_station),
                         const SizedBox(width: 8.0),
-                        Text(
-                          station.name,
-                          style: const TextStyle(
-                              color: Colors.amber, fontWeight: FontWeight.bold),
+                        Expanded(
+                          child: Text(
+                            station.name,
+                            style: const TextStyle(
+                                color: Colors.amber, fontWeight: FontWeight.bold),
+                          ),
                         ),
-                        const Spacer(),
                         if (_userRole == 'admin') ...[
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
@@ -158,29 +156,20 @@ class StationsPageState extends State<StationsPage> {
                               }
                             },
                           ),
-                          IconButton(
-                            icon: Icon(
-                              station.isVerified
-                                  ? Icons.verified
-                                  : Icons.verified_outlined,
-                              color:
-                                  station.isVerified ? Colors.blue : Colors.grey,
-                            ),
-                            onPressed: () async {
-                              _verifyStation(station.id, !station.isVerified);
-                            },
-                          ),
+                          _buildVerificationButton(station),
                         ]
                       ],
                     ),
                     const SizedBox(height: 8.0),
                     Row(
                       children: [
-                        const Icon(Icons.location_on),  
+                        const Icon(Icons.location_on),
                         const SizedBox(width: 8.0),
-                        Text(
-                          'Location: ${station.location}',
-                          style: const TextStyle(fontSize: 16.0, color: Colors.grey),
+                        Expanded(
+                          child: Text(
+                            'Location: ${station.location}',
+                            style: const TextStyle(fontSize: 16.0, color: Colors.grey),
+                          ),
                         ),
                       ],
                     ),
@@ -212,6 +201,25 @@ class StationsPageState extends State<StationsPage> {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildVerificationButton(FuelStation station) {
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        return IconButton(
+          icon: Icon(
+            station.isVerified ? Icons.verified : Icons.verified_outlined,
+            color: station.isVerified ? Colors.blue : Colors.grey,
+          ),
+          onPressed: () async {
+            await _firestoreService.updateStationVerificationStatus(station.id, !station.isVerified);
+            setState(() {
+              station.isVerified = !station.isVerified;
+            });
+          },
         );
       },
     );

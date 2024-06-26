@@ -177,89 +177,102 @@ class MapView extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                ),
-                                ...verifiedStations.map((station) {
-                                  LatLng? coordinates = _parseCoordinates(station.gpsLink);
+                                ),...verifiedStations.map((station) {
+  LatLng? coordinates = _parseCoordinates(station.gpsLink);
 
-                                  if (coordinates != null) {
-                                    return Marker(
-                                      width: 150.0,
-                                      height: 150.0,
-                                      point: coordinates,
-                                      child: Container(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
-                                            const SizedBox(height: 2.0),
-                                            Text(
-                                              station.name,
-                                              overflow: TextOverflow.fade,
-                                              maxLines: 3,
-                                              style: const TextStyle(fontSize: 12.0),
-                                            ),
-                                            const SizedBox(height: 5.0),
-                                            StreamBuilder<StationServices>(
-                                              stream: _firestoreService.streamStationServices(station.id),
-                                              builder: (context, serviceSnapshot) {
-                                                if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-                                                  return const CircularProgressIndicator();
-                                                }
-                                                if (serviceSnapshot.hasError) {
-                                                  return const Text('Error loading services');
-                                                }
-                                                if (!serviceSnapshot.hasData) {
-                                                  return const Text('Services unavailable');
-                                                }
-                                                StationServices services = serviceSnapshot.data!;
+  if (coordinates != null) {
+    return Marker(
+      width: 80,
+      height: 80.0,
+      point: coordinates,
+      child:GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        station.name,
+                        style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10.0),
+                      StreamBuilder<StationServices>(
+                        stream: _firestoreService.streamStationServices(station.id),
+                        builder: (context, serviceSnapshot) {
+                          if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          }
+                          if (serviceSnapshot.hasError) {
+                            return const Text('Error loading services');
+                          }
+                          if (!serviceSnapshot.hasData) {
+                            return const Text('Services unavailable');
+                          }
+                          StationServices services = serviceSnapshot.data!;
 
-                                                return Row(
-                                                  children: [
-                                                    Row(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      children: [
-                                                        Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
-                                                        const SizedBox(width: 5.0),
-                                                        Text(
-                                                          'P',
-                                                          style: TextStyle(color: services.isPetrolAvailable ? Colors.green : Colors.red),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(width: 5.0),
-                                                    Row(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      children: [
-                                                        Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
-                                                        const SizedBox(width: 5.0),
-                                                        Text(
-                                                          'D',
-                                                          style: TextStyle(color: services.isDieselAvailable ? Colors.green : Colors.red),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(width: 5.0),
-                                                    Text(
-                                                      services.isOpen ? ' -Open' : ' -Closed',
-                                                      style: TextStyle(color: services.isOpen ? Colors.green : Colors.red),
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  } else {
-                                    return const Marker(
-                                      width: 0.0,
-                                      height: 0.0,
-                                      point: LatLng(0.0, 0.0),
-                                      child:SizedBox.shrink(),
-                                    );
-                                  }
-                                }).toList(),
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
+                                  const SizedBox(width: 5.0),
+                                  Text('Petrol: ${services.isPetrolAvailable ? 'Available' : 'Unavailable'}'),
+                                ],
+                              ),
+                              const SizedBox(height: 5.0),
+                              Row(
+                                children: [
+                                  Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
+                                  const SizedBox(width: 5.0),
+                                  Text('Diesel: ${services.isDieselAvailable ? 'Available' : 'Unavailable'}'),
+                                ],
+                              ),
+                              const SizedBox(height: 5.0),
+                              Text(
+                                'Status: ${services.isOpen ? 'Open' : 'Closed'}',
+                                style: TextStyle(color: services.isOpen ? Colors.green : Colors.red),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+        child: Column(
+          children: [
+            const Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
+            const SizedBox(height: 2.0),
+            Text(
+              station.name,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              style: const TextStyle(fontSize: 12.0),
+            ),
+          ],
+        ),
+      ),
+    );
+  } else {
+    return const Marker(
+      width: 0.0,
+      height: 0.0,
+      point: LatLng(0.0, 0.0),
+      child: SizedBox.shrink(),
+    );
+  }
+}).toList(),
                               ],
                             ),
                           ],

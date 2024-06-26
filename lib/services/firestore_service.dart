@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/utils/notifications.dart';
+
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
+
 
   Stream<List<FuelStation>> streamStations() {
     try {
@@ -102,6 +106,34 @@ class FirestoreService {
       throw Exception('Error streaming verified stations: $e');
     }
   }
+//new stations notification
+  Future<void> checkForNewStations() async {
+    DateTime lastCheckedTime = DateTime.now().subtract(Duration(hours: 24));
+
+    var newStationsQuery = await _db
+        .collection('fuelStations')
+        .where('createdAt', isGreaterThan: lastCheckedTime)
+        .get();
+
+    int newStationsCount = newStationsQuery.docs.length;
+
+    if (newStationsCount > 0) {
+      await _notificationService.showNotification(
+        'New Stations Registered',
+        '$newStationsCount new stations have registered and are waiting for verification.',
+      );
+    }
+  }
+
+  Future<void> scheduleDailyNewStationCheck() async {
+    // Schedule a daily check using any preferred method (cron, periodic task, etc.)
+  }
+  Stream<bool> getVerificationStatusStream(String stationId) {
+    return _db.collection('stations')
+      .doc(stationId)
+      .snapshots()
+      .map((snapshot) => snapshot.data()?['isVerified'] as bool);
+  }
 
   Stream<StationServices> streamStationServices(String stationId) {
     return FirebaseFirestore.instance
@@ -121,6 +153,18 @@ class FirestoreService {
       throw Exception('Error updating station: $e');
     }
   }
+
+//updated this line
+  Future<void> updateStationVerificationStatus(String stationId, bool isVerified) async {
+  try {
+    await _db.collection('stations').doc(stationId).update({'isVerified': isVerified});
+    print('Verification status updated for station with ID: $stationId');
+  } catch (e) {
+    print('Error updating verification status: $e');
+  }
+}
+
+
 
   Future<FuelStation?> getStationByOwnerId(String ownerId) async {
     try {

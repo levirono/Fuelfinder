@@ -1,0 +1,304 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
+import 'package:ff_main/services/firestore_service.dart';
+import 'package:ff_main/ui/driver/station_details.dart';
+import 'package:ff_main/models/fuel_station.dart';
+import 'dart:async';
+
+
+class AllFuelStationsPage extends StatefulWidget {
+  const AllFuelStationsPage({Key? key}) : super(key: key);
+
+  @override
+  _AllFuelStationsPageState createState() => _AllFuelStationsPageState();
+}
+
+class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
+  final FirestoreService _firestoreService = FirestoreService();
+  String searchQuery = '';
+  LatLng? _currentLocation;
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      setState(() {
+        _currentLocation = LatLng(position.latitude, position.longitude);
+      });
+    } catch (e) {
+      print('Error getting location: $e');
+    }
+  }
+
+  Future<double> calculateRoadDistance(LatLng start, LatLng end) async {
+    final String url =
+        'https://api.mapbox.com/directions/v5/mapbox/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtwZzVyNjB3bDUydnA3eGNrNHplN3QifQ.M5AHspWj4Wb19XqLD26Gtg';
+
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+
+      // Extract distance
+      final distance = data['routes'][0]['distance'];
+      return distance / 1000; // Converting to kilometers
+    } else {
+      throw Exception('Failed to load directions');
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'All Fuel Stations',
+          style: TextStyle(fontSize: 24.0, color: Colors.green),
+        ),
+        backgroundColor: Colors.green[100],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search stations...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<List<FuelStation>>(
+              stream: _firestoreService.streamVerifiedStations(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No stations found'));
+                }
+                List<FuelStation> stations = snapshot.data!;
+                if (searchQuery.isNotEmpty) {
+                  stations = stations
+                      .where((station) => station.location
+                          .toLowerCase()
+                          .contains(searchQuery.toLowerCase()))
+                      .toList();
+                }
+
+                return FutureBuilder<List<FuelStation>>(
+                  future: _sortStationsByDistance(stations),
+                  builder: (context, sortedSnapshot) {
+                    if (sortedSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (!sortedSnapshot.hasData ||
+                        sortedSnapshot.data!.isEmpty) {
+                      return const Center(child: Text('No stations found'));
+                    }
+                    List<FuelStation> sortedStations = sortedSnapshot.data!;
+
+                    return ListView.builder(
+                      itemCount: sortedStations.length,
+                      itemBuilder: (context, index) {
+                        return _buildStationTile(sortedStations[index]);
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStationTile(FuelStation station) {
+    return FutureBuilder<double>(
+      future: calculateRoadDistance(
+        _currentLocation!,
+        _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildListTile(station.name, 'Loading...', Colors.grey);
+        }
+        if (snapshot.hasError) {
+          return _buildListTile(station.name, 'Data unavailable', Colors.grey);
+        }
+        final double distance = snapshot.data!;
+
+        return StreamBuilder<StationServices>(
+          stream: _firestoreService.streamStationServices(station.id),
+          builder: (context, serviceSnapshot) {
+            if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+              return _buildListTile(
+                  station.name, 'Loading services...', Colors.grey);
+            }
+            if (serviceSnapshot.hasError || !serviceSnapshot.hasData) {
+              return _buildListTile(
+                  station.name, 'Services unavailable', Colors.grey);
+            }
+            final StationServices services = serviceSnapshot.data!;
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        FuelStationDetailsPage(station: station),
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20.0),
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.local_gas_station),
+                            const SizedBox(width: 8.0),
+                            Text(
+                              station.name,
+                              style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.arrow_forward_ios),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on),
+                            const SizedBox(width: 8.0),
+                            Text(
+                              'Distance: ${distance.toStringAsFixed(2)} km',
+                              style: const TextStyle(fontSize: 16.0),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.circle,
+                                    color: services.isPetrolAvailable
+                                        ? Colors.green
+                                        : Colors.red),
+                                const SizedBox(width: 4.0),
+                                const Text('Petrol'),
+                                const SizedBox(width: 16.0),
+                                Icon(Icons.circle,
+                                    color: services.isDieselAvailable
+                                        ? Colors.green
+                                        : Colors.red),
+                                const SizedBox(width: 4.0),
+                                const Text('Diesel'),
+                              ],
+                            ),
+                            Text(
+                              services.isOpen ? 'Open' : 'Closed',
+                              style: TextStyle(
+                                  color: services.isOpen
+                                      ? Colors.green
+                                      : Colors.red),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[300]!),
+        ),
+        color: backgroundColor,
+      ),
+      child: ListTile(
+        title: Text(
+          title,
+          style:
+              const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(subtitle),
+      ),
+    );
+  }
+
+  LatLng? _parseCoordinates(String? gpsLink) {
+    if (gpsLink != null && gpsLink.isNotEmpty) {
+      var coordinates = gpsLink.split(',');
+      if (coordinates.length == 2) {
+        try {
+          double latitude = double.parse(coordinates[0].trim());
+          double longitude = double.parse(coordinates[1].trim());
+          return LatLng(latitude, longitude);
+        } catch (e) {
+          print('Error parsing coordinates: $e');
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<List<FuelStation>> _sortStationsByDistance(
+      List<FuelStation> stations) async {
+    List<MapEntry<FuelStation, double>> stationsWithDistances =
+        await Future.wait(stations.map((station) async {
+      double distance = await calculateRoadDistance(
+        _currentLocation!,
+        _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
+      );
+      return MapEntry(station, distance);
+    }));
+
+    stationsWithDistances.sort((a, b) => a.value.compareTo(b.value));
+    return stationsWithDistances.map((e) => e.key).toList();
+  }
+}

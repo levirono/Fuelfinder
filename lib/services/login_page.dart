@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ff_main/utils/carousel_item.dart';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/signup_page.dart';
@@ -64,10 +65,19 @@ class LoginPageState extends State<LoginPage> {
                   height: 300.0,
                   child: PageView(
                     controller: _pageController,
-                    children: [
-                      _buildCarouselItem('Welcome to FuelFinder', 'Find the nearest fuel station and know if there is fuel or not.'),
-                      _buildCarouselItem('Track Your Fuel Usage', 'Keep an eye on your fuel consumption and save money.'),
-                      _buildCarouselItem('Plan your trips effectively', 'Plan ahead of time where you wanna refill your gas tank.'),
+                    children: const [
+                      CarouselItem(
+                          imagePath:'assets/images/welcome1.png',
+                          title:'FIND THE NEAREST FUEL STATION TO REFILL',
+                          subtitle: 'always have a view of fuel stations to refill your car,save your time.'),
+                      CarouselItem(
+                          imagePath: 'assets/images/welcome2.png',
+                          title:'COMPREHENSIVE MAP VIEW',
+                          subtitle:'You can open map view to see the stations on the map'),
+                      CarouselItem(
+                          imagePath:'assets/images/welcome3.png',
+                          title:'EFFICIENCY TIPS',
+                          subtitle: 'You get fuel efficiency tips that will hep you save your fuel and time.'),
                     ],
                   ),
                 ),
@@ -209,41 +219,4 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildCarouselItem(String title, String subtitle) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10.0),
-      decoration: BoxDecoration(
-        color: Colors.green[100],
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.green[800],
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10.0),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  color: Colors.green[700],
-                  fontSize: 16.0,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

@@ -6,6 +6,10 @@ import 'package:ff_main/models/fuel_station.dart';
 import 'station_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
+import 'package:ff_main/utils/logout_confirmation.dart';
+import 'package:ff_main/utils/carousel_item.dart';
+
+
 
 class StationHomePage extends StatefulWidget {
   const StationHomePage({super.key});
@@ -32,6 +36,10 @@ class StationHomePageState extends State<StationHomePage> {
   Future<String?> _stationNameFuture = Future.value('Station Name');
   Future<List<String>> _servicesOfferedFuture = Future.value([]);
   bool _isVerified = false; //verification status
+  
+  Stream<bool> _verificationStatusStream() {
+    return _firestoreService.getVerificationStatusStream(_stationId);
+  }
 
   @override
   void initState() {
@@ -41,13 +49,14 @@ class StationHomePageState extends State<StationHomePage> {
       if (_pageController.hasClients) {
         int nextPage = (_pageController.page!.round() + 1) % 3;
         _pageController.animateToPage(
-          nextPage,
+          nextPage,    
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeIn,
         );
       }
     });
   }
+
 
   Future<void> _fetchStationData() async {
     if (!mounted) return;
@@ -156,7 +165,7 @@ class StationHomePageState extends State<StationHomePage> {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.red, size: 30.0),
             onPressed: () {
-              _showLogoutConfirmationDialog(context);
+              LogoutConfirmationDialog.show(context);
             },
           ),
         ],
@@ -227,16 +236,27 @@ class StationHomePageState extends State<StationHomePage> {
               ),
               const SizedBox(height: 20.0),
               SizedBox(
-                height: 200.0,
-                child: PageView(
-                  controller: _pageController,
-                  children: [
-                    _buildCarouselItem('FUELF FINDER', 'LOGO IN THIS FIRST PAGE.'),
-                    _buildCarouselItem('FUELFINDER', 'always update the status of the station and services for smooth operation'),
-                    _buildCarouselItem('FUELFINDER', 'Help drivers to know the fuel status and make informed decissions.'),
-                  ],
+                  height: 300.0,
+                  child: PageView(
+                    controller: _pageController,
+                    children: const [
+                      CarouselItem(
+                          imagePath:'assets/images/welcome1.png',
+                          title:'FIND THE NEAREST FUEL STATION TO REFILL',
+                          subtitle: 'always have a view of fuel stations to refill your car,save your time.'),
+                      CarouselItem(
+                          imagePath: 'assets/images/welcome2.png',
+                          title:'COMPREHENSIVE MAP VIEW',
+                          subtitle:'You can open map view to see the stations on the map'),
+                      CarouselItem(
+                          imagePath:'assets/images/welcome3.png',
+                          title:'EFFICIENCY TIPS',
+                          subtitle: 'You get fuel efficiency tips that will hep you save your fuel and time.'),
+                    ],
+                  ),
                 ),
-              ),
+              const SizedBox(height: 20.0),
+              _buildVerificationStatus(),
               const SizedBox(height: 20.0),
               _buildStatusTile('Station Status', _stationServices.isOpen),
               const SizedBox(height: 20.0),
@@ -313,6 +333,45 @@ class StationHomePageState extends State<StationHomePage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+
+  Widget _buildVerificationStatus() {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: _isVerified ? Colors.green[100] : Colors.red[100],
+        borderRadius: BorderRadius.circular(10.0),
+        boxShadow: [
+          BoxShadow(
+            color: _isVerified ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+            spreadRadius: 4,
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Verification Status:',
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+              color: _isVerified ? Colors.green[900] : Colors.red[900],
+            ),
+          ),
+          Text(
+            _isVerified ? 'Verified' : 'Not Verified',
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+              color: _isVerified ? Colors.green : Colors.red,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -484,6 +543,7 @@ void _showVerificationPopup() {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
+        backgroundColor: Colors.green[100],
         title: const Text('Verification Required'),
         content: const Text('You need to be verified to perform this action.'),
         actions: [
@@ -491,7 +551,13 @@ void _showVerificationPopup() {
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('OK'),
+            child: const Text('OK',
+            style: TextStyle(
+              color: Colors.green,
+              fontSize:15.0,
+            ),
+            
+            ),
           ),
         ],
       );
@@ -506,84 +572,4 @@ void _showVerificationPopup() {
       print('Error updating station services: $e');
     }
   }
-
-  Widget _buildCarouselItem(String title, String subtitle) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10.0),
-      decoration: BoxDecoration(
-        color: Colors.green[100],
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.green[800],
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10.0),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  color: Colors.green[700],
-                  fontSize: 16.0,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext dialogContext) {
-      return AlertDialog(
-        title: const Text('Logout Confirmation'),
-        backgroundColor: Colors.green[100],
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-            },
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Colors.red[400]),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              await _authService.logout();
-              Navigator.pushNamedAndRemoveUntil(
-                context, 
-                '/login', 
-                (Route<dynamic> route) => false
-              );
-            },
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.green),
-            ),
-          ),
-        ],
-      );
-    },
-  );
 }
-}
-
-
