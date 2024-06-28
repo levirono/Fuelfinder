@@ -107,8 +107,8 @@ class FirestoreService {
     }
   }
 //new stations notification
-  Future<void> checkForNewStations() async {
-    DateTime lastCheckedTime = DateTime.now().subtract(Duration(hours: 24));
+   Future<bool> checkForNewStations() async {
+    DateTime lastCheckedTime = DateTime.now().subtract(const Duration(hours: 24));
 
     var newStationsQuery = await _db
         .collection('fuelStations')
@@ -118,23 +118,26 @@ class FirestoreService {
     int newStationsCount = newStationsQuery.docs.length;
 
     if (newStationsCount > 0) {
+      // Send notification to admin users
       await _notificationService.showNotification(
         'New Stations Registered',
         '$newStationsCount new stations have registered and are waiting for verification.',
       );
+      return true;
     }
+    return false;
   }
 
   Future<void> scheduleDailyNewStationCheck() async {
-    // Schedule a daily check using any preferred method (cron, periodic task, etc.)
+    // Implementation for scheduling daily checks
   }
+
   Stream<bool> getVerificationStatusStream(String stationId) {
     return _db.collection('stations')
       .doc(stationId)
       .snapshots()
       .map((snapshot) => snapshot.data()?['isVerified'] as bool);
   }
-
   Stream<StationServices> streamStationServices(String stationId) {
     return FirebaseFirestore.instance
         .collection('stationServices')
@@ -155,14 +158,18 @@ class FirestoreService {
   }
 
 //updated this line
-  Future<void> updateStationVerificationStatus(String stationId, bool isVerified) async {
+  Future<bool> updateStationVerificationStatus(String stationId, bool isVerified) async {
   try {
-    await _db.collection('stations').doc(stationId).update({'isVerified': isVerified});
-    print('Verification status updated for station with ID: $stationId');
+    await _db.collection('fuelStations').doc(stationId).update({
+      'isVerified': isVerified,
+    });
+    return true;
   } catch (e) {
     print('Error updating verification status: $e');
+    return false;
   }
 }
+
 
 
 

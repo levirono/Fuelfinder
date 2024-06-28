@@ -2,6 +2,7 @@ import 'package:ff_main/ui/driver/driver_homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/models/fuel_station.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:uuid/uuid.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -188,8 +189,15 @@ class DriverProfileState extends State<DriverProfile> {
     if (_formKey.currentState!.validate()) {
       User? currentUser = await _authService.getCurrentUser();
       if (currentUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('You need to be logged in to save your profile.')));
+        Fluttertoast.showToast(
+          msg: "Login failed!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.yellow,
+          textColor: Colors.white,
+          fontSize: 16.0
+        );
         return;
       }
 
@@ -205,9 +213,15 @@ class DriverProfileState extends State<DriverProfile> {
       );
 
       await _firestoreService.addOrUpdateDriver(driver, currentUser.uid);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Driver profile saved')));
-
+      Fluttertoast.showToast(
+          msg: "Driver profile saved",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0
+        );
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DriverHomePage()),

@@ -6,8 +6,10 @@ class FuelStation {
   String location;
   String gpsLink;
   List<String> servicesOffered;
-  String operationHours;
   bool isVerified;
+  String operationStartTime;
+  String operationEndTime;
+  bool isOpenAllDay;
 
   FuelStation({
     required this.id,
@@ -15,8 +17,10 @@ class FuelStation {
     required this.location,
     required this.gpsLink,
     required this.servicesOffered,
-    required this.operationHours,
     this.isVerified = false,
+    required this.operationStartTime,
+    required this.operationEndTime,
+    required this.isOpenAllDay,
   });
 
   factory FuelStation.fromMap(Map<String, dynamic> map) {
@@ -26,8 +30,10 @@ class FuelStation {
       location: map['location'],
       gpsLink: map['gpsLink'],
       servicesOffered: List<String>.from(map['servicesOffered']),
-      operationHours: map['operationHours'],
       isVerified: map['isVerified'] ?? false,
+      operationStartTime: map['operationStartTime'] ?? '',
+      operationEndTime: map['operationEndTime'] ?? '',
+      isOpenAllDay: map['isOpenAllDay'] ?? false,
     );
   }
 
@@ -38,8 +44,10 @@ class FuelStation {
       'location': location,
       'gpsLink': gpsLink,
       'servicesOffered': servicesOffered,
-      'operationHours': operationHours,
       'isVerified': isVerified,
+      'operationStartTime': operationStartTime,
+      'operationEndTime': operationEndTime,
+      'isOpenAllDay': isOpenAllDay,
     };
   }
 }

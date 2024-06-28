@@ -55,17 +55,10 @@ class AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () {
-                // Navigate to Profile Page
-              },
-            ),
-            ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
-                // Navigate to Settings Page
+              
               },
             ),
           ],

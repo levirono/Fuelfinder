@@ -207,23 +207,31 @@ class StationsPageState extends State<StationsPage> {
   }
 
   Widget _buildVerificationButton(FuelStation station) {
-    return StatefulBuilder(
-      builder: (BuildContext context, StateSetter setState) {
-        return IconButton(
-          icon: Icon(
-            station.isVerified ? Icons.verified : Icons.verified_outlined,
-            color: station.isVerified ? Colors.blue : Colors.grey,
-          ),
-          onPressed: () async {
-            await _firestoreService.updateStationVerificationStatus(station.id, !station.isVerified);
+  return StatefulBuilder(
+    builder: (BuildContext context, StateSetter setState) {
+      return IconButton(
+        icon: Icon(
+          station.isVerified ? Icons.verified : Icons.verified_outlined,
+          color: station.isVerified ? Colors.blue : Colors.grey,
+        ),
+        onPressed: () async {
+          bool newStatus = !station.isVerified;
+          bool success = await _firestoreService.updateStationVerificationStatus(station.id, newStatus);
+          if (success) {
             setState(() {
-              station.isVerified = !station.isVerified;
+              station.isVerified = newStatus;
             });
-          },
-        );
-      },
-    );
-  }
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to update verification status')),
+            );
+          }
+        },
+      );
+    },
+  );
+}
+
 
   Widget _buildListTile(String title, String subtitle, Color backgroundColor) {
     return Container(
@@ -236,7 +244,7 @@ class StationsPageState extends State<StationsPage> {
       child: ListTile(
         title: Text(
           title,
-          style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(subtitle),
       ),

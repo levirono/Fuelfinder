@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/login_page.dart';
 import 'package:ff_main/services/auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class SignupPage extends StatefulWidget {
     const SignupPage({super.key});
@@ -252,11 +253,15 @@ class SignupPageState extends State<SignupPage> {
     if (result != null) {
       _showRegistrationSuccessDialog(contextBeforeAsync);
     } else {
-      ScaffoldMessenger.of(contextBeforeAsync).showSnackBar(
-        const SnackBar(
-          content: Text('Registration failed!'),
-        ),
-      );
+      Fluttertoast.showToast(
+          msg: "Login failed!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+        );
     }
   }
 }

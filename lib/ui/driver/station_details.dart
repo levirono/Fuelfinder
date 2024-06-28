@@ -7,7 +7,6 @@ class FuelStationDetailsPage extends StatelessWidget {
 
   FuelStationDetailsPage({required this.station});
 
-
   @override
   Widget build(BuildContext context) {
     List<String> locationComponents = station.location.split(',');
@@ -36,6 +35,9 @@ class FuelStationDetailsPage extends StatelessWidget {
             _buildLocationTile('Road Code', roadCode),
             _buildLocationTile('Distance To', distanceTo),
             _buildLocationTile('Distance From', distanceFrom),
+            const SizedBox(height: 20.0),
+            _buildSectionTitle('OPERATION HOURS:'),
+            _buildOperationHours(),
             const SizedBox(height: 20.0),
             _buildSectionTitle('FUEL AVAILABILITY:'),
             _buildFuelAvailability(),
@@ -100,7 +102,7 @@ class FuelStationDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTile(String text) {
+  Widget _buildOperationHours() {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: const EdgeInsets.all(16.0),
@@ -115,9 +117,24 @@ class FuelStationDetailsPage extends StatelessWidget {
           ),
         ],
       ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Operation Hours: ',
+            style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+          ),
+          Flexible(
+            child: Text(
+              station.isOpenAllDay 
+                ? 'Open 24 hours' 
+                : '${station.operationStartTime} - ${station.operationEndTime}',
+              style: const TextStyle(fontSize: 16.0),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
+        ],
       ),
     );
   }

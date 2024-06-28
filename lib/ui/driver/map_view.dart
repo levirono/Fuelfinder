@@ -14,6 +14,80 @@ class MapView extends StatelessWidget {
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
 
+
+  bool isOpenAllDay(FuelStation station) {
+    return station.isOpenAllDay;
+  }
+
+
+  DateTime parseTime(String time) {
+    final now = DateTime.now();
+    try {
+      // Remove any leading/trailing whitespace
+      time = time.trim();
+
+      // Split the time string into components
+      List<String> components = time.split(' ');
+      if (components.length != 2) {
+        throw FormatException('Invalid time format');
+      }
+
+      String timeComponent = components[0];
+      String amPm = components[1].toUpperCase();
+
+      List<String> timeParts = timeComponent.split(':');
+      if (timeParts.length != 2) {
+        throw FormatException('Invalid time format');
+      }
+
+      int hours = int.parse(timeParts[0]);
+      int minutes = int.parse(timeParts[1]);
+
+      // Adjust hours for PM
+      if (amPm == 'PM' && hours != 12) {
+        hours += 12;
+      } else if (amPm == 'AM' && hours == 12) {
+        hours = 0;
+      }
+
+      return DateTime(now.year, now.month, now.day, hours, minutes);
+    } catch (e) {
+      print('Error parsing time: $e');
+      // Return current time if parsing fails
+      return now;
+    }
+  }
+
+  String getStationStatus(FuelStation station) {
+    if (station.isOpenAllDay) return 'Open 24/7';
+
+    final now = DateTime.now();
+    DateTime openTime;
+    DateTime closeTime;
+
+    try {
+      openTime = parseTime(station.operationStartTime);
+      closeTime = parseTime(station.operationEndTime);
+    } catch (e) {
+      print('Error parsing station times: $e');
+      return 'Hours unavailable';
+    }
+
+    if (now.isAfter(openTime) && now.isBefore(closeTime)) {
+      final minutesToClose = closeTime.difference(now).inMinutes;
+      if (minutesToClose <= 60) {
+        return 'Closing soon';
+      }
+      return 'Open';
+    } else {
+      final minutesToOpen = openTime.difference(now).inMinutes;
+      if (minutesToOpen <= 60 && minutesToOpen > 0) {
+        return 'Opening soon';
+      }
+      return 'Closed';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +123,6 @@ class MapView extends StatelessWidget {
               }
 
               List<FuelStation> stations = stationSnapshot.data ?? [];
-              // Filter stations to show only verified ones
               List<FuelStation> verifiedStations = stations.where((station) => station.isVerified).toList();
 
               return Column(
@@ -177,102 +250,128 @@ class MapView extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                ),...verifiedStations.map((station) {
-  LatLng? coordinates = _parseCoordinates(station.gpsLink);
+                                ),
+                                ...verifiedStations.map((station) {
+                                  LatLng? coordinates = _parseCoordinates(station.gpsLink);
 
-  if (coordinates != null) {
-    return Marker(
-      width: 80,
-      height: 80.0,
-      point: coordinates,
-      child:GestureDetector(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return Dialog(
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        station.name,
-                        style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 10.0),
-                      StreamBuilder<StationServices>(
-                        stream: _firestoreService.streamStationServices(station.id),
-                        builder: (context, serviceSnapshot) {
-                          if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          }
-                          if (serviceSnapshot.hasError) {
-                            return const Text('Error loading services');
-                          }
-                          if (!serviceSnapshot.hasData) {
-                            return const Text('Services unavailable');
-                          }
-                          StationServices services = serviceSnapshot.data!;
+                                  if (coordinates != null) {
+                                    return Marker(
+                                      width: 80,
+                                      height: 80.0,
+                                      point: coordinates,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return Dialog(
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(16.0),
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        station.name,
+                                                        style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                                                      ),
+                                                      const SizedBox(height: 10.0),
+                                                      StreamBuilder<StationServices>(
+                                                        stream: _firestoreService.streamStationServices(station.id),
+                                                        builder: (context, serviceSnapshot) {
+                                                          if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                                                            return const CircularProgressIndicator();
+                                                          }
+                                                          if (serviceSnapshot.hasError) {
+                                                            return const Text('Error loading services');
+                                                          }
+                                                          if (!serviceSnapshot.hasData) {
+                                                            return const Text('Services unavailable');
+                                                          }
+                                                          StationServices services = serviceSnapshot.data!;
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
-                                  const SizedBox(width: 5.0),
-                                  Text('Petrol: ${services.isPetrolAvailable ? 'Available' : 'Unavailable'}'),
-                                ],
-                              ),
-                              const SizedBox(height: 5.0),
-                              Row(
-                                children: [
-                                  Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
-                                  const SizedBox(width: 5.0),
-                                  Text('Diesel: ${services.isDieselAvailable ? 'Available' : 'Unavailable'}'),
-                                ],
-                              ),
-                              const SizedBox(height: 5.0),
-                              Text(
-                                'Status: ${services.isOpen ? 'Open' : 'Closed'}',
-                                style: TextStyle(color: services.isOpen ? Colors.green : Colors.red),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-        child: Column(
-          children: [
-            const Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
-            const SizedBox(height: 2.0),
-            Text(
-              station.name,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-              style: const TextStyle(fontSize: 12.0),
-            ),
-          ],
-        ),
-      ),
-    );
-  } else {
-    return const Marker(
-      width: 0.0,
-      height: 0.0,
-      point: LatLng(0.0, 0.0),
-      child: SizedBox.shrink(),
-    );
-  }
-}).toList(),
+                                                          String stationStatus = getStationStatus(station);
+
+                                                          return Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              Row(
+                                                                children: [
+                                                                  Icon(Icons.circle, color: services.isPetrolAvailable ? Colors.green : Colors.red),
+                                                                  const SizedBox(width: 5.0),
+                                                                  Text('Petrol: ${services.isPetrolAvailable ? 'Available' : 'Unavailable'}'),
+                                                                ],
+                                                              ),
+                                                              const SizedBox(height: 5.0),
+                                                              Row(
+                                                                children: [
+                                                                  Icon(Icons.circle, color: services.isDieselAvailable ? Colors.green : Colors.red),
+                                                                  const SizedBox(width: 5.0),
+                                                                  Text('Diesel: ${services.isDieselAvailable ? 'Available' : 'Unavailable'}'),
+                                                                ],
+                                                              ),
+                                                              const SizedBox(height: 5.0),
+                                                              Text(
+                                                                'Status: $stationStatus',
+                                                                style: TextStyle(
+                                                                  color: stationStatus == 'Open' || stationStatus == 'Open 24/7'
+                                                                      ? Colors.green
+                                                                      : stationStatus == 'Closing soon'
+                                                                          ? Colors.orange
+                                                                          : Colors.red
+                                                                ),
+                                                              ),
+                                                              const SizedBox(height: 5.0),
+                                                              Row(
+                                                                children: [
+                                                                  const Icon(Icons.access_time, size: 16.0),
+                                                                  const SizedBox(width: 4.0),
+                                                                  Expanded(
+                                                                    child: Text(
+                                                                      station.isOpenAllDay
+                                                                          ? 'Open 24/7'
+                                                                          : station.operationStartTime.isNotEmpty && station.operationEndTime.isNotEmpty
+                                                                              ? 'Hours: ${station.operationStartTime} - ${station.operationEndTime}'
+                                                                              : 'Hours not available',
+                                                                      style: const TextStyle(fontSize: 14.0),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          );
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Column(
+                                          children: [
+                                            const Icon(Icons.local_gas_station, color: Colors.blue, size: 40.0),
+                                            const SizedBox(height: 2.0),
+                                            Text(
+                                              station.name,
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 2,
+                                              style: const TextStyle(fontSize: 12.0),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    return const Marker(
+                                      width: 0.0,
+                                      height: 0.0,
+                                      point: LatLng(0.0, 0.0),
+                                      child: SizedBox.shrink(),
+                                    );
+                                  }
+                                }).toList(),
                               ],
                             ),
                           ],
@@ -287,10 +386,7 @@ class MapView extends StatelessWidget {
         },
       ),
     );
-  }
-
-
-  Future<void> _searchPlace(String place, BuildContext context) async {
+  }  Future<void> _searchPlace(String place, BuildContext context) async {
     try {
       if (place.isNotEmpty) {
         List<Location> locations = await locationFromAddress(place);

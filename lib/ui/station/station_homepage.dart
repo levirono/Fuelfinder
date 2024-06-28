@@ -35,7 +35,7 @@ class StationHomePageState extends State<StationHomePage> {
 
   Future<String?> _stationNameFuture = Future.value('Station Name');
   Future<List<String>> _servicesOfferedFuture = Future.value([]);
-  bool _isVerified = false; //verification status
+  bool _isVerified = false;
   
   Stream<bool> _verificationStatusStream() {
     return _firestoreService.getVerificationStatusStream(_stationId);
@@ -545,7 +545,7 @@ void _showVerificationPopup() {
       return AlertDialog(
         backgroundColor: Colors.green[100],
         title: const Text('Verification Required'),
-        content: const Text('You need to be verified to perform this action.'),
+        content: const Text('You need to be verified wait for for atleast 24 hours if new,or contact support.',),
         actions: [
           TextButton(
             onPressed: () {

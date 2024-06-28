@@ -19,7 +19,6 @@ import 'dart:async';
 import 'package:ff_main/ui/driver/all_stations.dart';
 import 'package:ff_main/utils/logout_confirmation.dart';
 
-
 class DriverHomePage extends StatefulWidget {
   const DriverHomePage({super.key});
 
@@ -203,6 +202,79 @@ class DriverHomePageState extends State<DriverHomePage> {
     }
   }
 
+//new functionality
+  bool isOpenAllDay(FuelStation station) {
+    return station.isOpenAllDay;
+  }
+
+  DateTime parseTime(String time) {
+    final now = DateTime.now();
+    try {
+      // Remove any leading/trailing whitespace
+      time = time.trim();
+
+      // Split the time string into components
+      List<String> components = time.split(' ');
+      if (components.length != 2) {
+        throw FormatException('Invalid time format');
+      }
+
+      String timeComponent = components[0];
+      String amPm = components[1].toUpperCase();
+
+      List<String> timeParts = timeComponent.split(':');
+      if (timeParts.length != 2) {
+        throw FormatException('Invalid time format');
+      }
+
+      int hours = int.parse(timeParts[0]);
+      int minutes = int.parse(timeParts[1]);
+
+      // Adjust hours for PM
+      if (amPm == 'PM' && hours != 12) {
+        hours += 12;
+      } else if (amPm == 'AM' && hours == 12) {
+        hours = 0;
+      }
+
+      return DateTime(now.year, now.month, now.day, hours, minutes);
+    } catch (e) {
+      print('Error parsing time: $e');
+      // Return current time if parsing fails
+      return now;
+    }
+  }
+
+  String getStationStatus(FuelStation station) {
+    if (station.isOpenAllDay) return 'Open 24/7';
+
+    final now = DateTime.now();
+    DateTime openTime;
+    DateTime closeTime;
+
+    try {
+      openTime = parseTime(station.operationStartTime);
+      closeTime = parseTime(station.operationEndTime);
+    } catch (e) {
+      print('Error parsing station times: $e');
+      return 'Hours unavailable';
+    }
+
+    if (now.isAfter(openTime) && now.isBefore(closeTime)) {
+      final minutesToClose = closeTime.difference(now).inMinutes;
+      if (minutesToClose <= 60) {
+        return 'Closing soon';
+      }
+      return 'Open';
+    } else {
+      final minutesToOpen = openTime.difference(now).inMinutes;
+      if (minutesToOpen <= 60 && minutesToOpen > 0) {
+        return 'Opening soon';
+      }
+      return 'Closed';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_isProfileLoaded || _currentLocation == null) {
@@ -301,17 +373,20 @@ class DriverHomePageState extends State<DriverHomePage> {
                     controller: _pageController,
                     children: const [
                       CarouselItem(
-                          imagePath:'assets/images/welcome1.png',
-                          title:'FIND THE NEAREST FUEL STATION TO REFILL',
-                          subtitle: 'always have a view of fuel stations to refill your car,save your time.'),
+                          imagePath: 'assets/images/welcome1.png',
+                          title: 'FIND THE NEAREST FUEL STATION TO REFILL',
+                          subtitle:
+                              'always have a view of fuel stations to refill your car,save your time.'),
                       CarouselItem(
                           imagePath: 'assets/images/welcome2.png',
-                          title:'COMPREHENSIVE MAP VIEW',
-                          subtitle:'You can open map view to see the stations on the map'),
+                          title: 'COMPREHENSIVE MAP VIEW',
+                          subtitle:
+                              'You can open map view to see the stations on the map'),
                       CarouselItem(
-                          imagePath:'assets/images/welcome3.png',
-                          title:'EFFICIENCY TIPS',
-                          subtitle: 'You get fuel efficiency tips that will hep you save your fuel and time.'),
+                          imagePath: 'assets/images/welcome3.png',
+                          title: 'EFFICIENCY TIPS',
+                          subtitle:
+                              'You get fuel efficiency tips that will hep you save your fuel and time.'),
                     ],
                   ),
                 ),
@@ -537,6 +612,8 @@ class DriverHomePageState extends State<DriverHomePage> {
             }
             final StationServices services = serviceSnapshot.data!;
 
+            String stationStatus = getStationStatus(station);
+
             return GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -548,20 +625,15 @@ class DriverHomePageState extends State<DriverHomePage> {
                 );
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.horizontal(
-                    left: Radius.circular(20.0),
-                    right: Radius.circular(20.0),
-                  ),
+                  borderRadius: BorderRadius.circular(20.0),
                   child: Container(
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
-                      borderRadius: const BorderRadius.horizontal(
-                        left: Radius.circular(20.0),
-                        right: Radius.circular(20.0),
-                      ),
+                      borderRadius: BorderRadius.circular(20.0),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -613,11 +685,33 @@ class DriverHomePageState extends State<DriverHomePage> {
                               ],
                             ),
                             Text(
-                              services.isOpen ? 'Open' : 'Closed',
+                              stationStatus,
                               style: TextStyle(
-                                  color: services.isOpen
+                                  color: stationStatus == 'Open' ||
+                                          stationStatus == 'Open 24/7'
                                       ? Colors.green
-                                      : Colors.red),
+                                      : stationStatus == 'Closing soon' ||
+                                              stationStatus == 'Opening soon'
+                                          ? Colors.orange
+                                          : Colors.red),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time, size: 16.0),
+                            const SizedBox(width: 4.0),
+                            Expanded(
+                              child: Text(
+                                station.isOpenAllDay
+                                    ? 'Open 24/7'
+                                    : station.operationStartTime.isNotEmpty &&
+                                            station.operationEndTime.isNotEmpty
+                                        ? 'Operaration Hours: ${station.operationStartTime} - ${station.operationEndTime}'
+                                        : 'Not updated',
+                                style: const TextStyle(fontSize: 14.0),
+                              ),
                             ),
                           ],
                         ),

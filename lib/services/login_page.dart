@@ -3,6 +3,9 @@ import 'package:ff_main/utils/carousel_item.dart';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/signup_page.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -160,17 +163,20 @@ class LoginPageState extends State<LoginPage> {
                             onPressed: () async {
                               if (_formKey.currentState!.validate()) {
                                 _formKey.currentState!.save();
-                                final contextBeforeAsync = context;
                                 final result = await _authService.login(_email, _password);
                                 if (!mounted) return;
                                 if (result != null) {
                                 } else {
                                   // ignore: use_build_context_synchronously
-                                  ScaffoldMessenger.of(contextBeforeAsync).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Login failed!'),
-                                    ),
-                                  );
+                                  Fluttertoast.showToast(
+          msg: "Login failed!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+        );
                                 }
                               }
                             },

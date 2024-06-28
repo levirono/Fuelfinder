@@ -1,3 +1,4 @@
+// import 'package:ff_main/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,14 +16,27 @@ import 'package:ff_main/services/firestore_service.dart';
 
 
 
-//added this part
+// void callbackDispatcher() {
+//   Workmanager().executeTask((task, inputData) async {
+//     FirestoreService firestoreService = FirestoreService();
+//     await firestoreService.checkForNewStations();
+//     return Future.value(true);
+//   });
+// }
+
+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     FirestoreService firestoreService = FirestoreService();
-    await firestoreService.checkForNewStations();
+    bool hasNewStations = await firestoreService.checkForNewStations();
+    if (hasNewStations) {
+      // Optionally handle success here if needed
+    }
     return Future.value(true);
   });
 }
+
+
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -32,11 +46,11 @@ Future main() async {
     isInDebugMode: true,
   );
 
-  Workmanager().registerPeriodicTask(
-    "1",
-    "checkNewStations",
-    frequency: Duration(minutes: 4),
-  );
+  // Workmanager().registerPeriodicTask(
+  //   "1",
+  //   "checkNewStations",
+  //   frequency: const Duration(hours: 24),
+  // );
 
   runApp(MyApp());
 }
@@ -51,6 +65,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Your App Title',
+      // theme:customTheme,
       home: FutureBuilder<PermissionStatus>(
         future: Permission.location.request(),
         builder: (context, snapshot) {
