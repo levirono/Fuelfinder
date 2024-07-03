@@ -1,12 +1,10 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/login_page.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class SignupPage extends StatefulWidget {
-    const SignupPage({super.key});
+  const SignupPage({super.key});
 
   @override
   SignupPageState createState() => SignupPageState();
@@ -36,7 +34,7 @@ class SignupPageState extends State<SignupPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.green[200]!],
+            colors: [Colors.white, Colors.grey[200]!],
           ),
         ),
         child: Center(
@@ -68,7 +66,7 @@ class SignupPageState extends State<SignupPage> {
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Email',
-                              hintText: 'Enter your email',
+                              hintText: 'example@example.com',
                               prefixIcon: const Icon(Icons.email, color: Colors.green),
                               filled: true,
                               fillColor: Colors.white,
@@ -81,6 +79,11 @@ class SignupPageState extends State<SignupPage> {
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your email.';
+                              }
+                              // Simple email validation regex
+                              final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                              if (!emailRegex.hasMatch(value)) {
+                                return 'Please enter a valid email address.';
                               }
                               return null;
                             },
@@ -172,7 +175,7 @@ class SignupPageState extends State<SignupPage> {
                                 child: RadioListTile<String>(
                                   value: 'user',
                                   groupValue: _role,
-                                  title: const Text('Driver'),
+                                  activeColor: Colors.green,
                                   secondary: const Icon(Icons.directions_car, color: Colors.green),
                                   onChanged: (value) {
                                     setState(() {
@@ -185,7 +188,7 @@ class SignupPageState extends State<SignupPage> {
                                 child: RadioListTile<String>(
                                   value: 'station',
                                   groupValue: _role,
-                                  title: const Text('Station'),
+                                  activeColor: Colors.green,
                                   secondary: const Icon(Icons.local_gas_station, color: Colors.green),
                                   onChanged: (value) {
                                     setState(() {
@@ -206,10 +209,11 @@ class SignupPageState extends State<SignupPage> {
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
                             ),
-                            child: const Text('Sign Up',
-                            style: TextStyle(
-                              color:Colors.white,
-                            ),
+                            child: const Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 10.0),
@@ -243,50 +247,50 @@ class SignupPageState extends State<SignupPage> {
   }
 
   void _submitForm() async {
-  if (_formKey.currentState!.validate()) {
-    _formKey.currentState!.save();
-    final BuildContext contextBeforeAsync = context;
-    final result = await _authService.register(_email, _password, _role);
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      final BuildContext contextBeforeAsync = context;
+      final result = await _authService.register(_email, _password, _role);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (result != null) {
-      _showRegistrationSuccessDialog(contextBeforeAsync);
-    } else {
-      Fluttertoast.showToast(
-          msg: "Login failed!",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
+      if (result != null) {
+        _showRegistrationSuccessDialog(contextBeforeAsync);
+      } else {
+        Fluttertoast.showToast(
+            msg: "Login failed!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0
         );
+      }
     }
   }
-}
 
   Future<void> _showRegistrationSuccessDialog(BuildContext context) async {
-  return showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Account Created Successfully'),
-        content: const Text('Your account has been created successfully!'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              );
-            },
-            child: const Text('Proceed to Login'),
-          ),
-        ],
-      );
-    },
-  );
-}
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Account Created Successfully'),
+          content: const Text('Your account has been created successfully!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+              child: const Text('Proceed to Login'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

@@ -133,6 +133,7 @@ class StationsPageState extends State<StationsPage> {
                               bool confirmDelete = await showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
+                                  backgroundColor: Colors.green[100],
                                   title: const Text('Delete Station'),
                                   content: const Text(
                                       'Are you sure you want to delete this station?'),
@@ -140,12 +141,20 @@ class StationsPageState extends State<StationsPage> {
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.of(context).pop(false),
-                                      child: const Text('Cancel'),
+                                      child: const Text('Cancel',
+                                      style: TextStyle(
+                                        color: Colors.orange
+                                      ),
+                                      ),
                                     ),
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.of(context).pop(true),
-                                      child: const Text('Delete'),
+                                      child: const Text('Delete',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                      ),
+                                      ),
                                     ),
                                   ],
                                 ),
