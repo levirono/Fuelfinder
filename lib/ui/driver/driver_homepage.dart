@@ -4,6 +4,7 @@ import 'package:ff_main/utils/carousel_item.dart';
 import 'package:ff_main/utils/driver_drawer.dart';
 import 'package:ff_main/utils/sticky_header_delegate.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
@@ -186,8 +187,7 @@ class DriverHomePageState extends State<DriverHomePage> {
 
   Future<double> calculateRoadDistance(LatLng start, LatLng end) async {
     final String url =
-        'https://api.mapbox.com/directions/v5/mapbox/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtwZzVyNjB3bDUydnA3eGNrNHplN3QifQ.M5AHspWj4Wb19XqLD26Gtg';
-
+        'https://api.mapbox.com/directions/v5/mapbox/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {

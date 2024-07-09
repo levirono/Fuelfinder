@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/login_page.dart';
@@ -12,6 +13,7 @@ import 'package:ff_main/ui/admin/admin_dashboard.dart';
 //added these 2
 import 'package:workmanager/workmanager.dart';
 import 'package:ff_main/services/firestore_service.dart';
+
 
 
 
@@ -38,6 +40,12 @@ void callbackDispatcher() {
 
 
 Future main() async {
+ try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print("Error loading .env file: $e");
+    // Optionally, load a default configuration or handle the error
+  }
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 //added this part

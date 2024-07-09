@@ -6,6 +6,8 @@ import 'package:ff_main/models/fuel_station.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 class MapView extends StatelessWidget {
   MapView({Key? key}) : super(key: key);
@@ -223,14 +225,13 @@ class MapView extends StatelessWidget {
                           ),
                           children: [
                             TileLayer(
-                              urlTemplate:
-                                  'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
-                              additionalOptions: const {
-                                'accessToken':
-                                    'pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtvc2RiNTI2M3Aya256NnB3ajJlczIifQ.7abytkEEOSsAdSFy3QXWQg',
-                                'id': 'mapbox.mapbox-streets-v8',
-                              },
-                            ),
+      urlTemplate:
+          'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}',
+      additionalOptions: {
+        'accessToken': dotenv.env['MAPBOX_ACCESS_TOKEN']!,
+        'id': 'mapbox.mapbox-streets-v8',
+      },
+    ),
                             MarkerLayer(
                               markers: [
                                 Marker(
