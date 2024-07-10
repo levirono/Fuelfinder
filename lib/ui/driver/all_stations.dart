@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/ui/driver/station_details.dart';
 import 'package:ff_main/models/fuel_station.dart';
-import 'dart:async';
 
 class AllFuelStationsPage extends StatefulWidget {
   const AllFuelStationsPage({Key? key}) : super(key: key);
@@ -18,29 +18,26 @@ class AllFuelStationsPage extends StatefulWidget {
 class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
   final FirestoreService _firestoreService = FirestoreService();
   String searchQuery = '';
-  LatLng? _currentLocation;
+  Stream<Position>? _positionStream;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    _setupLocationStream();
   }
 
-  Future<void> _getCurrentLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      setState(() {
-        _currentLocation = LatLng(position.latitude, position.longitude);
-      });
-    } catch (e) {
-      print('Error getting location: $e');
-    }
+  void _setupLocationStream() {
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 100,
+    );
+    _positionStream =
+        Geolocator.getPositionStream(locationSettings: locationSettings);
   }
 
   Future<double> calculateRoadDistance(LatLng start, LatLng end) async {
     final String url =
-        'https://api.mapbox.com/directions/v5/mapbox/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?access_token=pk.eyJ1IjoiZ2VuaXhsIiwiYSI6ImNsdmtwZzVyNjB3bDUydnA3eGNrNHplN3QifQ.M5AHspWj4Wb19XqLD26Gtg';
+        'https://api.mapbox.com/directions/v5/mapbox/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}';
 
     final response = await http.get(Uri.parse(url));
 
@@ -60,10 +57,7 @@ class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
   DateTime parseTime(String time) {
     final now = DateTime.now();
     try {
-      // Remove any leading/trailing whitespace
       time = time.trim();
-
-      // Split the time string into components
       List<String> components = time.split(' ');
       if (components.length != 2) {
         throw FormatException('Invalid time format');
@@ -80,7 +74,6 @@ class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
       int hours = int.parse(timeParts[0]);
       int minutes = int.parse(timeParts[1]);
 
-      // Adjust hours for PM
       if (amPm == 'PM' && hours != 12) {
         hours += 12;
       } else if (amPm == 'AM' && hours == 12) {
@@ -90,7 +83,6 @@ class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
       return DateTime(now.year, now.month, now.day, hours, minutes);
     } catch (e) {
       print('Error parsing time: $e');
-      // Return current time if parsing fails
       return now;
     }
   }
@@ -155,45 +147,21 @@ class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<List<FuelStation>>(
-              stream: _firestoreService.streamVerifiedStations(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+            child: StreamBuilder<Position>(
+              stream: _positionStream,
+              builder: (context, locationSnapshot) {
+                if (locationSnapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No stations found'));
+                if (!locationSnapshot.hasData) {
+                  return const Center(child: Text('Location unavailable'));
                 }
-                List<FuelStation> stations = snapshot.data!;
-                if (searchQuery.isNotEmpty) {
-                  stations = stations
-                      .where((station) => station.location
-                          .toLowerCase()
-                          .contains(searchQuery.toLowerCase()))
-                      .toList();
-                }
-
-                return FutureBuilder<List<FuelStation>>(
-                  future: _sortStationsByDistance(stations),
-                  builder: (context, sortedSnapshot) {
-                    if (sortedSnapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (!sortedSnapshot.hasData ||
-                        sortedSnapshot.data!.isEmpty) {
-                      return const Center(child: Text('No stations found'));
-                    }
-                    List<FuelStation> sortedStations = sortedSnapshot.data!;
-
-                    return ListView.builder(
-                      itemCount: sortedStations.length,
-                      itemBuilder: (context, index) {
-                        return _buildStationTile(sortedStations[index]);
-                      },
-                    );
-                  },
+                final currentLocation = LatLng(
+                  locationSnapshot.data!.latitude,
+                  locationSnapshot.data!.longitude,
                 );
+                return _buildStationsList(currentLocation);
               },
             ),
           ),
@@ -202,10 +170,59 @@ class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
     );
   }
 
-  Widget _buildStationTile(FuelStation station) {
+  Widget _buildStationsList(LatLng currentLocation) {
+    return StreamBuilder<List<FuelStation>>(
+      stream: _firestoreService.streamVerifiedStations(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No stations found'));
+        }
+        List<FuelStation> stations = snapshot.data!;
+        if (searchQuery.isNotEmpty) {
+          stations = stations
+              .where((station) => station.location
+                  .toLowerCase()
+                  .contains(searchQuery.toLowerCase()))
+              .toList();
+        }
+
+        return FutureBuilder<List<FuelStation>>(
+          future: _sortStationsByDistance(stations, currentLocation),
+          builder: (context, sortedSnapshot) {
+            if (sortedSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!sortedSnapshot.hasData || sortedSnapshot.data!.isEmpty) {
+              return const Center(child: Text('No stations found'));
+            }
+            List<FuelStation> sortedStations = sortedSnapshot.data!;
+
+            return AnimatedList(
+              initialItemCount: sortedStations.length,
+              itemBuilder: (context, index, animation) {
+                return SlideTransition(
+                  position: animation.drive(Tween(
+                    begin: const Offset(1, 0),
+                    end: Offset.zero,
+                  )),
+                  child:
+                      _buildStationTile(sortedStations[index], currentLocation),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStationTile(FuelStation station, LatLng currentLocation) {
     return FutureBuilder<double>(
       future: calculateRoadDistance(
-        _currentLocation!,
+        currentLocation,
         _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
       ),
       builder: (context, snapshot) {
@@ -381,11 +398,11 @@ class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
   }
 
   Future<List<FuelStation>> _sortStationsByDistance(
-      List<FuelStation> stations) async {
+      List<FuelStation> stations, LatLng currentLocation) async {
     List<MapEntry<FuelStation, double>> stationsWithDistances =
         await Future.wait(stations.map((station) async {
       double distance = await calculateRoadDistance(
-        _currentLocation!,
+        currentLocation,
         _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
       );
       return MapEntry(station, distance);

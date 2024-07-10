@@ -35,14 +35,13 @@ class DriverHomePageState extends State<DriverHomePage> {
   String searchQuery = '';
   bool isFirstTime = true;
   bool _isProfileLoaded = false;
-  LatLng? _currentLocation;
+  Stream<Position>? _positionStream;
 
   @override
   void initState() {
     super.initState();
     _checkDriverProfile();
-    // _showRandomFuelEfficiencyTip();
-    _getCurrentLocation();
+    _setupLocationStream();
     Timer.periodic(const Duration(seconds: 5), (Timer timer) {
       if (_pageController.hasClients) {
         int nextPage = (_pageController.page!.round() + 1) % 3;
@@ -53,7 +52,16 @@ class DriverHomePageState extends State<DriverHomePage> {
         );
       }
     });
-      Future.delayed(const Duration(seconds: 20), _showRandomFuelEfficiencyTip);
+    Future.delayed(const Duration(seconds: 20), _showRandomFuelEfficiencyTip);
+  }
+
+  void _setupLocationStream() {
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 100,
+    );
+    _positionStream =
+        Geolocator.getPositionStream(locationSettings: locationSettings);
   }
 
   Future<void> _checkDriverProfile() async {
@@ -90,7 +98,8 @@ class DriverHomePageState extends State<DriverHomePage> {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const DriverProfile()),
+                      MaterialPageRoute(
+                          builder: (context) => const DriverProfile()),
                     );
                   },
                   child: const Text(
@@ -117,73 +126,75 @@ class DriverHomePageState extends State<DriverHomePage> {
   }
 
   Future<void> _showRandomFuelEfficiencyTip() async {
-  List<FuelEfficiencyTip> tips = await _firestoreService.getFuelEfficiencyTips();
-  if (tips.isNotEmpty) {
-    FuelEfficiencyTip randomTip = tips[Random().nextInt(tips.length)];
+    List<FuelEfficiencyTip> tips =
+        await _firestoreService.getFuelEfficiencyTips();
+    if (tips.isNotEmpty) {
+      FuelEfficiencyTip randomTip = tips[Random().nextInt(tips.length)];
 
-    if (mounted) {  // Check if the widget is still in the tree
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(
-              'Fuel Efficiency Tip',
-              style: TextStyle(
-                  color: Colors.green[800],
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold),
-            ),
-            content: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 20.0, vertical: 16.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(color: Colors.green, width: 2.0),
+      if (mounted) {
+        // Check if the widget is still in the tree
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(
+                'Fuel Efficiency Tip',
+                style: TextStyle(
+                    color: Colors.green[800],
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold),
               ),
-              child: Text(
-                randomTip.tip,
-                style: const TextStyle(fontSize: 18.0),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 12.0),
-                  child: const Text(
-                    'Close',
-                    style: TextStyle(color: Colors.white, fontSize: 18.0),
-                  ),
+              content: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8.0),
+                  border: Border.all(color: Colors.green, width: 2.0),
+                ),
+                child: Text(
+                  randomTip.tip,
+                  style: const TextStyle(fontSize: 18.0),
                 ),
               ),
-            ],
-          );
-        },
-      );
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 12.0),
+                    child: const Text(
+                      'Close',
+                      style: TextStyle(color: Colors.white, fontSize: 18.0),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      }
     }
   }
-}
 
-  Future<void> _getCurrentLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      setState(() {
-        _currentLocation = LatLng(position.latitude, position.longitude);
-      });
-    } catch (e) {
-      print('Error getting location: $e');
-    }
-  }
+  // Future<void> _getCurrentLocation() async {
+  //   try {
+  //     Position position = await Geolocator.getCurrentPosition(
+  //         desiredAccuracy: LocationAccuracy.high);
+  //     setState(() {
+  //       _currentLocation = LatLng(position.latitude, position.longitude);
+  //     });
+  //   } catch (e) {
+  //     print('Error getting location: $e');
+  //   }
+  // }
 
   Future<double> calculateRoadDistance(LatLng start, LatLng end) async {
     final String url =
@@ -276,7 +287,7 @@ class DriverHomePageState extends State<DriverHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isProfileLoaded || _currentLocation == null) {
+    if (!_isProfileLoaded) {
       return const Scaffold(
           // body: Center(child: CircularProgressIndicator()),
           );
@@ -299,259 +310,286 @@ class DriverHomePageState extends State<DriverHomePage> {
         ],
       ),
       drawer: const DriverDrawer(),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Container(
-              height: 300.0,
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(20.0),
-                  right: Radius.circular(20.0),
-                ),
-                border: Border.all(
-                  color: Colors.grey[300]!,
-                  width: 1.0,
-                ),
+      body: StreamBuilder<Position>(
+        stream: _positionStream,
+        builder: (context, locationSnapshot) {
+          if (locationSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!locationSnapshot.hasData) {
+            return const Center(child: Text('Location unavailable'));
+          }
+          final currentLocation = LatLng(
+            locationSnapshot.data!.latitude,
+            locationSnapshot.data!.longitude,
+          );
+          return _buildBodyContent(currentLocation);
+        },
+      ),
+    );
+  }
+
+  Widget _buildBodyContent(LatLng currentLocation) {
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Container(
+            height: 300.0,
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(20.0),
+                right: Radius.circular(20.0),
               ),
-              child: PageView(
-                controller: _pageController,
-                children: const [
-                  CarouselItem(
-                    imagePath: 'assets/images/welcome1.png',
-                    title: 'FIND THE NEAREST FUEL STATION TO REFILL',
-                    subtitle: 'Always have a view of fuel stations to refill your car, save your time.',
+              border: Border.all(
+                color: Colors.grey[300]!,
+                width: 1.0,
+              ),
+            ),
+            child: PageView(
+              controller: _pageController,
+              children: const [
+                CarouselItem(
+                  imagePath: 'assets/images/welcome1.png',
+                  title: 'FIND THE NEAREST FUEL STATION TO REFILL',
+                  subtitle:
+                      'Always have a view of fuel stations to refill your car, save your time.',
+                ),
+                CarouselItem(
+                  imagePath: 'assets/images/welcome2.png',
+                  title: 'COMPREHENSIVE MAP VIEW',
+                  subtitle:
+                      'You can open map view to see the stations on the map',
+                ),
+                CarouselItem(
+                  imagePath: 'assets/images/welcome3.png',
+                  title: 'EFFICIENCY TIPS',
+                  subtitle:
+                      'You get fuel efficiency tips that will help you save your fuel and time.',
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: StickyHeaderDelegate(
+            child: Container(
+              color: Colors.white,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'Search Route',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.0,
+                      ),
+                    ),
                   ),
-                  CarouselItem(
-                    imagePath: 'assets/images/welcome2.png',
-                    title: 'COMPREHENSIVE MAP VIEW',
-                    subtitle: 'You can open map view to see the stations on the map',
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Enter road code or route',
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  setState(() {
+                                    searchQuery = '';
+                                  });
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.search),
+                                onPressed: () {
+                                  setState(() {
+                                    searchQuery = searchQuery.trim();
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            searchQuery = value;
+                          });
+                        },
+                      ),
+                    ),
                   ),
-                  CarouselItem(
-                    imagePath: 'assets/images/welcome3.png',
-                    title: 'EFFICIENCY TIPS',
-                    subtitle: 'You get fuel efficiency tips that will help you save your fuel and time.',
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        PermissionStatus locationStatus =
+                            await Permission.location.request();
+
+                        if (locationStatus == PermissionStatus.granted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => MapView()),
+                          );
+                        }
+
+                        if (locationStatus == PermissionStatus.denied) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'This permission is required to use maps'),
+                            ),
+                          );
+                        }
+
+                        if (locationStatus ==
+                            PermissionStatus.permanentlyDenied) {
+                          openAppSettings();
+                        }
+                      },
+                      icon: const Icon(Icons.map, color: Colors.white),
+                      label: const Text(
+                        'View Stations on Map',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[400],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: StickyHeaderDelegate(
-              child: Container(
-                color: Colors.white,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'Search Route',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16.0,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: 'Enter road code or route',
-                            suffixIcon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    setState(() {
-                                      searchQuery = '';
-                                    });
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.search),
-                                  onPressed: () {
-                                    setState(() {
-                                      searchQuery = searchQuery.trim();
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              searchQuery = value;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          PermissionStatus locationStatus =
-                              await Permission.location.request();
-
-                          if (locationStatus == PermissionStatus.granted) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => MapView()),
-                            );
-                          }
-
-                          if (locationStatus == PermissionStatus.denied) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('This permission is required to use maps'),
-                              ),
-                            );
-                          }
-
-                          if (locationStatus == PermissionStatus.permanentlyDenied) {
-                            openAppSettings();
-                          }
-                        },
-                        icon: const Icon(Icons.map, color: Colors.white),
-                        label: const Text(
-                          'View Stations on Map',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[400],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12.0),
-                          minimumSize: const Size(double.infinity, 50),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Stations near me:',
+              style: TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Stations near me:',
-                style: TextStyle(
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-            ),
-          ),
-          StreamBuilder<List<FuelStation>>(
-            stream: _firestoreService.streamVerifiedStations(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('No stations found')),
-                );
-              }
-              List<FuelStation> stations = snapshot.data!;
-              if (searchQuery.isNotEmpty) {
-                stations = stations
-                    .where((station) => station.location
-                        .toLowerCase()
-                        .contains(searchQuery.toLowerCase()))
-                    .toList();
-              }
-
-              return FutureBuilder<List<FuelStation>>(
-                future: _sortStationsByDistance(stations),
-                builder: (context, sortedSnapshot) {
-                  if (sortedSnapshot.connectionState == ConnectionState.waiting) {
-                    return const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (!sortedSnapshot.hasData || sortedSnapshot.data!.isEmpty) {
-                    return const SliverFillRemaining(
-                      child: Center(child: Text('No stations found')),
-                    );
-                  }
-                  List<FuelStation> sortedStations = sortedSnapshot.data!;
-
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (index < sortedStations.length) {
-                          return _buildStationTile(sortedStations[index]);
-                        } else if (index == sortedStations.length) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8.0, horizontal: 16.0),
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => AllFuelStationsPage()),
-                                );
-                              },
-                              icon: const Icon(Icons.arrow_forward,
-                                  color: Colors.white),
-                              label: const Text(
-                                'View All Stations',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                                minimumSize: const Size(double.infinity, 50),
-                              ),
-                            ),
-                          );
-                        } else {
-                          return null;
-                        }
-                      },
-                      childCount: sortedStations.length + 1,
-                    ),
-                  );
-                },
+        ),
+        StreamBuilder<List<FuelStation>>(
+          stream: _firestoreService.streamVerifiedStations(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
               );
-            },
-          ),
-        ],
-      ),
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const SliverFillRemaining(
+                child: Center(child: Text('No stations found')),
+              );
+            }
+            List<FuelStation> stations = snapshot.data!;
+            if (searchQuery.isNotEmpty) {
+              stations = stations
+                  .where((station) => station.location
+                      .toLowerCase()
+                      .contains(searchQuery.toLowerCase()))
+                  .toList();
+            }
+
+            return FutureBuilder<List<FuelStation>>(
+              future: _sortStationsByDistance(stations, currentLocation),
+              builder: (context, sortedSnapshot) {
+                if (sortedSnapshot.connectionState == ConnectionState.waiting) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (!sortedSnapshot.hasData || sortedSnapshot.data!.isEmpty) {
+                  return const SliverFillRemaining(
+                    child: Center(child: Text('No stations found')),
+                  );
+                }
+                List<FuelStation> sortedStations = sortedSnapshot.data!;
+
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      if (index < sortedStations.length) {
+                        return _buildStationTile(
+                            sortedStations[index], currentLocation);
+                      } else if (index == sortedStations.length) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8.0, horizontal: 16.0),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        AllFuelStationsPage()),
+                              );
+                            },
+                            icon: const Icon(Icons.arrow_forward,
+                                color: Colors.white),
+                            label: const Text(
+                              'View All Stations',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 12.0),
+                              minimumSize: const Size(double.infinity, 50),
+                            ),
+                          ),
+                        );
+                      } else {
+                        return null;
+                      }
+                    },
+                    childCount: sortedStations.length + 1,
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildStationTile(FuelStation station) {
+  Widget _buildStationTile(FuelStation station, LatLng currentLocation) {
     return FutureBuilder<double>(
       future: calculateRoadDistance(
-        _currentLocation!,
+        currentLocation,
         _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
       ),
       builder: (context, snapshot) {
@@ -727,11 +765,11 @@ class DriverHomePageState extends State<DriverHomePage> {
   }
 
   Future<List<FuelStation>> _sortStationsByDistance(
-      List<FuelStation> stations) async {
+      List<FuelStation> stations, LatLng currentLocation) async {
     List<MapEntry<FuelStation, double>> stationsWithDistances =
         await Future.wait(stations.map((station) async {
       double distance = await calculateRoadDistance(
-        _currentLocation!,
+        currentLocation,
         _parseCoordinates(station.gpsLink) ?? const LatLng(0.0, 0.0),
       );
       return MapEntry(station, distance);
