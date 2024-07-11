@@ -226,7 +226,7 @@ class DriverHomePageState extends State<DriverHomePage> {
       // Split the time string into components
       List<String> components = time.split(' ');
       if (components.length != 2) {
-        throw FormatException('Invalid time format');
+        throw const FormatException('Invalid time format');
       }
 
       String timeComponent = components[0];
@@ -234,7 +234,7 @@ class DriverHomePageState extends State<DriverHomePage> {
 
       List<String> timeParts = timeComponent.split(':');
       if (timeParts.length != 2) {
-        throw FormatException('Invalid time format');
+        throw const FormatException('Invalid time format');
       }
 
       int hours = int.parse(timeParts[0]);
@@ -289,7 +289,6 @@ class DriverHomePageState extends State<DriverHomePage> {
   Widget build(BuildContext context) {
     if (!_isProfileLoaded) {
       return const Scaffold(
-          // body: Center(child: CircularProgressIndicator()),
           );
     }
 
@@ -297,7 +296,7 @@ class DriverHomePageState extends State<DriverHomePage> {
       appBar: AppBar(
         title: const Text(
           'FUELFINDER',
-          style: TextStyle(fontSize: 30.0, color: Colors.green),
+        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
         actions: [
@@ -351,19 +350,19 @@ class DriverHomePageState extends State<DriverHomePage> {
               controller: _pageController,
               children: const [
                 CarouselItem(
-                  imagePath: 'assets/images/welcome1.png',
+                  imagePath: 'assets/images/driver2.jpg',
                   title: 'FIND THE NEAREST FUEL STATION TO REFILL',
                   subtitle:
                       'Always have a view of fuel stations to refill your car, save your time.',
                 ),
                 CarouselItem(
-                  imagePath: 'assets/images/welcome2.png',
+                  imagePath: 'assets/images/driver1.jpg',
                   title: 'COMPREHENSIVE MAP VIEW',
                   subtitle:
                       'You can open map view to see the stations on the map',
                 ),
                 CarouselItem(
-                  imagePath: 'assets/images/welcome3.png',
+                  imagePath: 'assets/images/driver3.jpg',
                   title: 'EFFICIENCY TIPS',
                   subtitle:
                       'You get fuel efficiency tips that will help you save your fuel and time.',
@@ -482,9 +481,9 @@ class DriverHomePageState extends State<DriverHomePage> {
             ),
           ),
         ),
-        SliverToBoxAdapter(
+        const SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(16.0),
             child: Text(
               'Stations near me:',
               style: TextStyle(
@@ -548,7 +547,7 @@ class DriverHomePageState extends State<DriverHomePage> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        AllFuelStationsPage()),
+                                        const AllFuelStationsPage()),
                               );
                             },
                             icon: const Icon(Icons.arrow_forward,

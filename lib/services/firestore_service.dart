@@ -128,9 +128,6 @@ class FirestoreService {
     return false;
   }
 
-  Future<void> scheduleDailyNewStationCheck() async {
-    // Implementation for scheduling daily checks
-  }
 
   Stream<bool> getVerificationStatusStream(String stationId) {
     return _db.collection('stations')
@@ -157,7 +154,6 @@ class FirestoreService {
     }
   }
 
-//updated this line
   Future<bool> updateStationVerificationStatus(String stationId, bool isVerified) async {
   try {
     await _db.collection('fuelStations').doc(stationId).update({
@@ -262,12 +258,10 @@ class FirestoreService {
 
   Future<StationServices> getStationServices(String stationId) async {
     try {
-      // Fetch the station services document using the provided stationId
       var docSnapshot =
           await _db.collection('stationServices').doc(stationId).get();
 
       if (docSnapshot.exists) {
-        // If the station services document exists, parse the data into a StationServices object
         var servicesData = docSnapshot.data() as Map<String, dynamic>;
         return StationServices(
           isPetrolAvailable: servicesData['isPetrolAvailable'],
@@ -279,7 +273,6 @@ class FirestoreService {
               List<String>.from(servicesData['availableServices']),
         );
       } else {
-        // If the station services document doesn't exist, create a new one with defaults
         await _db.collection('stationServices').doc(stationId).set({
           'isPetrolAvailable': false,
           'isDieselAvailable': false,
@@ -334,7 +327,6 @@ class FirestoreService {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // print('Fuel efficiency tip added successfully.');
     } catch (e) {
       // print('Error adding tip: $e');
     }
@@ -415,7 +407,6 @@ class FirestoreService {
     }
   }
 
-  //new functionality to verify stationos
   Future<void> verifyStation(String stationId, bool isVerified) async {
     try {
       await _db

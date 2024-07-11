@@ -5,13 +5,13 @@ import 'package:ff_main/services/firestore_service.dart';
 class FuelStationDetailsPage extends StatelessWidget {
   final FuelStation station;
 
-  FuelStationDetailsPage({required this.station});
+  const FuelStationDetailsPage({super.key, required this.station});
 
   @override
   Widget build(BuildContext context) {
     List<String> locationComponents = station.location.split(',');
 
-    String roadCode = locationComponents.length > 0 ? locationComponents[0].trim() : 'N/A';
+    String roadCode = locationComponents.isNotEmpty ? locationComponents[0].trim() : 'N/A';
     String location = locationComponents.length > 1 ? locationComponents[1].trim() : 'N/A';
     String distanceTo = locationComponents.length > 2 ? locationComponents[2].trim() : 'N/A';
     String distanceFrom = locationComponents.length > 3 ? locationComponents[3].trim() : 'N/A';
@@ -19,9 +19,9 @@ class FuelStationDetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(station.name,
-        style: TextStyle(
+        style: const TextStyle(
           fontWeight: FontWeight.bold,
-          color:Colors.green[900]
+          color:Colors.green
         ),
         ),
         backgroundColor: Colors.green[100],
@@ -120,9 +120,9 @@ class FuelStationDetailsPage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
+          const Text(
             'Operation Hours: ',
-            style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
           ),
           Flexible(
             child: Text(

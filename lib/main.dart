@@ -17,22 +17,11 @@ import 'package:ff_main/services/firestore_service.dart';
 
 
 
-
-// void callbackDispatcher() {
-//   Workmanager().executeTask((task, inputData) async {
-//     FirestoreService firestoreService = FirestoreService();
-//     await firestoreService.checkForNewStations();
-//     return Future.value(true);
-//   });
-// }
-
-
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     FirestoreService firestoreService = FirestoreService();
     bool hasNewStations = await firestoreService.checkForNewStations();
     if (hasNewStations) {
-      // Optionally handle success here if needed
     }
     return Future.value(true);
   });
@@ -44,11 +33,9 @@ Future main() async {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     print("Error loading .env file: $e");
-    // Optionally, load a default configuration or handle the error
   }
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-//added this part
   Workmanager().initialize(
     callbackDispatcher,
     isInDebugMode: true,

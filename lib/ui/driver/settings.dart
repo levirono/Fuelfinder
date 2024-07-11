@@ -7,11 +7,9 @@ class DriverSetting extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:Text('Setings')
+        title:const Text('Setings')
       ),
-      body: Container(
-        child: Text(' Settings page'),
-      ),
+      body: const Text(' Settings page'),
     );
   }
 }

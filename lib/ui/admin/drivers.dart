@@ -18,7 +18,7 @@ class DriversPageState extends State<DriversPage> {
       appBar: AppBar(
         title: const Text(
           'DRIVERS',
-          style: TextStyle(fontSize: 30.0, color: Colors.green),
+        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
         

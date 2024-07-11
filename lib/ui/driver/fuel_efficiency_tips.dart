@@ -46,7 +46,9 @@ class FuelEfficiencyTips extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fuel Efficiency Tips', style: TextStyle(fontSize: 30.0, color: Colors.green)),
+        title: const Text('Fuel Efficiency Tips',
+        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
+         ),
         backgroundColor: Colors.green[100],
       ),
       body: StreamBuilder<List<FuelEfficiencyTip>>(

@@ -5,8 +5,6 @@ import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/signup_page.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -22,6 +20,9 @@ class LoginPageState extends State<LoginPage> {
   String _email = '';
   String _password = '';
   bool _showPassword = false;
+  bool _showLoginFields = false;
+
+
 
   @override
   void initState() {
@@ -48,7 +49,9 @@ class LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text('FUELFINDER',
+        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
+        ),
         backgroundColor: Colors.green[100],
       ),
       body: Container(
@@ -70,21 +73,48 @@ class LoginPageState extends State<LoginPage> {
                     controller: _pageController,
                     children: const [
                       CarouselItem(
-                          imagePath:'assets/images/welcome1.png',
-                          title:'FIND THE NEAREST FUEL STATION TO REFILL',
-                          subtitle: 'always have a view of fuel stations to refill your car,save your time.'),
+                          imagePath: 'assets/images/welcome1.png',
+                          title: 'FUELFINDER ',
+                          subtitle:
+                              'always have a view of fuel stations to refill your car,save your time.'),
                       CarouselItem(
-                          imagePath: 'assets/images/welcome2.png',
-                          title:'COMPREHENSIVE MAP VIEW',
-                          subtitle:'You can open map view to see the stations on the map'),
+                          imagePath: 'assets/images/landing1.jpg',
+                          title: 'COMPREHENSIVE MAP VIEW',
+                          subtitle:
+                              'You can open map view to see the stations on the map'),
                       CarouselItem(
-                          imagePath:'assets/images/welcome3.png',
-                          title:'EFFICIENCY TIPS',
-                          subtitle: 'You get fuel efficiency tips that will hep you save your fuel and time.'),
+                          imagePath: 'assets/images/welcome3.png',
+                          title: 'EFFICIENCY TIPS',
+                          subtitle:
+                              'You get fuel efficiency tips that will hep you save your fuel and time.'),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20.0),
+              if (!_showLoginFields)
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _showLoginFields = true;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15.0, horizontal: 30.0),
+                  ),
+                  child: const Text(
+                    'Get Started',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              if (_showLoginFields) ...[
                 const Text(
                   'Please login to continue',
                   style: TextStyle(
@@ -110,14 +140,16 @@ class LoginPageState extends State<LoginPage> {
                             decoration: InputDecoration(
                               labelText: 'Email',
                               hintText: 'Enter your email',
-                              prefixIcon: const Icon(Icons.email, color: Colors.green),
+                              prefixIcon:
+                                  const Icon(Icons.email, color: Colors.green),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 15.0, horizontal: 20.0),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -132,9 +164,14 @@ class LoginPageState extends State<LoginPage> {
                             decoration: InputDecoration(
                               labelText: 'Password',
                               hintText: 'Enter your password',
-                              prefixIcon: const Icon(Icons.lock, color: Colors.green),
+                              prefixIcon:
+                                  const Icon(Icons.lock, color: Colors.green),
                               suffixIcon: IconButton(
-                                icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
+                                icon: Icon(
+                                    _showPassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.green),
                                 onPressed: () {
                                   setState(() {
                                     _showPassword = !_showPassword;
@@ -147,7 +184,8 @@ class LoginPageState extends State<LoginPage> {
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 15.0, horizontal: 20.0),
                             ),
                             obscureText: !_showPassword,
                             validator: (value) {
@@ -163,20 +201,20 @@ class LoginPageState extends State<LoginPage> {
                             onPressed: () async {
                               if (_formKey.currentState!.validate()) {
                                 _formKey.currentState!.save();
-                                final result = await _authService.login(_email, _password);
+                                final result =
+                                    await _authService.login(_email, _password);
                                 if (!mounted) return;
                                 if (result != null) {
                                 } else {
                                   // ignore: use_build_context_synchronously
                                   Fluttertoast.showToast(
-          msg: "Login failed!",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
-        );
+                                      msg: "Login failed!",
+                                      toastLength: Toast.LENGTH_SHORT,
+                                      gravity: ToastGravity.BOTTOM,
+                                      timeInSecForIosWeb: 1,
+                                      backgroundColor: Colors.red,
+                                      textColor: Colors.white,
+                                      fontSize: 16.0);
                                 }
                               }
                             },
@@ -185,7 +223,8 @@ class LoginPageState extends State<LoginPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 15.0, horizontal: 30.0),
                             ),
                             child: const Text(
                               'Login',
@@ -200,7 +239,8 @@ class LoginPageState extends State<LoginPage> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const SignupPage()),
+                                MaterialPageRoute(
+                                    builder: (context) => const SignupPage()),
                               );
                             },
                             child: const Text(
@@ -218,11 +258,12 @@ class LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ],
-            ),
+              ]
+            ,
           ),
         ),
       ),
+    )
     );
   }
-
 }

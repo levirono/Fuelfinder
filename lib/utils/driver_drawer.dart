@@ -26,7 +26,7 @@ class DriverDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => DriverProfile()),
+                MaterialPageRoute(builder: (context) => const DriverProfile()),
               );
             },
           ),

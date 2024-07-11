@@ -80,7 +80,7 @@ class StationProfileState extends State<StationProfile> {
           children: [
             const Text(
               'My Profile',
-              style: TextStyle(color: Colors.green, fontSize: 30.0),
+            style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
             ),
             if (_existingStation != null && _existingStation!.isVerified)
               const Icon(Icons.verified, color: Colors.blue),

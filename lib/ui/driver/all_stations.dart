@@ -12,10 +12,10 @@ class AllFuelStationsPage extends StatefulWidget {
   const AllFuelStationsPage({Key? key}) : super(key: key);
 
   @override
-  _AllFuelStationsPageState createState() => _AllFuelStationsPageState();
+  AllFuelStationsPageState createState() => AllFuelStationsPageState();
 }
 
-class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
+class AllFuelStationsPageState extends State<AllFuelStationsPage> {
   final FirestoreService _firestoreService = FirestoreService();
   String searchQuery = '';
   Stream<Position>? _positionStream;
@@ -60,7 +60,7 @@ class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
       time = time.trim();
       List<String> components = time.split(' ');
       if (components.length != 2) {
-        throw FormatException('Invalid time format');
+        throw const FormatException('Invalid time format');
       }
 
       String timeComponent = components[0];
@@ -68,7 +68,7 @@ class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
 
       List<String> timeParts = timeComponent.split(':');
       if (timeParts.length != 2) {
-        throw FormatException('Invalid time format');
+        throw const FormatException('Invalid time format');
       }
 
       int hours = int.parse(timeParts[0]);
@@ -123,7 +123,7 @@ class _AllFuelStationsPageState extends State<AllFuelStationsPage> {
       appBar: AppBar(
         title: const Text(
           'All Fuel Stations',
-          style: TextStyle(fontSize: 24.0, color: Colors.green),
+        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
       ),

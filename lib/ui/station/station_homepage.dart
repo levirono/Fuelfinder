@@ -37,9 +37,9 @@ class StationHomePageState extends State<StationHomePage> {
   Future<List<String>> _servicesOfferedFuture = Future.value([]);
   bool _isVerified = false;
   
-  Stream<bool> _verificationStatusStream() {
-    return _firestoreService.getVerificationStatusStream(_stationId);
-  }
+  // Stream<bool> _verificationStatusStream() {
+  //   return _firestoreService.getVerificationStatusStream(_stationId);
+  // }
 
   @override
   void initState() {
@@ -149,11 +149,7 @@ class StationHomePageState extends State<StationHomePage> {
                 final stationName = snapshot.data!;
                 return Text(
                   stationName,
-                  style: const TextStyle(
-                    fontSize: 30.0,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 1, 33, 3),
-                  ),
+                  style: const TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
                 );
               }
             }
@@ -201,17 +197,17 @@ class StationHomePageState extends State<StationHomePage> {
                     controller: _pageController,
                     children: const [
                       CarouselItem(
-                          imagePath:'assets/images/welcome1.png',
-                          title:'FIND THE NEAREST FUEL STATION TO REFILL',
-                          subtitle: 'always have a view of fuel stations to refill your car,save your time.'),
+                          imagePath:'assets/images/fuelstation.jpg',
+                          title:'MANAGE YOUR STATION DASHBOARD',
+                          subtitle: 'Update fuel prices, availability, and station status in real-time for drivers to see.'),
                       CarouselItem(
-                          imagePath: 'assets/images/welcome2.png',
-                          title:'COMPREHENSIVE MAP VIEW',
-                          subtitle:'You can open map view to see the stations on the map'),
+                          imagePath: 'assets/images/fuelstation2.jpg',
+                          title:'TRACH STATION PERFORMANCE',
+                          subtitle:'Analyse how driversly frequent visit and ensure enough fuel is available beforehand'),
                       CarouselItem(
-                          imagePath:'assets/images/welcome3.png',
-                          title:'EFFICIENCY TIPS',
-                          subtitle: 'You get fuel efficiency tips that will hep you save your fuel and time.'),
+                          imagePath:'assets/images/fuelstation3.jpg',
+                          title:'MANAGE STATION SERVICES',
+                          subtitle: 'Add, update, or remove additional services.'),
                     ],
                   ),
                 ),

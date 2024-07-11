@@ -10,13 +10,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:async';
 
 class MapView extends StatefulWidget {
-  MapView({Key? key}) : super(key: key);
+  const MapView({Key? key}) : super(key: key);
 
   @override
-  _MapViewState createState() => _MapViewState();
+  MapViewState createState() => MapViewState();
 }
 
-class _MapViewState extends State<MapView> {
+class MapViewState extends State<MapView> {
   final ValueNotifier<double> _zoomNotifier = ValueNotifier(13.0);
 
   final FirestoreService _firestoreService = FirestoreService();
@@ -35,7 +35,7 @@ class _MapViewState extends State<MapView> {
 
   void _onMapEvent(MapEvent mapEvent) {
     if (mapEvent is MapEventMove) {
-      _zoomNotifier.value = _mapController.zoom;
+      _zoomNotifier.value = _mapController.camera.zoom;
     }
   }
 
@@ -46,9 +46,9 @@ class _MapViewState extends State<MapView> {
       setState(() {
         _initialPosition = LatLng(position.latitude, position.longitude);
       });
-      _mapController.move(_initialPosition, _mapController.zoom);
+      _mapController.move(_initialPosition, _mapController.camera.zoom);
     } catch (e) {
-      print('Error getting location: $e');
+      // print('Error getting location: $e');
     }
   }
 
@@ -79,7 +79,7 @@ class _MapViewState extends State<MapView> {
       time = time.trim();
       List<String> components = time.split(' ');
       if (components.length != 2) {
-        throw FormatException('Invalid time format');
+        throw const FormatException('Invalid time format');
       }
 
       String timeComponent = components[0];
@@ -87,7 +87,7 @@ class _MapViewState extends State<MapView> {
 
       List<String> timeParts = timeComponent.split(':');
       if (timeParts.length != 2) {
-        throw FormatException('Invalid time format');
+        throw const FormatException('Invalid time format');
       }
 
       int hours = int.parse(timeParts[0]);
@@ -141,7 +141,7 @@ class _MapViewState extends State<MapView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('FUELFINDER',
-            style: TextStyle(fontSize: 20.0, color: Colors.green)),
+        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green)),
         backgroundColor: Colors.green[100],
       ),
       body: Column(
@@ -208,16 +208,16 @@ class _MapViewState extends State<MapView> {
                     IconButton(
                       icon: const Icon(Icons.zoom_in, size: 30.0),
                       onPressed: () {
-                        double newZoom = _mapController.zoom + 1;
-                        _mapController.move(_mapController.center, newZoom);
+                        double newZoom = _mapController.camera.zoom + 1;
+                        _mapController.move(_mapController.camera.center, newZoom);
                         _zoomNotifier.value = newZoom;
                       },
                     ),
                     IconButton(
                       icon: const Icon(Icons.zoom_out, size: 30.0),
                       onPressed: () {
-                        double newZoom = _mapController.zoom - 1;
-                        _mapController.move(_mapController.center, newZoom);
+                        double newZoom = _mapController.camera.zoom - 1;
+                        _mapController.move(_mapController.camera.center, newZoom);
                         _zoomNotifier.value = newZoom;
                       },
                     ),
@@ -284,7 +284,7 @@ class _MapViewState extends State<MapView> {
                             },
                           );
                         }
-                        return MarkerLayer(markers: []);
+                        return const MarkerLayer(markers: []);
                       },
                     ),
                   ],
@@ -298,16 +298,14 @@ class _MapViewState extends State<MapView> {
   }
 
   Widget _buildUserMarker() {
-    return Container(
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.directions_car, color: Colors.red, size: 40.0),
-          SizedBox(height: 5.0),
-          Text('Me Driver',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-        ],
-      ),
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.directions_car, color: Colors.red, size: 40.0),
+        SizedBox(height: 5.0),
+        Text('Me Driver',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+      ],
     );
   }
 

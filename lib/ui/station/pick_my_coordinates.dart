@@ -29,8 +29,10 @@ class PickMyCoordinateState extends State<PickMyCoordinate> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FUELFINDER',
-        style: TextStyle(fontSize: 20.0, color: Colors.green),
+        title: const Text(
+          'FUELFINDER',
+          style: TextStyle(
+              fontSize: 30.0, fontWeight: FontWeight.bold, color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
       ),
@@ -42,7 +44,8 @@ class PickMyCoordinateState extends State<PickMyCoordinate> {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Error fetching location: ${snapshot.error}'));
+            return Center(
+                child: Text('Error fetching location: ${snapshot.error}'));
           }
 
           LatLng currentLocation = snapshot.data ?? const LatLng(0.001, 35.09);
@@ -55,49 +58,51 @@ class PickMyCoordinateState extends State<PickMyCoordinate> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                     TypeAheadField<Location>(
-                          suggestionsCallback: (pattern) async {
-                            if (pattern.isNotEmpty) { 
-                              return await locationFromAddress(pattern);
-                            } else {
-                              return [];
-                            }
-                          },
-                          itemBuilder: (context, Location suggestion) {
-                            return ListTile(
-                              title: Text('${suggestion.latitude}, ${suggestion.longitude}'),
-                            );
-                          },
-                          onSelected: (Location suggestion) {
-                            final LatLng newLocation = LatLng(suggestion.latitude, suggestion.longitude);
-                            _mapController.move(newLocation, 13.0);
-                          },
-                          builder: (context, controller, focusNode) {
-                            return TextField(
-                              controller: _searchController,
-                              focusNode: focusNode,
-                              decoration: InputDecoration(
-                                hintText: 'Search for a place',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                fillColor: Colors.grey[200],
-                                filled: true,
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.search),
-                                  onPressed: () {
-                                    if (_searchController.text.isNotEmpty) {
-                                      _searchPlace(_searchController.text, context);
-                                    }
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                    TypeAheadField<Location>(
+                      suggestionsCallback: (pattern) async {
+                        if (pattern.isNotEmpty) {
+                          return await locationFromAddress(pattern);
+                        } else {
+                          return [];
+                        }
+                      },
+                      itemBuilder: (context, Location suggestion) {
+                        return ListTile(
+                          title: Text(
+                              '${suggestion.latitude}, ${suggestion.longitude}'),
+                        );
+                      },
+                      onSelected: (Location suggestion) {
+                        final LatLng newLocation =
+                            LatLng(suggestion.latitude, suggestion.longitude);
+                        _mapController.move(newLocation, 13.0);
+                      },
+                      builder: (context, controller, focusNode) {
+                        return TextField(
+                          controller: _searchController,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            hintText: 'Search for a place',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            fillColor: Colors.grey[200],
+                            filled: true,
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: () {
+                                if (_searchController.text.isNotEmpty) {
+                                  _searchPlace(_searchController.text, context);
+                                }
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 10),
                     const Text(
-                      'Zoom in and tap your place to pick121your coordinates',
+                      'Zoom in and tap your location to pick your coordinates',
                       style: TextStyle(fontSize: 20, color: Colors.green),
                       textAlign: TextAlign.center,
                     ),
@@ -147,13 +152,13 @@ class PickMyCoordinateState extends State<PickMyCoordinate> {
                       ),
                       children: [
                         TileLayer(
-      urlTemplate:
-          'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}',
-      additionalOptions: {
-        'accessToken': dotenv.env['MAPBOX_ACCESS_TOKEN']!,
-        'id': 'mapbox.mapbox-streets-v8',
-      },
-    ),
+                          urlTemplate:
+                              'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}',
+                          additionalOptions: {
+                            'accessToken': dotenv.env['MAPBOX_ACCESS_TOKEN']!,
+                            'id': 'mapbox.mapbox-streets-v8',
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -165,29 +170,33 @@ class PickMyCoordinateState extends State<PickMyCoordinate> {
       ),
     );
   }
-Future<void> _searchPlace(String place, BuildContext context) async {
-  try {
-    if (place.isNotEmpty) {
-      List<Location> locations = await locationFromAddress(place);
-      if (locations.isNotEmpty) {
-        final LatLng newLocation = LatLng(locations.first.latitude, locations.first.longitude);
-        _mapController.move(newLocation, 13.0);
+
+  Future<void> _searchPlace(String place, BuildContext context) async {
+    try {
+      if (place.isNotEmpty) {
+        List<Location> locations = await locationFromAddress(place);
+        if (locations.isNotEmpty) {
+          final LatLng newLocation =
+              LatLng(locations.first.latitude, locations.first.longitude);
+          _mapController.move(newLocation, 13.0);
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('No results found')));
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No results found')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enter a valid address')));
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid address')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error searching for place: $e')));
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error searching for place: $e')));
   }
-}
-
-
 
   Future<LatLng> _getCurrentLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
       return LatLng(position.latitude, position.longitude);
     } catch (e) {
       print('Error getting location: $e');
@@ -196,26 +205,28 @@ Future<void> _searchPlace(String place, BuildContext context) async {
   }
 
   void _handleTap(LatLng tappedPoint) {
-  setState(() {
-    _selectedCoordinate = tappedPoint;
-  });
+    setState(() {
+      _selectedCoordinate = tappedPoint;
+    });
 
 // Copy coordinates to clipboard using platform channel
-  String coordinatesText = '${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}';
-  
-  Clipboard.setData(ClipboardData(text: coordinatesText)).then((_) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coordinates copied to clipboard')),
-    );
-// Navigate back to the station profile page after copying coordinates
-    Navigator.pop(context, coordinatesText);
-  }).catchError((error) {
-    print('Error copying to clipboard: $error');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Failed to copy coordinates')),
-    );
-  });
+    String coordinatesText =
+        '${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}';
 
-  print('Selected Coordinates: ${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}');
-}
+    Clipboard.setData(ClipboardData(text: coordinatesText)).then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Coordinates copied to clipboard')),
+      );
+// Navigate back to the station profile page after copying coordinates
+      Navigator.pop(context, coordinatesText);
+    }).catchError((error) {
+      print('Error copying to clipboard: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to copy coordinates')),
+      );
+    });
+
+    print(
+        'Selected Coordinates: ${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}');
+  }
 }

@@ -31,7 +31,7 @@ class AdminDashboardState extends State<AdminDashboard> {
       appBar: AppBar(
         title: const Text(
           'Admin Dashboard',
-          style: TextStyle(fontSize: 30.0, color: Colors.green),
+        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
         actions: [
@@ -83,7 +83,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome, Admin!',
+                    'Welcome!',
                     style: TextStyle(
                       fontSize: 40.0,
                       fontWeight: FontWeight.bold,
@@ -118,7 +118,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                     () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => StationsPage()),
+                        MaterialPageRoute(builder: (context) => const StationsPage()),
                       );
                     },
                   );
@@ -141,7 +141,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                     () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => DriversPage()),
+                        MaterialPageRoute(builder: (context) => const DriversPage()),
                       );
                     },
                   );

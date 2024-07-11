@@ -60,7 +60,11 @@ class DriverProfileState extends State<DriverProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MY PROFILE'),
+        title: const Text('MY PROFILE',
+        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
+
+        ),
+        
         backgroundColor: Colors.green[100],
       ),
       body: Container(

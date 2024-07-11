@@ -1,4 +1,3 @@
-// sticky_header_delegate.dart
 import 'package:flutter/material.dart';
 
 class StickyHeaderDelegate extends SliverPersistentHeaderDelegate {

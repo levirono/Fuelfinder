@@ -4,6 +4,8 @@ import 'package:ff_main/services/auth.dart';
 class LogoutConfirmationDialog extends StatelessWidget {
   final AuthService _authService = AuthService();
 
+  LogoutConfirmationDialog({super.key});
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
