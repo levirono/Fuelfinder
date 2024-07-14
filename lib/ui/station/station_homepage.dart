@@ -2,7 +2,7 @@ import 'package:ff_main/utils/station_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/firestore_service.dart';
-import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/models/fuelfinder.dart';
 import 'station_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';

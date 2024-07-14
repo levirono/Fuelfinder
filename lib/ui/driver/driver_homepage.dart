@@ -14,7 +14,7 @@ import 'package:ff_main/services/firestore_service.dart';
 import 'driver_profile.dart';
 import 'package:ff_main/ui/driver/station_details.dart';
 import 'map_view.dart';
-import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/models/fuelfinder.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'package:ff_main/ui/driver/all_stations.dart';
@@ -350,13 +350,13 @@ class DriverHomePageState extends State<DriverHomePage> {
               controller: _pageController,
               children: const [
                 CarouselItem(
-                  imagePath: 'assets/images/driver2.jpg',
+                  imagePath: 'assets/images/fuelstation2.jpg',
                   title: 'FIND THE NEAREST FUEL STATION TO REFILL',
                   subtitle:
                       'Always have a view of fuel stations to refill your car, save your time.',
                 ),
                 CarouselItem(
-                  imagePath: 'assets/images/driver1.jpg',
+                  imagePath: 'assets/images/driver2.jpg',
                   title: 'COMPREHENSIVE MAP VIEW',
                   subtitle:
                       'You can open map view to see the stations on the map',

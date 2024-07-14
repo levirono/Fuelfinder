@@ -5,14 +5,15 @@ import 'package:ff_main/models/fuelfinder.dart';
 class FuelEfficiencyTips extends StatelessWidget {
   const FuelEfficiencyTips({Key? key}) : super(key: key);
 
-  void _showSubmitTipDialog(BuildContext context, FirestoreService firestoreService) {
-    final TextEditingController tipController = TextEditingController();
+  void _showSubmitTipDialog(BuildContext context, FirestoreService firestoreService, {FuelEfficiencyTip? tip}) {
+    final TextEditingController tipController = TextEditingController(text: tip?.tip);
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Submit a Fuel Efficiency Tip', style: TextStyle(fontSize: 20.0, color: Colors.green)),
+          title: Text(tip == null ? 'Submit a Fuel Efficiency Tip' : 'Edit Fuel Efficiency Tip', 
+                      style: const TextStyle(fontSize: 20.0, color: Colors.green)),
           content: TextFormField(
             controller: tipController,
             decoration: const InputDecoration(
@@ -26,10 +27,14 @@ class FuelEfficiencyTips extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
-              child: const Text('Submit', style: TextStyle(color: Colors.green)),
+              child: Text(tip == null ? 'Submit' : 'Update', style: const TextStyle(color: Colors.green)),
               onPressed: () {
                 if (tipController.text.isNotEmpty) {
-                  firestoreService.addFuelEfficiencyTip(tipController.text);
+                  if (tip == null) {
+                    firestoreService.addFuelEfficiencyTip(tipController.text);
+                  } else {
+                    firestoreService.updateFuelEfficiencyTip(tip.id, tipController.text);
+                  }
                   Navigator.of(context).pop();
                 }
               },
@@ -40,9 +45,35 @@ class FuelEfficiencyTips extends StatelessWidget {
     );
   }
 
+  void _showDeleteConfirmationDialog(BuildContext context, FirestoreService firestoreService, String tipId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.green[100],
+          title: const Text('Delete Tip', style: TextStyle(color: Colors.black)),
+          content: const Text('Are you sure you want to delete this tip?'),
+          actions: [
+            TextButton(
+              child: const Text('Cancel', style: TextStyle(color: Colors.amber)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                firestoreService.deleteFuelEfficiencyTip(tipId);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final FirestoreService _firestoreService = FirestoreService();
+    final FirestoreService firestoreService = FirestoreService();
 
     return Scaffold(
       appBar: AppBar(
@@ -52,7 +83,7 @@ class FuelEfficiencyTips extends StatelessWidget {
         backgroundColor: Colors.green[100],
       ),
       body: StreamBuilder<List<FuelEfficiencyTip>>(
-        stream: _firestoreService.streamFuelEfficiencyTips(),
+        stream: firestoreService.streamFuelEfficiencyTips(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -88,6 +119,19 @@ class FuelEfficiencyTips extends StatelessWidget {
                 child: ListTile(
                   title: Text(tips[index].tip, style: const TextStyle(color: Colors.green, fontSize: 16.0)),
                   subtitle: Text('Posted on: ${tips[index].timestamp}', style: const TextStyle(color: Colors.grey)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () => _showSubmitTipDialog(context, firestoreService, tip: tips[index]),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _showDeleteConfirmationDialog(context, firestoreService, tips[index].id),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -95,7 +139,7 @@ class FuelEfficiencyTips extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showSubmitTipDialog(context, _firestoreService),
+        onPressed: () => _showSubmitTipDialog(context, firestoreService),
         tooltip: 'Add Tip',
         backgroundColor: Colors.green,
         child: const Icon(Icons.add),

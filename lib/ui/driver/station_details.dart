@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/models/fuelfinder.dart';
 import 'package:ff_main/services/firestore_service.dart';
 
 class FuelStationDetailsPage extends StatelessWidget {

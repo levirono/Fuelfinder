@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/models/fuelfinder.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/ui/driver/station_details.dart';

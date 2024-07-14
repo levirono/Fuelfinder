@@ -1,7 +1,7 @@
 import 'package:ff_main/ui/driver/driver_homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/firestore_service.dart';
-import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/models/fuelfinder.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:uuid/uuid.dart';
 import 'package:ff_main/services/auth.dart';

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/models/fuelfinder.dart';
 import 'package:ff_main/utils/notifications.dart';
 
 
@@ -347,6 +347,26 @@ class FirestoreService {
       throw Exception('Error fetching fuel efficiency tips: $e');
     }
   }
+  
+  Future<void> updateFuelEfficiencyTip(String tipId, String updatedTip) async {
+    try {
+      await _db.collection('fuel_efficiency_tips').doc(tipId).update({
+        'tip': updatedTip,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Error updating fuel efficiency tip: $e');
+    }
+  }
+
+  Future<void> deleteFuelEfficiencyTip(String tipId) async {
+    try {
+      await _db.collection('fuel_efficiency_tips').doc(tipId).delete();
+    } catch (e) {
+      throw Exception('Error deleting fuel efficiency tip: $e');
+    }
+  }
+
 
   Future<Driver?> getDriverByOwnerId(String ownerId) async {
     var snapshot = await _db

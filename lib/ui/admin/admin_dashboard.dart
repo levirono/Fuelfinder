@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/ui/admin/drivers.dart';
 import 'package:ff_main/ui/admin/stations.dart';
-import 'package:ff_main/ui/driver/fuel_efficiency_tips.dart';
+import 'package:ff_main/ui/admin/admin_efficiency_tips.dart';
 import 'package:ff_main/utils/logout_confirmation.dart';
 
 class AdminDashboard extends StatefulWidget {

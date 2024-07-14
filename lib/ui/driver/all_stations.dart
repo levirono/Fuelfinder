@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/ui/driver/station_details.dart';
-import 'package:ff_main/models/fuel_station.dart';
+import 'package:ff_main/models/fuelfinder.dart';
 
 class AllFuelStationsPage extends StatefulWidget {
   const AllFuelStationsPage({Key? key}) : super(key: key);
