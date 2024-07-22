@@ -136,62 +136,73 @@ class StationProfileState extends State<StationProfile> {
     );
   }
 
-  Widget _buildFormField(String labelText, TextEditingController controller,
-      {bool mandatory = false, String example = ''}) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                labelText,
-                style: const TextStyle(
+ Widget _buildFormField(String labelText, TextEditingController controller,
+    {bool mandatory = false, String example = ''}) {
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 8.0),
+    padding: const EdgeInsets.all(16.0),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10.0),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.3),
+          spreadRadius: 2,
+          blurRadius: 5,
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              labelText,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (mandatory)
+              const Text(
+                '*',
+                style: TextStyle(
+                  color: Colors.red,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              if (mandatory)
-                const Text(
-                  '*',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8.0),
-          TextFormField(
-            controller: controller,
-            enabled: _editMode,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              hintText: example.isNotEmpty ? 'e.g. $example' : null,
+          ],
+        ),
+        const SizedBox(height: 8.0),
+        TextFormField(
+          controller: controller,
+          enabled: _editMode,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: const BorderSide(color: Colors.grey),
             ),
-            validator: (value) {
-              if (mandatory && (value == null || value.isEmpty)) {
-                return 'This field is required';
-              }
-              return null;
-            },
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: const BorderSide(color: Colors.green, width: 2.0),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: const BorderSide(color: Colors.grey),
+            ),
+            hintText: example.isNotEmpty ? 'e.g. $example' : null,
           ),
-        ],
-      ),
-    );
-  }
+          validator: (value) {
+            if (mandatory && (value == null || value.isEmpty)) {
+              return 'This field is required';
+            }
+            return null;
+          },
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildOperationHoursField() {
     return Container(

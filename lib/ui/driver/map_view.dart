@@ -23,7 +23,7 @@ class MapViewState extends State<MapView> {
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
   Stream<Position>? _positionStream;
-  LatLng _initialPosition = const LatLng(51.505, -0.09); // Default position
+  LatLng _currentPosition = const LatLng(0, 0);
 
   @override
   void initState() {
@@ -44,11 +44,11 @@ class MapViewState extends State<MapView> {
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
       setState(() {
-        _initialPosition = LatLng(position.latitude, position.longitude);
+        _currentPosition = LatLng(position.latitude, position.longitude);
       });
-      _mapController.move(_initialPosition, _mapController.camera.zoom);
+      _mapController.move(_currentPosition, _mapController.camera.zoom);
     } catch (e) {
-      // print('Error getting location: $e');
+      print('Error getting location: $e');
     }
   }
 
@@ -59,6 +59,11 @@ class MapViewState extends State<MapView> {
     );
     _positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings);
+    _positionStream?.listen((Position position) {
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+      });
+    });
   }
 
   (bool, double) _getMarkerVisibilityAndSize(double zoom) {
@@ -141,159 +146,157 @@ class MapViewState extends State<MapView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('FUELFINDER',
-        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green)),
+            style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold, color: Colors.green)),
         backgroundColor: Colors.green[100],
       ),
       body: Column(
         children: [
-          Container(
-            height: MediaQuery.of(context).size.height / 4,
-            padding: const EdgeInsets.all(10),
-            color: Colors.white,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TypeAheadField<Location>(
-                  suggestionsCallback: (pattern) async {
-                    if (pattern.isNotEmpty) {
-                      return await locationFromAddress(pattern);
-                    } else {
-                      return [];
-                    }
-                  },
-                  itemBuilder: (context, Location suggestion) {
-                    return ListTile(
-                      title: Text(
-                          '${suggestion.latitude}, ${suggestion.longitude}'),
-                    );
-                  },
-                  onSelected: (Location suggestion) {
-                    final LatLng newLocation =
-                        LatLng(suggestion.latitude, suggestion.longitude);
-                    _mapController.move(newLocation, 13.0);
-                  },
-                  builder: (context, controller, focusNode) {
-                    return TextField(
-                      controller: _searchController,
-                      focusNode: focusNode,
-                      decoration: InputDecoration(
-                        hintText: 'Search for a place',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        fillColor: Colors.grey[200],
-                        filled: true,
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.search),
-                          onPressed: () {
-                            if (_searchController.text.isNotEmpty) {
-                              _searchPlace(_searchController.text, context);
-                            }
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'View nearby verified stations to refuel',
-                  style: TextStyle(fontSize: 20, color: Colors.green),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.zoom_in, size: 30.0),
-                      onPressed: () {
-                        double newZoom = _mapController.camera.zoom + 1;
-                        _mapController.move(_mapController.camera.center, newZoom);
-                        _zoomNotifier.value = newZoom;
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.zoom_out, size: 30.0),
-                      onPressed: () {
-                        double newZoom = _mapController.camera.zoom - 1;
-                        _mapController.move(_mapController.camera.center, newZoom);
-                        _zoomNotifier.value = newZoom;
-                      },
-                    ),
-                  ],
-                ),
-              ],
+          _buildSearchContainer(),
+          Expanded(
+            child: _buildMap(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchContainer() {
+    return Container(
+      height: MediaQuery.of(context).size.height / 4,
+      padding: const EdgeInsets.all(10),
+      color: Colors.white,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildSearchField(),
+          const SizedBox(height: 10),
+          const Text(
+            'View nearby verified stations to refuel',
+            style: TextStyle(fontSize: 20, color: Colors.green),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          _buildZoomButtons(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return TypeAheadField<Location>(
+      suggestionsCallback: (pattern) async {
+        if (pattern.isNotEmpty) {
+          return await locationFromAddress(pattern);
+        } else {
+          return [];
+        }
+      },
+      itemBuilder: (context, Location suggestion) {
+        return ListTile(
+          title: Text('${suggestion.latitude}, ${suggestion.longitude}'),
+        );
+      },
+      onSelected: (Location suggestion) {
+        final LatLng newLocation = LatLng(suggestion.latitude, suggestion.longitude);
+        _mapController.move(newLocation, 13.0);
+      },
+      builder: (context, controller, focusNode) {
+        return TextField(
+          controller: _searchController,
+          focusNode: focusNode,
+          decoration: InputDecoration(
+            hintText: 'Search for a place',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            fillColor: Colors.grey[200],
+            filled: true,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                if (_searchController.text.isNotEmpty) {
+                  _searchPlace(_searchController.text, context);
+                }
+              },
             ),
           ),
-          Expanded(
-            child: StreamBuilder<List<FuelStation>>(
-              stream: _firestoreService.streamStationsWithServices(),
-              builder: (context, stationSnapshot) {
-                if (stationSnapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (stationSnapshot.hasError) {
-                  return Center(child: Text('Error: ${stationSnapshot.error}'));
-                }
-                List<FuelStation> stations = stationSnapshot.data ?? [];
-                List<FuelStation> verifiedStations =
-                    stations.where((station) => station.isVerified).toList();
+        );
+      },
+    );
+  }
 
-                return FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    center: _initialPosition,
-                    zoom: 13.0,
-                    onMapEvent: _onMapEvent,
-                  ),
-                  children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}',
-                      additionalOptions: {
-                        'accessToken': dotenv.env['MAPBOX_ACCESS_TOKEN']!,
-                        'id': 'mapbox.mapbox-streets-v8',
-                      },
+  Widget _buildZoomButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.zoom_in, size: 30.0),
+          onPressed: () {
+            double newZoom = _mapController.camera.zoom + 1;
+            _mapController.move(_mapController.camera.center, newZoom);
+            _zoomNotifier.value = newZoom;
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.zoom_out, size: 30.0),
+          onPressed: () {
+            double newZoom = _mapController.camera.zoom - 1;
+            _mapController.move(_mapController.camera.center, newZoom);
+            _zoomNotifier.value = newZoom;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMap() {
+    return StreamBuilder<List<FuelStation>>(
+      stream: _firestoreService.streamStationsWithServices(),
+      builder: (context, stationSnapshot) {
+        if (stationSnapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (stationSnapshot.hasError) {
+          return Center(child: Text('Error: ${stationSnapshot.error}'));
+        }
+        List<FuelStation> stations = stationSnapshot.data ?? [];
+        List<FuelStation> verifiedStations = stations.where((station) => station.isVerified).toList();
+
+        return FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(
+            center: _currentPosition,
+            zoom: 13.0,
+            onMapEvent: _onMapEvent,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate:
+                  'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}',
+              additionalOptions: {
+                'accessToken': dotenv.env['MAPBOX_ACCESS_TOKEN']!,
+                'id': 'mapbox.mapbox-streets-v8',
+              },
+            ),
+            ValueListenableBuilder<double>(
+              valueListenable: _zoomNotifier,
+              builder: (context, zoom, child) {
+                return MarkerLayer(
+                  markers: [
+                    Marker(
+                      width: 80.0,
+                      height: 80.0,
+                      point: _currentPosition,
+                      child: _buildUserMarker(),
                     ),
-                    StreamBuilder<Position>(
-                      stream: _positionStream,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          LatLng currentPosition = LatLng(
-                              snapshot.data!.latitude,
-                              snapshot.data!.longitude);
-                          return ValueListenableBuilder<double>(
-                            valueListenable: _zoomNotifier,
-                            builder: (context, zoom, child) {
-                              return MarkerLayer(
-                                markers: [
-                                  Marker(
-                                    width: 80.0,
-                                    height: 80.0,
-                                    point: currentPosition,
-                                    child: _buildUserMarker(),
-                                  ),
-                                  ...verifiedStations
-                                      .map((station) =>
-                                          _buildStationMarker(station, zoom))
-                                      .toList(),
-                                ],
-                              );
-                            },
-                          );
-                        }
-                        return const MarkerLayer(markers: []);
-                      },
-                    ),
+                    ...verifiedStations.map((station) => _buildStationMarker(station, zoom)).toList(),
                   ],
                 );
               },
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 
@@ -301,10 +304,8 @@ class MapViewState extends State<MapView> {
     return const Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.directions_car, color: Colors.red, size: 40.0),
+        Icon(Icons.directions_car, color: Colors.redAccent, size: 20.0),
         SizedBox(height: 5.0),
-        Text('Me Driver',
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -312,15 +313,13 @@ class MapViewState extends State<MapView> {
   Marker _buildStationMarker(FuelStation station, double zoom) {
     LatLng? coordinates = _parseCoordinates(station.gpsLink);
     if (coordinates == null) {
-      return Marker(
-          width: 0, height: 0, point: const LatLng(0, 0), child: Container());
+      return Marker(width: 0, height: 0, point: const LatLng(0, 0), child: Container());
     }
 
     var (isVisible, size) = _getMarkerVisibilityAndSize(zoom);
 
     if (!isVisible) {
-      return Marker(
-          width: 0, height: 0, point: coordinates, child: Container());
+      return Marker(width: 0, height: 0, point: coordinates, child: Container());
     }
 
     return Marker(
@@ -360,15 +359,13 @@ class MapViewState extends State<MapView> {
               children: [
                 Text(
                   station.name,
-                  style: const TextStyle(
-                      fontSize: 16.0, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10.0),
                 StreamBuilder<StationServices>(
                   stream: _firestoreService.streamStationServices(station.id),
                   builder: (context, serviceSnapshot) {
-                    if (serviceSnapshot.connectionState ==
-                        ConnectionState.waiting) {
+                    if (serviceSnapshot.connectionState == ConnectionState.waiting) {
                       return const CircularProgressIndicator();
                     }
                     if (serviceSnapshot.hasError) {
@@ -378,41 +375,34 @@ class MapViewState extends State<MapView> {
                       return const Text('Services unavailable');
                     }
                     StationServices services = serviceSnapshot.data!;
-
-                    String stationStatus = getStationStatus(station);
-
+                    String stationStatus = services.isOpen 
+                        ? getStationStatus(station) 
+                        : 'Temporarily Closed';
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
                             Icon(Icons.circle,
-                                color: services.isPetrolAvailable
-                                    ? Colors.green
-                                    : Colors.red),
+                                color: services.isPetrolAvailable ? Colors.green : Colors.red),
                             const SizedBox(width: 5.0),
-                            Text(
-                                'Petrol: ${services.isPetrolAvailable ? 'Available' : 'Unavailable'}'),
+                            Text('Petrol: ${services.isPetrolAvailable ? 'Available' : 'Unavailable'}'),
                           ],
                         ),
                         const SizedBox(height: 5.0),
                         Row(
                           children: [
                             Icon(Icons.circle,
-                                color: services.isDieselAvailable
-                                    ? Colors.green
-                                    : Colors.red),
+                                color: services.isDieselAvailable ? Colors.green : Colors.red),
                             const SizedBox(width: 5.0),
-                            Text(
-                                'Diesel: ${services.isDieselAvailable ? 'Available' : 'Unavailable'}'),
+                            Text('Diesel: ${services.isDieselAvailable ? 'Available' : 'Unavailable'}'),
                           ],
                         ),
                         const SizedBox(height: 5.0),
                         Text(
                           'Status: $stationStatus',
                           style: TextStyle(
-                              color: stationStatus == 'Open' ||
-                                      stationStatus == 'Open 24/7'
+                              color: stationStatus == 'Open' || stationStatus == 'Open 24/7'
                                   ? Colors.green
                                   : stationStatus == 'Closing soon'
                                       ? Colors.orange
@@ -471,7 +461,9 @@ class MapViewState extends State<MapView> {
         _mapController.move(newLocation, 13.0);
       }
     } catch (e) {
-      print('Error searching for place: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error searching for place: $e')),
+      );
     }
   }
 

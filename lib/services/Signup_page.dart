@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ff_main/services/login_page.dart';
 import 'package:ff_main/services/auth.dart';
+import 'package:ff_main/services/login_page.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+  const SignupPage({Key? key}) : super(key: key);
 
   @override
   SignupPageState createState() => SignupPageState();
@@ -21,13 +21,14 @@ class SignupPageState extends State<SignupPage> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
   bool _passwordsMatch = true;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Account',
-        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
+          style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold, color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
       ),
@@ -82,14 +83,14 @@ class SignupPageState extends State<SignupPage> {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your email.';
                               }
-                              // Simple email validation regex
-                              final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                              final emailRegex = RegExp(r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
                               if (!emailRegex.hasMatch(value)) {
                                 return 'Please enter a valid email address.';
                               }
                               return null;
                             },
                             onSaved: (newValue) => _email = newValue!,
+                            enabled: !_isLoading,
                           ),
                           const SizedBox(height: 10.0),
                           TextFormField(
@@ -99,7 +100,7 @@ class SignupPageState extends State<SignupPage> {
                               prefixIcon: const Icon(Icons.lock, color: Colors.green),
                               suffixIcon: IconButton(
                                 icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
-                                onPressed: () {
+                                onPressed: _isLoading ? null : () {
                                   setState(() {
                                     _showPassword = !_showPassword;
                                   });
@@ -129,6 +130,7 @@ class SignupPageState extends State<SignupPage> {
                               }
                               return null;
                             },
+                            enabled: !_isLoading,
                           ),
                           const SizedBox(height: 10.0),
                           TextFormField(
@@ -138,7 +140,7 @@ class SignupPageState extends State<SignupPage> {
                               prefixIcon: const Icon(Icons.lock, color: Colors.green),
                               suffixIcon: IconButton(
                                 icon: Icon(_showConfirmPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
-                                onPressed: () {
+                                onPressed: _isLoading ? null : () {
                                   setState(() {
                                     _showConfirmPassword = !_showConfirmPassword;
                                   });
@@ -168,6 +170,7 @@ class SignupPageState extends State<SignupPage> {
                               }
                               return null;
                             },
+                            enabled: !_isLoading,
                           ),
                           const SizedBox(height: 20.0),
                           Row(
@@ -175,11 +178,12 @@ class SignupPageState extends State<SignupPage> {
                             children: [
                               Expanded(
                                 child: RadioListTile<String>(
+                                  title: const Text('User'),
                                   value: 'user',
                                   groupValue: _role,
                                   activeColor: Colors.green,
                                   secondary: const Icon(Icons.directions_car, color: Colors.green),
-                                  onChanged: (value) {
+                                  onChanged: _isLoading ? null : (value) {
                                     setState(() {
                                       _role = value!;
                                     });
@@ -188,11 +192,12 @@ class SignupPageState extends State<SignupPage> {
                               ),
                               Expanded(
                                 child: RadioListTile<String>(
+                                  title: const Text('Station'),
                                   value: 'station',
                                   groupValue: _role,
                                   activeColor: Colors.green,
                                   secondary: const Icon(Icons.local_gas_station, color: Colors.green),
-                                  onChanged: (value) {
+                                  onChanged: _isLoading ? null : (value) {
                                     setState(() {
                                       _role = value!;
                                     });
@@ -203,7 +208,7 @@ class SignupPageState extends State<SignupPage> {
                           ),
                           const SizedBox(height: 20.0),
                           ElevatedButton(
-                            onPressed: _submitForm,
+                            onPressed: _isLoading ? null : _submitForm,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               shape: RoundedRectangleBorder(
@@ -211,16 +216,25 @@ class SignupPageState extends State<SignupPage> {
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
                             ),
-                            child: const Text(
-                              'Sign Up',
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Sign Up',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                           const SizedBox(height: 10.0),
                           TextButton(
-                            onPressed: () {
+                            onPressed: _isLoading ? null : () {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -251,34 +265,42 @@ class SignupPageState extends State<SignupPage> {
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      setState(() {
+        _isLoading = true;
+      });
       final BuildContext contextBeforeAsync = context;
-      final result = await _authService.register(_email, _password, _role);
-
-      if (!mounted) return;
-
-      if (result != null) {
-        _showRegistrationSuccessDialog(contextBeforeAsync);
-      } else {
-        Fluttertoast.showToast(
-            msg: "Login failed!",
+      try {
+        final result = await _authService.register(_email, _password, _role);
+        if (!mounted) return;
+        if (result != null) {
+          _showVerificationEmailSentDialog(contextBeforeAsync);
+        } else {
+          Fluttertoast.showToast(
+            msg: "Registration failed!",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM,
             timeInSecForIosWeb: 1,
             backgroundColor: Colors.red,
             textColor: Colors.white,
             fontSize: 16.0
-        );
+          );
+        }
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
-  Future<void> _showRegistrationSuccessDialog(BuildContext context) async {
+  Future<void> _showVerificationEmailSentDialog(BuildContext context) async {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Account Created Successfully'),
-          content: const Text('Your account has been created successfully!'),
+          title: const Text('Verify Your Email'),
+          content: const Text('A verification email has been sent to your email address. Please verify your email to complete the registration process.'),
+          backgroundColor: Colors.green[100],
           actions: [
             TextButton(
               onPressed: () {
@@ -288,7 +310,11 @@ class SignupPageState extends State<SignupPage> {
                   MaterialPageRoute(builder: (context) => const LoginPage()),
                 );
               },
-              child: const Text('Proceed to Login'),
+              child: const Text('OK',
+              style:TextStyle(
+                color:Colors.green
+              )
+              ),
             ),
           ],
         );

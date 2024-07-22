@@ -76,7 +76,7 @@ class DriverProfileState extends State<DriverProfile> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildFormField('Driver Name', _nameController),
-                _buildFormField('Phone Number', _phoneNumberController, prefixText: '+254'),
+                _buildFormField('Phone Number', _phoneNumberController),
                 _buildFormField('Vehicle Model', _vehicleModelController),
                 _buildFormField('Vehicle Plate Number', _vehiclePlateNumberController, hintText: 'e.g., KDJ299F'),
                 _buildFormField('Driver License', _driverLicenseController, hintText: 'e.g., A12345678'),
@@ -91,48 +91,58 @@ class DriverProfileState extends State<DriverProfile> {
   }
 
   Widget _buildFormField(String label, TextEditingController controller, {String? prefixText, String? hintText}) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.black),
-          ),
-          const SizedBox(height: 8.0),
-          TextFormField(
-            controller: controller,
-            decoration: InputDecoration(
-              prefixText: prefixText,
-              hintText: hintText,
-              border: const OutlineInputBorder(),
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 8.0),
+    padding: const EdgeInsets.all(16.0),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10.0),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.3),
+          spreadRadius: 2,
+          blurRadius: 5,
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        const SizedBox(height: 8.0),
+        TextFormField(
+          controller: controller,
+          decoration: InputDecoration(
+            prefixText: prefixText,
+            hintText: hintText,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: const BorderSide(color: Colors.grey),
             ),
-            readOnly: !_editMode,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter $label';
-              }
-              return null;
-            },
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: const BorderSide(color: Colors.green, width: 2.0),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: const BorderSide(color: Colors.grey),
+            ),
           ),
-        ],
-      ),
-    );
-  }
-
+          readOnly: !_editMode,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter $label';
+            }
+            return null;
+          },
+        ),
+      ],
+    ),
+  );
+}
   Widget _buildActionButtons() {
     if (_existingDriver == null || _editMode) {
       return ElevatedButton(

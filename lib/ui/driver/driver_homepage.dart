@@ -249,7 +249,6 @@ class DriverHomePageState extends State<DriverHomePage> {
 
       return DateTime(now.year, now.month, now.day, hours, minutes);
     } catch (e) {
-      print('Error parsing time: $e');
       // Return current time if parsing fails
       return now;
     }
@@ -266,8 +265,7 @@ class DriverHomePageState extends State<DriverHomePage> {
       openTime = parseTime(station.operationStartTime);
       closeTime = parseTime(station.operationEndTime);
     } catch (e) {
-      print('Error parsing station times: $e');
-      return 'Hours unavailable';
+      return 'unavailable';
     }
 
     if (now.isAfter(openTime) && now.isBefore(closeTime)) {
@@ -286,17 +284,20 @@ class DriverHomePageState extends State<DriverHomePage> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     if (!_isProfileLoaded) {
       return const Scaffold(
-          );
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'FUELFINDER',
-        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
+          style: TextStyle(
+              fontSize: 30.0, fontWeight: FontWeight.bold, color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
         actions: [
@@ -322,245 +323,146 @@ class DriverHomePageState extends State<DriverHomePage> {
             locationSnapshot.data!.latitude,
             locationSnapshot.data!.longitude,
           );
-          return _buildBodyContent(currentLocation);
-        },
-      ),
-    );
-  }
-
-  Widget _buildBodyContent(LatLng currentLocation) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Container(
-            height: 300.0,
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(20.0),
-                right: Radius.circular(20.0),
-              ),
-              border: Border.all(
-                color: Colors.grey[300]!,
-                width: 1.0,
-              ),
-            ),
-            child: PageView(
-              controller: _pageController,
-              children: const [
-                CarouselItem(
-                  imagePath: 'assets/images/fuelstation2.jpg',
-                  title: 'FIND THE NEAREST FUEL STATION TO REFILL',
-                  subtitle:
-                      'Always have a view of fuel stations to refill your car, save your time.',
-                ),
-                CarouselItem(
-                  imagePath: 'assets/images/driver2.jpg',
-                  title: 'COMPREHENSIVE MAP VIEW',
-                  subtitle:
-                      'You can open map view to see the stations on the map',
-                ),
-                CarouselItem(
-                  imagePath: 'assets/images/driver3.jpg',
-                  title: 'EFFICIENCY TIPS',
-                  subtitle:
-                      'You get fuel efficiency tips that will help you save your fuel and time.',
-                ),
-              ],
-            ),
-          ),
-        ),
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: StickyHeaderDelegate(
-            child: Container(
-              color: Colors.white,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      'Search Route',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16.0,
-                      ),
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Container(
+                  height: 300.0,
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(20.0),
+                      right: Radius.circular(20.0),
+                    ),
+                    border: Border.all(
+                      color: Colors.grey[300]!,
+                      width: 1.0,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8.0),
+                  child: PageView(
+                    controller: _pageController,
+                    children: const [
+                      CarouselItem(
+                        imagePath: 'assets/images/fuelstation2.jpg',
+                        title: 'FIND THE NEAREST FUEL STATION TO REFILL',
+                        subtitle:
+                            'Always have a view of fuel stations to refill your car, save your time.',
                       ),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: 'Enter road code or route',
-                          suffixIcon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  setState(() {
-                                    searchQuery = '';
-                                  });
-                                },
+                      CarouselItem(
+                        imagePath: 'assets/images/driver2.jpg',
+                        title: 'COMPREHENSIVE MAP VIEW',
+                        subtitle:
+                            'You can open map view to see the stations on the map',
+                      ),
+                      CarouselItem(
+                        imagePath: 'assets/images/driver3.jpg',
+                        title: 'EFFICIENCY TIPS',
+                        subtitle:
+                            'You get fuel efficiency tips that will help you save your fuel and time.',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: StickyHeaderDelegate(
+                  child: Container(
+                    color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // const Padding(
+                        //   padding: EdgeInsets.all(16.0),
+                        //   child: Text(
+                        //     'Search Route',
+                        //     style: TextStyle(
+                        //       fontWeight: FontWeight.bold,
+                        //       fontSize: 16.0,
+                        //     ),
+                        //   ),
+                        // ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 8.0),
+                          child: TextField(
+                            controller:
+                                TextEditingController(text: searchQuery),
+                            decoration: InputDecoration(
+                              hintText: 'Enter road code or route',
+                              hintStyle: TextStyle(color: Colors.grey[600]),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.search),
-                                onPressed: () {
-                                  setState(() {
-                                    searchQuery = searchQuery.trim();
-                                  });
-                                },
+                              fillColor: Colors.grey[200],
+                              filled: true,
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      setState(() {
+                                        searchQuery = '';
+                                      });
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.search),
+                                    onPressed: () {
+                                      setState(() {
+                                        searchQuery = searchQuery.trim();
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
-                            ],
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                searchQuery = value;
+                              });
+                            },
                           ),
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            searchQuery = value;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        PermissionStatus locationStatus =
-                            await Permission.location.request();
-
-                        if (locationStatus == PermissionStatus.granted) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MapView()),
-                          );
-                        }
-
-                        if (locationStatus == PermissionStatus.denied) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'This permission is required to use maps'),
-                            ),
-                          );
-                        }
-
-                        if (locationStatus ==
-                            PermissionStatus.permanentlyDenied) {
-                          openAppSettings();
-                        }
-                      },
-                      icon: const Icon(Icons.map, color: Colors.white),
-                      label: const Text(
-                        'View Stations on Map',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[400],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12.0),
-                        minimumSize: const Size(double.infinity, 50),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Stations near me:',
-              style: TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-          ),
-        ),
-        StreamBuilder<List<FuelStation>>(
-          stream: _firestoreService.streamVerifiedStations(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const SliverFillRemaining(
-                child: Center(child: Text('No stations found')),
-              );
-            }
-            List<FuelStation> stations = snapshot.data!;
-            if (searchQuery.isNotEmpty) {
-              stations = stations
-                  .where((station) => station.location
-                      .toLowerCase()
-                      .contains(searchQuery.toLowerCase()))
-                  .toList();
-            }
-
-            return FutureBuilder<List<FuelStation>>(
-              future: _sortStationsByDistance(stations, currentLocation),
-              builder: (context, sortedSnapshot) {
-                if (sortedSnapshot.connectionState == ConnectionState.waiting) {
-                  return const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                if (!sortedSnapshot.hasData || sortedSnapshot.data!.isEmpty) {
-                  return const SliverFillRemaining(
-                    child: Center(child: Text('No stations found')),
-                  );
-                }
-                List<FuelStation> sortedStations = sortedSnapshot.data!;
-
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      if (index < sortedStations.length) {
-                        return _buildStationTile(
-                            sortedStations[index], currentLocation);
-                      } else if (index == sortedStations.length) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 16.0),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
                           child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const AllFuelStationsPage()),
-                              );
+                            onPressed: () async {
+                              PermissionStatus locationStatus =
+                                  await Permission.location.request();
+                              if (locationStatus == PermissionStatus.granted) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const MapView()),
+                                );
+                              } else if (locationStatus ==
+                                  PermissionStatus.denied) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'This permission is required to use maps'),
+                                  ),
+                                );
+                              } else if (locationStatus ==
+                                  PermissionStatus.permanentlyDenied) {
+                                openAppSettings();
+                              }
                             },
-                            icon: const Icon(Icons.arrow_forward,
-                                color: Colors.white),
+                            icon: const Icon(Icons.map, color: Colors.white),
                             label: const Text(
-                              'View All Stations',
+                              'View Stations on Map',
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16.0,
                                   fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                              backgroundColor: Colors.green[400],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
@@ -569,19 +471,162 @@ class DriverHomePageState extends State<DriverHomePage> {
                               minimumSize: const Size(double.infinity, 50),
                             ),
                           ),
-                        );
-                      } else {
-                        return null;
-                      }
-                    },
-                    childCount: sortedStations.length + 1,
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
-            );
-          },
-        ),
-      ],
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'Stations near me:',
+                    style: TextStyle(
+                      fontSize: 24.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+              ),
+              StreamBuilder<List<FuelStation>>(
+                stream: _firestoreService.streamVerifiedStations(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SliverFillRemaining(
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  List<FuelStation> stations = snapshot.data ?? [];
+                  if (searchQuery.isNotEmpty) {
+                    stations = stations
+                        .where((station) => station.location
+                            .toLowerCase()
+                            .contains(searchQuery.toLowerCase()))
+                        .toList();
+                  }
+
+                  return FutureBuilder<List<FuelStation>>(
+                    future: _sortStationsByDistance(stations, currentLocation),
+                    builder: (context, sortedSnapshot) {
+                      if (sortedSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const SliverFillRemaining(
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      List<FuelStation> sortedStations =
+                          sortedSnapshot.data ?? [];
+                      if (sortedStations.isEmpty) {
+                        return SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.orange[100],
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.5),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(20.0),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: Colors.orange,
+                                      size: 50,
+                                    ),
+                                    SizedBox(height: 10),
+                                    Text(
+                                      'No Nearby Stations Found',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange,
+                                      ),
+                                    ),
+                                    SizedBox(height: 10),
+                                    Text(
+                                      'We couldn\'t find any fuel stations near your current location.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    SizedBox(height: 15),
+                                    // ElevatedButton(
+                                    //   onPressed: () {                },
+                                    //   style: ElevatedButton.styleFrom(
+                                    //     backgroundColor: Colors.orange,
+                                    //     foregroundColor: Colors.white,
+                                    //     shape: RoundedRectangleBorder(
+                                    //       borderRadius: BorderRadius.circular(30),
+                                    //     ),
+                                    //   ),
+                                    //   // child: const Text('Refresh Search'),
+                                    // ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            return _buildStationTile(
+                                sortedStations[index], currentLocation);
+                          },
+                          childCount: sortedStations.length,
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 16.0, horizontal: 16.0),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const AllFuelStationsPage()),
+                      );
+                    },
+                    icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                    label: const Text(
+                      'View All Stations',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -613,7 +658,11 @@ class DriverHomePageState extends State<DriverHomePage> {
             }
             final StationServices services = serviceSnapshot.data!;
 
-            String stationStatus = getStationStatus(station);
+            // String stationStatus = getStationStatus(station);
+
+            String stationStatus = services.isOpen
+                ? getStationStatus(station)
+                : 'Temporarily Closed';
 
             return GestureDetector(
               onTap: () {
@@ -714,6 +763,8 @@ class DriverHomePageState extends State<DriverHomePage> {
                                 style: const TextStyle(fontSize: 14.0),
                               ),
                             ),
+
+                            // added this during testing
                           ],
                         ),
                       ],

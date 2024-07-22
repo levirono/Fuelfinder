@@ -437,4 +437,57 @@ class FirestoreService {
       rethrow;
     }
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //new additions
+
+
+  Stream<List<FuelStation>> streamStationsWithinBounds(double south, double north, double west, double east) {
+  return _db
+      .collection('fuelStations')
+      .where('isVerified', isEqualTo: true)
+      .snapshots()
+      .asyncMap((querySnapshot) async {
+    List<FuelStation> stations = [];
+
+    for (var doc in querySnapshot.docs) {
+      var stationData = doc.data();
+      var stationId = doc.id;
+      
+      // Parse GPS link
+      List<String> coordinates = stationData['gpsLink'].split(',');
+      double latitude = double.parse(coordinates[0]);
+      double longitude = double.parse(coordinates[1]);
+
+      // Check if station is within bounds
+      if (latitude >= south && latitude <= north && longitude >= west && longitude <= east) {
+        var services = await getStationServices(stationId);
+
+        var fuelStation = FuelStation.fromMap({
+          ...stationData,
+          'id': stationId,
+          'isPetrolAvailable': services.isPetrolAvailable,
+          'isDieselAvailable': services.isDieselAvailable,
+          'isOpen': services.isOpen,
+        });
+
+        stations.add(fuelStation);
+      }
+    }
+
+    return stations;
+  });
+}
 }
