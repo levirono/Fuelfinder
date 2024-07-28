@@ -140,7 +140,7 @@ class AllFuelStationsPageState extends State<AllFuelStationsPage> {
       closeTime = parseTime(station.operationEndTime);
     } catch (e) {
       print('Error parsing station times: $e');
-      return 'Hours unavailable';
+      return 'Not Updated';
     }
 
     if (now.isAfter(openTime) && now.isBefore(closeTime)) {

@@ -437,8 +437,8 @@ class MapViewState extends State<MapView> {
                                     ? 'Open 24/7'
                                     : station.operationStartTime.isNotEmpty &&
                                             station.operationEndTime.isNotEmpty
-                                        ? 'Hours: ${station.operationStartTime} - ${station.operationEndTime}'
-                                        : 'Hours not available',
+                                        ? 'Operation Hours: ${station.operationStartTime} - ${station.operationEndTime}'
+                                        : 'Not updated',
                                 style: const TextStyle(fontSize: 14.0),
                               ),
                             ),
