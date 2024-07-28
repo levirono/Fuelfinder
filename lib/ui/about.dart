@@ -64,7 +64,7 @@ class About extends StatelessWidget {
                       onPressed: () async {
                         final Uri emailLaunchUri = Uri(
                           scheme: 'mailto',
-                          path: 'support@fuelfinder@gmail.com',
+                          path: 'genixlsolutions@gmail.com',
                         );
                         if (await canLaunchUrl(emailLaunchUri)) {
                           await launchUrl(emailLaunchUri);
@@ -73,7 +73,7 @@ class About extends StatelessWidget {
                         }
                       },
                       child: const Text(
-                        'support@fuelfinder@gmail.com',
+                        'Send us email For support',
                         style: TextStyle(
                           fontSize: 16.0,
                           fontWeight: FontWeight.bold,
@@ -89,7 +89,6 @@ class About extends StatelessWidget {
                         if (await canLaunchUrl(url)) {
                           await launchUrl(url, mode: LaunchMode.externalApplication);
                         } else {
-                          print('Could not launch $url');
                         }
                       },
                       child: const Text(

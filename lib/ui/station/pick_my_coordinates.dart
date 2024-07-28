@@ -136,31 +136,25 @@ class PickMyCoordinateState extends State<PickMyCoordinate> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(10),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
-                      borderRadius: BorderRadius.circular(10),
+                  child: FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: currentLocation,
+                      initialZoom: 13.0,
+                      onTap: (tapPosition, latLng) {
+                        _handleTap(latLng);
+                      },
                     ),
-                    child: FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        center: currentLocation,
-                        zoom: 13.0,
-                        onTap: (TapPosition tapPosition, LatLng latLng) {
-                          _handleTap(latLng);
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}',
+                        additionalOptions: {
+                          'accessToken': dotenv.env['MAPBOX_ACCESS_TOKEN']!,
+                          'id': 'mapbox.mapbox-streets-v8',
                         },
                       ),
-                      children: [
-                        TileLayer(
-                          urlTemplate:
-                              'https://api.mapbox.com/styles/v1/genixl/clvl3kmme011v01o0gh95hmt4/tiles/256/{z}/{x}/{y}@2x?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}',
-                          additionalOptions: {
-                            'accessToken': dotenv.env['MAPBOX_ACCESS_TOKEN']!,
-                            'id': 'mapbox.mapbox-streets-v8',
-                          },
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -209,7 +203,6 @@ class PickMyCoordinateState extends State<PickMyCoordinate> {
       _selectedCoordinate = tappedPoint;
     });
 
-// Copy coordinates to clipboard using platform channel
     String coordinatesText =
         '${_selectedCoordinate!.latitude}, ${_selectedCoordinate!.longitude}';
 
@@ -217,7 +210,6 @@ class PickMyCoordinateState extends State<PickMyCoordinate> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Coordinates copied to clipboard')),
       );
-// Navigate back to the station profile page after copying coordinates
       Navigator.pop(context, coordinatesText);
     }).catchError((error) {
       print('Error copying to clipboard: $error');

@@ -31,6 +31,8 @@ class AuthService {
           'emailVerified': false,
         });
 
+        await _auth.signOut();
+
         return user;
       }
     } on FirebaseAuthException catch (e) {
@@ -43,29 +45,28 @@ class AuthService {
     return null;
   }
 
-  Future<UserCredential?> login(String email, String password) async {
+  Future<User?> loginWithEmailVerificationCheck(
+      String email, String password) async {
     try {
-      final credential = await _auth.signInWithEmailAndPassword(
+      UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
-      if (!credential.user!.emailVerified) {
-        throw FirebaseAuthException(
-          code: 'email-not-verified',
-          message: 'Please verify your email before logging in.',
-        );
+      User? user = result.user;
+      if (user != null) {
+        if (!user.emailVerified) {
+          await _auth.signOut();
+          throw FirebaseAuthException(
+            code: 'email-not-verified',
+            message: 'Please verify your email before logging in.',
+          );
+        }
+        return user;
       }
-      
-      await _firestore.collection('users').doc(credential.user!.uid).update({
-        'emailVerified': true,
-      });
-      
-      return credential;
-    } on FirebaseAuthException catch (e) {
-      print(e.message);
+    } catch (e) {
       rethrow;
     }
+    return null;
   }
 
   Stream<User?> get currentUser {
@@ -87,7 +88,8 @@ class AuthService {
   Future<String?> getUserRole() async {
     User? user = await getCurrentUser();
     if (user != null) {
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(user.uid).get();
       return userDoc['role'] as String?;
     }
     return null;

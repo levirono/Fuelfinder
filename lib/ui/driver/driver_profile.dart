@@ -21,7 +21,7 @@ class DriverProfileState extends State<DriverProfile> {
   final _phoneNumberController = TextEditingController(text: '+254');
   final _vehicleModelController = TextEditingController();
   final _vehiclePlateNumberController = TextEditingController();
-  final _driverLicenseController = TextEditingController();
+  final _driverLicenseController = TextEditingController(text: 'DL-');
 
   final _authService = AuthService();
 
@@ -37,7 +37,8 @@ class DriverProfileState extends State<DriverProfile> {
   Future<void> _loadDriverProfile() async {
     User? currentUser = await _authService.getCurrentUser();
     if (currentUser != null) {
-      Driver? existingDriver = await _firestoreService.getDriverByOwnerId(currentUser.uid);
+      Driver? existingDriver =
+          await _firestoreService.getDriverByOwnerId(currentUser.uid);
       setState(() {
         _existingDriver = existingDriver;
         if (_existingDriver != null) {
@@ -56,15 +57,22 @@ class DriverProfileState extends State<DriverProfile> {
     _driverLicenseController.text = _existingDriver!.driverLicense;
   }
 
+  String? mandatoryFieldValidator(String? value, String fieldName) {
+    if (value == null || value.trim().isEmpty) {
+      return '$fieldName is required';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MY PROFILE',
-        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
-
+        title: const Text(
+          'MY PROFILE',
+          style: TextStyle(
+              fontSize: 30.0, fontWeight: FontWeight.bold, color: Colors.green),
         ),
-        
         backgroundColor: Colors.green[100],
       ),
       body: Container(
@@ -75,11 +83,16 @@ class DriverProfileState extends State<DriverProfile> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildFormField('Driver Name', _nameController),
-                _buildFormField('Phone Number', _phoneNumberController),
+                _buildFormField('Driver Name', _nameController,
+                    isMandatory: true),
+                _buildFormField('Phone Number', _phoneNumberController,
+                    isMandatory: true),
                 _buildFormField('Vehicle Model', _vehicleModelController),
-                _buildFormField('Vehicle Plate Number', _vehiclePlateNumberController, hintText: 'e.g., KDJ299F'),
-                _buildFormField('Driver License', _driverLicenseController, hintText: 'e.g., A12345678'),
+                _buildFormField(
+                    'Vehicle Plate Number', _vehiclePlateNumberController,
+                    hintText: 'e.g., KDJ299F'),
+                _buildFormField('Driver License', _driverLicenseController,
+                    hintText: 'e.g., DL-12345678', isMandatory: true),
                 const SizedBox(height: 20.0),
                 _buildActionButtons(),
               ],
@@ -90,59 +103,67 @@ class DriverProfileState extends State<DriverProfile> {
     );
   }
 
-  Widget _buildFormField(String label, TextEditingController controller, {String? prefixText, String? hintText}) {
-  return Container(
-    margin: const EdgeInsets.symmetric(vertical: 8.0),
-    padding: const EdgeInsets.all(16.0),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(10.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.3),
-          spreadRadius: 2,
-          blurRadius: 5,
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.black),
-        ),
-        const SizedBox(height: 8.0),
-        TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            prefixText: prefixText,
-            hintText: hintText,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Colors.grey),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Colors.green, width: 2.0),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Colors.grey),
-            ),
+  Widget _buildFormField(String label, TextEditingController controller,
+      {String? prefixText, String? hintText, bool isMandatory = false}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
           ),
-          readOnly: !_editMode,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter $label';
-            }
-            return null;
-          },
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label + (isMandatory ? ' *' : ''),
+            style: const TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.black),
+          ),
+          const SizedBox(height: 8.0),
+          TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              prefixText: prefixText,
+              hintText: hintText,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: Colors.grey),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: Colors.green, width: 2.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: Colors.grey),
+              ),
+            ),
+            readOnly: !_editMode,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter $label';
+              }
+              if (isMandatory) {
+                return mandatoryFieldValidator(value, label);
+              }
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActionButtons() {
     if (_existingDriver == null || _editMode) {
       return ElevatedButton(
@@ -163,8 +184,8 @@ class DriverProfileState extends State<DriverProfile> {
               'Save Station Profile',
               style: TextStyle(
                 fontSize: 16.0,
-                color:Colors.white,
-                ),
+                color: Colors.white,
+              ),
             ),
           ],
         ),
@@ -193,25 +214,19 @@ class DriverProfileState extends State<DriverProfile> {
       );
     }
   }
-  void _toggleEditMode() {
-    setState(() {
-      _editMode = true;
-    });
-  }
 
-   Future<void> _saveProfile() async {
+  Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       User? currentUser = await _authService.getCurrentUser();
       if (currentUser == null) {
         Fluttertoast.showToast(
-          msg: "Login failed!",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.yellow,
-          textColor: Colors.white,
-          fontSize: 16.0
-        );
+            msg: "Login failed!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.yellow,
+            textColor: Colors.white,
+            fontSize: 16.0);
         return;
       }
 
@@ -234,13 +249,11 @@ class DriverProfileState extends State<DriverProfile> {
           timeInSecForIosWeb: 1,
           backgroundColor: Colors.green,
           textColor: Colors.white,
-          fontSize: 16.0
-        );
+          fontSize: 16.0);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DriverHomePage()),
       );
     }
   }
-
 }

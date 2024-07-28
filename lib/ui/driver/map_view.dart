@@ -146,7 +146,10 @@ class MapViewState extends State<MapView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('FUELFINDER',
-            style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold, color: Colors.green)),
+            style: TextStyle(
+                fontSize: 30.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.green)),
         backgroundColor: Colors.green[100],
       ),
       body: Column(
@@ -197,7 +200,8 @@ class MapViewState extends State<MapView> {
         );
       },
       onSelected: (Location suggestion) {
-        final LatLng newLocation = LatLng(suggestion.latitude, suggestion.longitude);
+        final LatLng newLocation =
+            LatLng(suggestion.latitude, suggestion.longitude);
         _mapController.move(newLocation, 13.0);
       },
       builder: (context, controller, focusNode) {
@@ -260,13 +264,14 @@ class MapViewState extends State<MapView> {
           return Center(child: Text('Error: ${stationSnapshot.error}'));
         }
         List<FuelStation> stations = stationSnapshot.data ?? [];
-        List<FuelStation> verifiedStations = stations.where((station) => station.isVerified).toList();
+        List<FuelStation> verifiedStations =
+            stations.where((station) => station.isVerified).toList();
 
         return FlutterMap(
           mapController: _mapController,
           options: MapOptions(
-            center: _currentPosition,
-            zoom: 13.0,
+            initialCenter: _currentPosition,
+            initialZoom: 13.0,
             onMapEvent: _onMapEvent,
           ),
           children: [
@@ -289,7 +294,9 @@ class MapViewState extends State<MapView> {
                       point: _currentPosition,
                       child: _buildUserMarker(),
                     ),
-                    ...verifiedStations.map((station) => _buildStationMarker(station, zoom)).toList(),
+                    ...verifiedStations
+                        .map((station) => _buildStationMarker(station, zoom))
+                        .toList(),
                   ],
                 );
               },
@@ -313,13 +320,15 @@ class MapViewState extends State<MapView> {
   Marker _buildStationMarker(FuelStation station, double zoom) {
     LatLng? coordinates = _parseCoordinates(station.gpsLink);
     if (coordinates == null) {
-      return Marker(width: 0, height: 0, point: const LatLng(0, 0), child: Container());
+      return Marker(
+          width: 0, height: 0, point: const LatLng(0, 0), child: Container());
     }
 
     var (isVisible, size) = _getMarkerVisibilityAndSize(zoom);
 
     if (!isVisible) {
-      return Marker(width: 0, height: 0, point: coordinates, child: Container());
+      return Marker(
+          width: 0, height: 0, point: coordinates, child: Container());
     }
 
     return Marker(
@@ -359,13 +368,15 @@ class MapViewState extends State<MapView> {
               children: [
                 Text(
                   station.name,
-                  style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 16.0, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10.0),
                 StreamBuilder<StationServices>(
                   stream: _firestoreService.streamStationServices(station.id),
                   builder: (context, serviceSnapshot) {
-                    if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+                    if (serviceSnapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const CircularProgressIndicator();
                     }
                     if (serviceSnapshot.hasError) {
@@ -375,8 +386,8 @@ class MapViewState extends State<MapView> {
                       return const Text('Services unavailable');
                     }
                     StationServices services = serviceSnapshot.data!;
-                    String stationStatus = services.isOpen 
-                        ? getStationStatus(station) 
+                    String stationStatus = services.isOpen
+                        ? getStationStatus(station)
                         : 'Temporarily Closed';
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,25 +395,32 @@ class MapViewState extends State<MapView> {
                         Row(
                           children: [
                             Icon(Icons.circle,
-                                color: services.isPetrolAvailable ? Colors.green : Colors.red),
+                                color: services.isPetrolAvailable
+                                    ? Colors.green
+                                    : Colors.red),
                             const SizedBox(width: 5.0),
-                            Text('Petrol: ${services.isPetrolAvailable ? 'Available' : 'Unavailable'}'),
+                            Text(
+                                'Petrol: ${services.isPetrolAvailable ? 'Available' : 'Unavailable'}'),
                           ],
                         ),
                         const SizedBox(height: 5.0),
                         Row(
                           children: [
                             Icon(Icons.circle,
-                                color: services.isDieselAvailable ? Colors.green : Colors.red),
+                                color: services.isDieselAvailable
+                                    ? Colors.green
+                                    : Colors.red),
                             const SizedBox(width: 5.0),
-                            Text('Diesel: ${services.isDieselAvailable ? 'Available' : 'Unavailable'}'),
+                            Text(
+                                'Diesel: ${services.isDieselAvailable ? 'Available' : 'Unavailable'}'),
                           ],
                         ),
                         const SizedBox(height: 5.0),
                         Text(
                           'Status: $stationStatus',
                           style: TextStyle(
-                              color: stationStatus == 'Open' || stationStatus == 'Open 24/7'
+                              color: stationStatus == 'Open' ||
+                                      stationStatus == 'Open 24/7'
                                   ? Colors.green
                                   : stationStatus == 'Closing soon'
                                       ? Colors.orange

@@ -1,3 +1,4 @@
+import 'package:ff_main/ui/about.dart';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/firestore_service.dart';
 import 'package:ff_main/ui/admin/drivers.dart';
@@ -30,7 +31,7 @@ class AdminDashboardState extends State<AdminDashboard> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Admin Dashboard',
+          'FUELFINDER',
         style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
@@ -55,12 +56,16 @@ class AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-              
-              },
-            ),
+            leading: const Icon(Icons.info_outline_rounded),
+            title: const Text('About us'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const About()),
+              );
+            },
+          ),
           ],
         ),
       ),

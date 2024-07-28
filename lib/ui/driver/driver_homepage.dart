@@ -132,7 +132,6 @@ class DriverHomePageState extends State<DriverHomePage> {
       FuelEfficiencyTip randomTip = tips[Random().nextInt(tips.length)];
 
       if (mounted) {
-        // Check if the widget is still in the tree
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -184,18 +183,6 @@ class DriverHomePageState extends State<DriverHomePage> {
     }
   }
 
-  // Future<void> _getCurrentLocation() async {
-  //   try {
-  //     Position position = await Geolocator.getCurrentPosition(
-  //         desiredAccuracy: LocationAccuracy.high);
-  //     setState(() {
-  //       _currentLocation = LatLng(position.latitude, position.longitude);
-  //     });
-  //   } catch (e) {
-  //     print('Error getting location: $e');
-  //   }
-  // }
-
   Future<double> calculateRoadDistance(LatLng start, LatLng end) async {
     final String url =
         'https://api.mapbox.com/directions/v5/mapbox/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?access_token=${dotenv.env['MAPBOX_ACCESS_TOKEN']}';
@@ -212,7 +199,6 @@ class DriverHomePageState extends State<DriverHomePage> {
     }
   }
 
-//new functionality
   bool isOpenAllDay(FuelStation station) {
     return station.isOpenAllDay;
   }
@@ -220,10 +206,8 @@ class DriverHomePageState extends State<DriverHomePage> {
   DateTime parseTime(String time) {
     final now = DateTime.now();
     try {
-      // Remove any leading/trailing whitespace
       time = time.trim();
 
-      // Split the time string into components
       List<String> components = time.split(' ');
       if (components.length != 2) {
         throw const FormatException('Invalid time format');
@@ -240,7 +224,6 @@ class DriverHomePageState extends State<DriverHomePage> {
       int hours = int.parse(timeParts[0]);
       int minutes = int.parse(timeParts[1]);
 
-      // Adjust hours for PM
       if (amPm == 'PM' && hours != 12) {
         hours += 12;
       } else if (amPm == 'AM' && hours == 12) {
@@ -249,7 +232,6 @@ class DriverHomePageState extends State<DriverHomePage> {
 
       return DateTime(now.year, now.month, now.day, hours, minutes);
     } catch (e) {
-      // Return current time if parsing fails
       return now;
     }
   }
@@ -373,16 +355,6 @@ class DriverHomePageState extends State<DriverHomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // const Padding(
-                        //   padding: EdgeInsets.all(16.0),
-                        //   child: Text(
-                        //     'Search Route',
-                        //     style: TextStyle(
-                        //       fontWeight: FontWeight.bold,
-                        //       fontSize: 16.0,
-                        //     ),
-                        //   ),
-                        // ),
                         Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16.0, vertical: 8.0),
@@ -560,17 +532,6 @@ class DriverHomePageState extends State<DriverHomePage> {
                                       style: TextStyle(fontSize: 16),
                                     ),
                                     SizedBox(height: 15),
-                                    // ElevatedButton(
-                                    //   onPressed: () {                },
-                                    //   style: ElevatedButton.styleFrom(
-                                    //     backgroundColor: Colors.orange,
-                                    //     foregroundColor: Colors.white,
-                                    //     shape: RoundedRectangleBorder(
-                                    //       borderRadius: BorderRadius.circular(30),
-                                    //     ),
-                                    //   ),
-                                    //   // child: const Text('Refresh Search'),
-                                    // ),
                                   ],
                                 ),
                               ),
@@ -657,8 +618,6 @@ class DriverHomePageState extends State<DriverHomePage> {
                   station.name, 'Services unavailable', Colors.grey);
             }
             final StationServices services = serviceSnapshot.data!;
-
-            // String stationStatus = getStationStatus(station);
 
             String stationStatus = services.isOpen
                 ? getStationStatus(station)

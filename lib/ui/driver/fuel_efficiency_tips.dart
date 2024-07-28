@@ -5,14 +5,16 @@ import 'package:ff_main/models/fuelfinder.dart';
 class FuelEfficiencyTips extends StatelessWidget {
   const FuelEfficiencyTips({Key? key}) : super(key: key);
 
-  void _showSubmitTipDialog(BuildContext context, FirestoreService firestoreService) {
+  void _showSubmitTipDialog(
+      BuildContext context, FirestoreService firestoreService) {
     final TextEditingController tipController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Submit a Fuel Efficiency Tip', style: TextStyle(fontSize: 20.0, color: Colors.green)),
+          title: const Text('Submit a Fuel Efficiency Tip',
+              style: TextStyle(fontSize: 20.0, color: Colors.green)),
           content: TextFormField(
             controller: tipController,
             decoration: const InputDecoration(
@@ -26,7 +28,8 @@ class FuelEfficiencyTips extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
-              child: const Text('Submit', style: TextStyle(color: Colors.green)),
+              child:
+                  const Text('Submit', style: TextStyle(color: Colors.green)),
               onPressed: () {
                 if (tipController.text.isNotEmpty) {
                   firestoreService.addFuelEfficiencyTip(tipController.text);
@@ -42,28 +45,34 @@ class FuelEfficiencyTips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final FirestoreService _firestoreService = FirestoreService();
+    final FirestoreService firestoreService = FirestoreService();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fuel Efficiency Tips',
-        style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
-         ),
+        title: const Text(
+          'Fuel Efficiency Tips',
+          style: TextStyle(
+              fontSize: 30.0, fontWeight: FontWeight.bold, color: Colors.green),
+        ),
         backgroundColor: Colors.green[100],
       ),
       body: StreamBuilder<List<FuelEfficiencyTip>>(
-        stream: _firestoreService.streamFuelEfficiencyTips(),
+        stream: firestoreService.streamFuelEfficiencyTips(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+            return Center(
+                child: Text('Error: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.red)));
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No tips available', style: TextStyle(color: Colors.grey)));
+            return const Center(
+                child: Text('No tips available',
+                    style: TextStyle(color: Colors.grey)));
           }
 
           List<FuelEfficiencyTip> tips = snapshot.data!;
@@ -79,15 +88,18 @@ class FuelEfficiencyTips extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8.0),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.3), 
+                      color: Colors.grey.withOpacity(0.3),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
                 child: ListTile(
-                  title: Text(tips[index].tip, style: const TextStyle(color: Colors.green, fontSize: 16.0)),
-                  subtitle: Text('Posted on: ${tips[index].timestamp}', style: const TextStyle(color: Colors.grey)),
+                  title: Text(tips[index].tip,
+                      style:
+                          const TextStyle(color: Colors.green, fontSize: 16.0)),
+                  subtitle: Text('Posted on: ${tips[index].timestamp}',
+                      style: const TextStyle(color: Colors.grey)),
                 ),
               );
             },
@@ -95,7 +107,7 @@ class FuelEfficiencyTips extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showSubmitTipDialog(context, _firestoreService),
+        onPressed: () => _showSubmitTipDialog(context, firestoreService),
         tooltip: 'Add Tip',
         backgroundColor: Colors.green,
         child: const Icon(Icons.add),

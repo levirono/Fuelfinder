@@ -71,6 +71,13 @@ class StationProfileState extends State<StationProfile> {
     _isOpenAllDay = _existingStation!.isOpenAllDay;
   }
 
+  String? mandatoryFieldValidator(String? value, String fieldName) {
+    if (value == null || value.trim().isEmpty) {
+      return '$fieldName is required';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,7 +87,10 @@ class StationProfileState extends State<StationProfile> {
           children: [
             const Text(
               'My Profile',
-            style: TextStyle(fontSize:30.0,fontWeight: FontWeight.bold,color: Colors.green),
+              style: TextStyle(
+                  fontSize: 30.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green),
             ),
             if (_existingStation != null && _existingStation!.isVerified)
               const Icon(Icons.verified, color: Colors.blue),
@@ -96,8 +106,10 @@ class StationProfileState extends State<StationProfile> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildFormField('Station Name', _nameController, mandatory: true),
-                _buildFormField('GPS Link', _gpsLinkController, mandatory: true, example: 'latitude,longitude'),
+                _buildFormField('Station Name', _nameController,
+                    isMandatory: true),
+                _buildFormField('GPS Link', _gpsLinkController,
+                    isMandatory: true, hintText: 'latitude,longitude'),
                 const SizedBox(height: 20.0),
                 ElevatedButton(
                   onPressed: _openPickMyCoordinateScreen,
@@ -120,11 +132,14 @@ class StationProfileState extends State<StationProfile> {
                     ],
                   ),
                 ),
-                _buildFormField('Road Code', _roadCodeController, mandatory: true, example: 'C39'),
-                _buildFormField('Route', _routeController, mandatory: true, example: 'Eldoret-kapsabet'),
+                _buildFormField('Road Code', _roadCodeController,
+                    isMandatory: true, hintText: 'e.g., C39'),
+                _buildFormField('Route', _routeController,
+                    isMandatory: true, hintText: 'e.g., Eldoret-kapsabet'),
                 _buildFormField('Distance To (km)', _distanceToController),
                 _buildFormField('Distance From (km)', _distanceFromController),
-                _buildFormField('Services Offered (comma-separated)', _servicesOfferedController),
+                _buildFormField('Services Offered (comma-separated)',
+                    _servicesOfferedController),
                 _buildOperationHoursField(),
                 const SizedBox(height: 20.0),
                 _buildActionButtons(),
@@ -136,73 +151,62 @@ class StationProfileState extends State<StationProfile> {
     );
   }
 
- Widget _buildFormField(String labelText, TextEditingController controller,
-    {bool mandatory = false, String example = ''}) {
-  return Container(
-    margin: const EdgeInsets.symmetric(vertical: 8.0),
-    padding: const EdgeInsets.all(16.0),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(10.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.3),
-          spreadRadius: 2,
-          blurRadius: 5,
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              labelText,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (mandatory)
-              const Text(
-                '*',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8.0),
-        TextFormField(
-          controller: controller,
-          enabled: _editMode,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Colors.grey),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Colors.green, width: 2.0),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Colors.grey),
-            ),
-            hintText: example.isNotEmpty ? 'e.g. $example' : null,
+  Widget _buildFormField(String label, TextEditingController controller,
+      {bool isMandatory = false, String? hintText}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
           ),
-          validator: (value) {
-            if (mandatory && (value == null || value.isEmpty)) {
-              return 'This field is required';
-            }
-            return null;
-          },
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label + (isMandatory ? ' *' : ''),
+            style: const TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.black),
+          ),
+          const SizedBox(height: 8.0),
+          TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: hintText,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: Colors.grey),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: Colors.green, width: 2.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: Colors.grey),
+              ),
+            ),
+            enabled: _editMode,
+            validator: (value) {
+              if (isMandatory && (value == null || value.trim().isEmpty)) {
+                return '$label is required';
+              }
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildOperationHoursField() {
     return Container(
@@ -326,7 +330,8 @@ class StationProfileState extends State<StationProfile> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context, TextEditingController controller) async {
+  Future<void> _selectTime(
+      BuildContext context, TextEditingController controller) async {
     if (_isOpenAllDay) return;
 
     final TimeOfDay? picked = await showTimePicker(
@@ -370,22 +375,19 @@ class StationProfileState extends State<StationProfile> {
 
       await _firestoreService.addOrUpdateStation(station, currentUser.uid);
       Fluttertoast.showToast(
-        msg: "Station Profile Saved!",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
-        fontSize: 16.0
-      );
+          msg: "Station Profile Saved!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0);
       setState(() {
         _editMode = false;
         _loadStationProfile();
       });
 
-      // Check if it's the first time saving the profile
       if (_existingStation == null) {
-        // Navigate to StationHomePage after saving the profile
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const StationHomePage()),

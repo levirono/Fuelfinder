@@ -1,4 +1,3 @@
-// import 'package:ff_main/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,26 +9,20 @@ import 'package:ff_main/services/login_page.dart';
 import 'package:ff_main/ui/driver/driver_homepage.dart';
 import 'package:ff_main/ui/station/station_homepage.dart';
 import 'package:ff_main/ui/admin/admin_dashboard.dart';
-//added these 2
 import 'package:workmanager/workmanager.dart';
 import 'package:ff_main/services/firestore_service.dart';
-
-
-
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     FirestoreService firestoreService = FirestoreService();
     bool hasNewStations = await firestoreService.checkForNewStations();
-    if (hasNewStations) {
-    }
+    if (hasNewStations) {}
     return Future.value(true);
   });
 }
 
-
 Future main() async {
- try {
+  try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     print("Error loading .env file: $e");
@@ -40,13 +33,6 @@ Future main() async {
     callbackDispatcher,
     isInDebugMode: true,
   );
-
-  // Workmanager().registerPeriodicTask(
-  //   "1",
-  //   "checkNewStations",
-  //   frequency: const Duration(hours: 24),
-  // );
-
   runApp(MyApp());
 }
 
@@ -60,7 +46,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Your App Title',
-      // theme:customTheme,
       home: FutureBuilder<PermissionStatus>(
         future: Permission.location.request(),
         builder: (context, snapshot) {

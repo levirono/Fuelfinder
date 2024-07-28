@@ -11,18 +11,21 @@ class FuelStationDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     List<String> locationComponents = station.location.split(',');
 
-    String roadCode = locationComponents.isNotEmpty ? locationComponents[0].trim() : 'N/A';
-    String location = locationComponents.length > 1 ? locationComponents[1].trim() : 'N/A';
-    String distanceTo = locationComponents.length > 2 ? locationComponents[2].trim() : 'N/A';
-    String distanceFrom = locationComponents.length > 3 ? locationComponents[3].trim() : 'N/A';
+    String roadCode =
+        locationComponents.isNotEmpty ? locationComponents[0].trim() : 'N/A';
+    String location =
+        locationComponents.length > 1 ? locationComponents[1].trim() : 'N/A';
+    String distanceTo =
+        locationComponents.length > 2 ? locationComponents[2].trim() : 'N/A';
+    String distanceFrom =
+        locationComponents.length > 3 ? locationComponents[3].trim() : 'N/A';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(station.name,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          color:Colors.green
-        ),
+        title: Text(
+          station.name,
+          style:
+              const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
       ),
@@ -126,9 +129,9 @@ class FuelStationDetailsPage extends StatelessWidget {
           ),
           Flexible(
             child: Text(
-              station.isOpenAllDay 
-                ? 'Open 24 hours' 
-                : '${station.operationStartTime} - ${station.operationEndTime}',
+              station.isOpenAllDay
+                  ? 'Open 24 hours'
+                  : '${station.operationStartTime} - ${station.operationEndTime}',
               style: const TextStyle(fontSize: 16.0),
               overflow: TextOverflow.ellipsis,
               maxLines: 2,
@@ -197,46 +200,47 @@ class FuelStationDetailsPage extends StatelessWidget {
   }
 
   Widget _buildServicesOffered() {
-  return FutureBuilder(
-    future: FirestoreService().getStationServices(station.id),
-    builder: (context, AsyncSnapshot<StationServices> serviceSnapshot) {
-      if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      if (serviceSnapshot.hasError) {
-        return const Text('Error loading services');
-      }
-      if (!serviceSnapshot.hasData || serviceSnapshot.data!.availableServices.isEmpty) {
-        return _buildServiceContainer('Services not updated');
-      }
-      var services = serviceSnapshot.data!;
-      String allServices = services.availableServices.join(', ');
-      return _buildServiceContainer(allServices);
-    },
-  );
-}
+    return FutureBuilder(
+      future: FirestoreService().getStationServices(station.id),
+      builder: (context, AsyncSnapshot<StationServices> serviceSnapshot) {
+        if (serviceSnapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (serviceSnapshot.hasError) {
+          return const Text('Error loading services');
+        }
+        if (!serviceSnapshot.hasData ||
+            serviceSnapshot.data!.availableServices.isEmpty) {
+          return _buildServiceContainer('Services not updated');
+        }
+        var services = serviceSnapshot.data!;
+        String allServices = services.availableServices.join(', ');
+        return _buildServiceContainer(allServices);
+      },
+    );
+  }
 
-Widget _buildServiceContainer(String content) {
-  return Container(
-    margin: const EdgeInsets.symmetric(vertical: 8.0),
-    padding: const EdgeInsets.all(16.0),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(10.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.3),
-          spreadRadius: 2,
-          blurRadius: 5,
-        ),
-      ],
-    ),
-    child: Text(
-      content,
-      style: const TextStyle(fontSize: 16.0),
-    ),
-  );
-}
+  Widget _buildServiceContainer(String content) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: Text(
+        content,
+        style: const TextStyle(fontSize: 16.0),
+      ),
+    );
+  }
 
   Widget _buildFuelPrices() {
     return FutureBuilder(

@@ -203,37 +203,7 @@ class LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 20.0),
                             ElevatedButton(
-                              onPressed: _isLoading ? null : () async {
-                                if (_formKey.currentState!.validate()) {
-                                  _formKey.currentState!.save();
-                                  setState(() {
-                                    _isLoading = true;
-                                  });
-                                  try {
-                                    final result = await _authService.login(_email, _password);
-                                    if (result != null) {
-                                      // Proceed to next screen
-                                    }
-                                  } on FirebaseAuthException catch (e) {
-                                    if (e.code == 'email-not-verified') {
-                                      _showEmailNotVerifiedDialog();
-                                    } else {
-                                      Fluttertoast.showToast(
-                                          msg: e.message ?? "Login failed!",
-                                          toastLength: Toast.LENGTH_SHORT,
-                                          gravity: ToastGravity.BOTTOM,
-                                          timeInSecForIosWeb: 1,
-                                          backgroundColor: Colors.red,
-                                          textColor: Colors.white,
-                                          fontSize: 16.0);
-                                    }
-                                  } finally {
-                                    setState(() {
-                                      _isLoading = false;
-                                    });
-                                  }
-                                }
-                              },
+                              onPressed: _isLoading ? null : _login,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 shape: RoundedRectangleBorder(
@@ -308,6 +278,81 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        User? user = await _authService.loginWithEmailVerificationCheck(_email, _password);
+        if (user != null) {
+          if (user.emailVerified) {
+            Fluttertoast.showToast(
+              msg: "Login successful!",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Colors.green,
+              textColor: Colors.white,
+              fontSize: 16.0
+            );
+            
+          } else {
+            _showEmailNotVerifiedDialog();
+          }
+        }
+      } on FirebaseAuthException catch (e) {
+        String errorMessage;
+        Color backgroundColor;
+        switch (e.code) {
+          case 'user-not-found':
+            errorMessage = "No user found with this email.";
+            backgroundColor = Colors.orange;
+            break;
+          case 'wrong-password':
+            errorMessage = "Incorrect password. Please try again.";
+            backgroundColor = Colors.red;
+            break;
+          case 'invalid-email':
+            errorMessage = "Invalid email address.";
+            backgroundColor = Colors.purple;
+            break;
+          case 'user-disabled':
+            errorMessage = "This account has been disabled.";
+            backgroundColor = Colors.grey;
+            break;
+          default:
+            errorMessage = e.message ?? "Login failed!";
+            backgroundColor = Colors.red;
+        }
+        Fluttertoast.showToast(
+          msg: errorMessage,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: backgroundColor,
+          textColor: Colors.white,
+          fontSize: 16.0
+        );
+      } catch (e) {
+        Fluttertoast.showToast(
+          msg: "An unexpected error occurred. Please try again.",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   void _showEmailNotVerifiedDialog() {
     showDialog(
       context: context,
@@ -322,10 +367,10 @@ class LoginPageState extends State<LoginPage> {
                 Navigator.of(context).pop();
               },
               child: const Text('OK',
-              style:TextStyle(
-                color:Colors.green
+              style: TextStyle(
+                color: Colors.green
                 )
-                ),
+              ),
             ),
           ],
         );

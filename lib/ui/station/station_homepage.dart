@@ -202,7 +202,7 @@ class StationHomePageState extends State<StationHomePage> {
                           subtitle: 'Update fuel prices, availability, and station status in real-time for drivers to see.'),
                       CarouselItem(
                           imagePath: 'assets/images/fuelstation2.jpg',
-                          title:'TRACH STATION PERFORMANCE',
+                          title:'TRACK STATION PERFORMANCE',
                           subtitle:'Analyse how driversly frequent visit and ensure enough fuel is available beforehand'),
                       CarouselItem(
                           imagePath:'assets/images/fuelstation3.jpg',

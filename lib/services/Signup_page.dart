@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ff_main/services/auth.dart';
 import 'package:ff_main/services/login_page.dart';
@@ -27,8 +28,10 @@ class SignupPageState extends State<SignupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Account',
-          style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold, color: Colors.green),
+        title: const Text(
+          'Create Account',
+          style: TextStyle(
+              fontSize: 30.0, fontWeight: FontWeight.bold, color: Colors.green),
         ),
         backgroundColor: Colors.green[100],
       ),
@@ -70,20 +73,23 @@ class SignupPageState extends State<SignupPage> {
                             decoration: InputDecoration(
                               labelText: 'Email',
                               hintText: 'example@example.com',
-                              prefixIcon: const Icon(Icons.email, color: Colors.green),
+                              prefixIcon:
+                                  const Icon(Icons.email, color: Colors.green),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 15.0, horizontal: 20.0),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your email.';
                               }
-                              final emailRegex = RegExp(r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
+                              final emailRegex = RegExp(
+                                  r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
                               if (!emailRegex.hasMatch(value)) {
                                 return 'Please enter a valid email address.';
                               }
@@ -96,15 +102,22 @@ class SignupPageState extends State<SignupPage> {
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              hintText: 'Enter your password',
-                              prefixIcon: const Icon(Icons.lock, color: Colors.green),
+                              hintText: 'Enter at least 8 characters',
+                              prefixIcon:
+                                  const Icon(Icons.lock, color: Colors.green),
                               suffixIcon: IconButton(
-                                icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
-                                onPressed: _isLoading ? null : () {
-                                  setState(() {
-                                    _showPassword = !_showPassword;
-                                  });
-                                },
+                                icon: Icon(
+                                    _showPassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.green),
+                                onPressed: _isLoading
+                                    ? null
+                                    : () {
+                                        setState(() {
+                                          _showPassword = !_showPassword;
+                                        });
+                                      },
                               ),
                               filled: true,
                               fillColor: Colors.white,
@@ -112,7 +125,8 @@ class SignupPageState extends State<SignupPage> {
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 15.0, horizontal: 20.0),
                             ),
                             obscureText: !_showPassword,
                             onChanged: (value) {
@@ -136,15 +150,23 @@ class SignupPageState extends State<SignupPage> {
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Confirm Password',
-                              hintText: 'Confirm your password',
-                              prefixIcon: const Icon(Icons.lock, color: Colors.green),
+                              hintText: 'Re-enter your password',
+                              prefixIcon:
+                                  const Icon(Icons.lock, color: Colors.green),
                               suffixIcon: IconButton(
-                                icon: Icon(_showConfirmPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green),
-                                onPressed: _isLoading ? null : () {
-                                  setState(() {
-                                    _showConfirmPassword = !_showConfirmPassword;
-                                  });
-                                },
+                                icon: Icon(
+                                    _showConfirmPassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.green),
+                                onPressed: _isLoading
+                                    ? null
+                                    : () {
+                                        setState(() {
+                                          _showConfirmPassword =
+                                              !_showConfirmPassword;
+                                        });
+                                      },
                               ),
                               filled: true,
                               fillColor: Colors.white,
@@ -152,7 +174,8 @@ class SignupPageState extends State<SignupPage> {
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 15.0, horizontal: 20.0),
                             ),
                             obscureText: !_showConfirmPassword,
                             onChanged: (value) {
@@ -164,6 +187,9 @@ class SignupPageState extends State<SignupPage> {
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please confirm your password.';
+                              }
+                              if (value.length < 8) {
+                                return 'Password must be at least 8 characters long.';
                               }
                               if (!_passwordsMatch) {
                                 return 'Passwords do not match.';
@@ -182,12 +208,15 @@ class SignupPageState extends State<SignupPage> {
                                   value: 'user',
                                   groupValue: _role,
                                   activeColor: Colors.green,
-                                  secondary: const Icon(Icons.directions_car, color: Colors.green),
-                                  onChanged: _isLoading ? null : (value) {
-                                    setState(() {
-                                      _role = value!;
-                                    });
-                                  },
+                                  secondary: const Icon(Icons.directions_car,
+                                      color: Colors.green),
+                                  onChanged: _isLoading
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            _role = value!;
+                                          });
+                                        },
                                 ),
                               ),
                               Expanded(
@@ -196,12 +225,15 @@ class SignupPageState extends State<SignupPage> {
                                   value: 'station',
                                   groupValue: _role,
                                   activeColor: Colors.green,
-                                  secondary: const Icon(Icons.local_gas_station, color: Colors.green),
-                                  onChanged: _isLoading ? null : (value) {
-                                    setState(() {
-                                      _role = value!;
-                                    });
-                                  },
+                                  secondary: const Icon(Icons.local_gas_station,
+                                      color: Colors.green),
+                                  onChanged: _isLoading
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            _role = value!;
+                                          });
+                                        },
                                 ),
                               ),
                             ],
@@ -214,7 +246,8 @@ class SignupPageState extends State<SignupPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 15.0, horizontal: 30.0),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -234,12 +267,16 @@ class SignupPageState extends State<SignupPage> {
                           ),
                           const SizedBox(height: 10.0),
                           TextButton(
-                            onPressed: _isLoading ? null : () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (context) => const LoginPage()),
-                              );
-                            },
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const LoginPage()),
+                                    );
+                                  },
                             child: const Text(
                               'Already have an account? Login',
                               style: TextStyle(
@@ -263,62 +300,119 @@ class SignupPageState extends State<SignupPage> {
   }
 
   void _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      setState(() {
-        _isLoading = true;
-      });
-      final BuildContext contextBeforeAsync = context;
-      try {
-        final result = await _authService.register(_email, _password, _role);
-        if (!mounted) return;
-        if (result != null) {
-          _showVerificationEmailSentDialog(contextBeforeAsync);
-        } else {
-          Fluttertoast.showToast(
-            msg: "Registration failed!",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16.0
-          );
-        }
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
+  if (_formKey.currentState!.validate()) {
+    _formKey.currentState!.save();
+    setState(() {
+      _isLoading = true;
+    });
+    final BuildContext contextBeforeAsync = context;
+    try {
+      final result = await _authService.register(_email, _password, _role);
+      if (!mounted) return;
+      if (result != null) {
+        _showVerificationEmailSentDialog(contextBeforeAsync);
       }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      Color backgroundColor;
+      switch (e.code) {
+        case 'email-already-in-use':
+          errorMessage = "This email is already registered. Please use a different email.";
+          backgroundColor = Colors.orange;
+          break;
+        case 'invalid-email':
+          errorMessage = "The email address is not valid.";
+          backgroundColor = Colors.purple;
+          break;
+        case 'weak-password':
+          errorMessage = "The password is too weak. Please use a stronger password.";
+          backgroundColor = Colors.red;
+          break;
+        case 'operation-not-allowed':
+          errorMessage = "Registration is not enabled at this time. Please try again later.";
+          backgroundColor = Colors.grey;
+          break;
+        default:
+          errorMessage = e.message ?? "An error occurred during registration.";
+          backgroundColor = Colors.red;
+      }
+      Fluttertoast.showToast(
+        msg: errorMessage,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: backgroundColor,
+        textColor: Colors.white,
+        fontSize: 16.0
+      );
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: "An unexpected error occurred. Please try again.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+}
 
-  Future<void> _showVerificationEmailSentDialog(BuildContext context) async {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Verify Your Email'),
-          content: const Text('A verification email has been sent to your email address. Please verify your email to complete the registration process.'),
-          backgroundColor: Colors.green[100],
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              },
-              child: const Text('OK',
-              style:TextStyle(
-                color:Colors.green
-              )
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+Future<void> _showVerificationEmailSentDialog(BuildContext context) async {
+  return showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Verify Your Email'),
+        content: const Text(
+            'A verification email has been sent to your email address. Please verify your email to complete the registration process.'),
+        backgroundColor: Colors.green[100],
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            },
+            child: const Text('OK', style: TextStyle(color: Colors.green)),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+  // Future<void> _showVerificationEmailSentDialog(BuildContext context) async {
+  //   return showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text('Verify Your Email'),
+  //         content: const Text(
+  //             'A verification email has been sent to your email address. Please verify your email to complete the registration process.'),
+  //         backgroundColor: Colors.green[100],
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //               Navigator.pushReplacement(
+  //                 context,
+  //                 MaterialPageRoute(builder: (context) => const LoginPage()),
+  //               );
+  //             },
+  //             child: const Text('OK', style: TextStyle(color: Colors.green)),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 }

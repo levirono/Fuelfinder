@@ -86,10 +86,10 @@ class StationListItem extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _StationListItemState createState() => _StationListItemState();
+  StationListItemState createState() => StationListItemState();
 }
 
-class _StationListItemState extends State<StationListItem> {
+class StationListItemState extends State<StationListItem> {
   late bool isVerified;
   final FirestoreService _firestoreService = FirestoreService();
 
